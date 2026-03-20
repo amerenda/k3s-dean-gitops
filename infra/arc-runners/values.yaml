@@ -1,45 +1,47 @@
 # GitHub Actions Runner Scale Set Helm Chart Values
 # Deploy ARC runner scale set to arc-runners namespace
-# Based on: https://docs.github.com/en/actions/tutorials/use-actions-runner-controller/quickstart
+#
+# NOTE: We define the full dind setup manually instead of using
+# containerMode.type: dind because the chart ignores initContainer
+# overrides when containerMode is set, making it impossible to
+# customize the dind startup probe timeout.
 
-# GitHub configuration - repo-level (personal account, org-level not supported)
 githubConfigUrl: "https://github.com/amerenda/k3s-dean-gitops"
-
-# Runner scale set name (used as runs-on in workflows)
-# This must match the runs-on label in GitHub Actions workflows
 runnerScaleSetName: arc-runner-set
-
-# GitHub App authentication
-# Reference existing secret created by ExternalSecret
-# The secret 'controller-manager' in arc-runners namespace contains:
-# - github_app_id
-# - github_app_installation_id
-# - github_app_private_key
 githubConfigSecret: controller-manager
 
-# Controller service account configuration
-# Explicitly set to avoid lookup issues during Helm template rendering
-# Service account name matches the Helm release name (ArgoCD application name)
 controllerServiceAccount:
-  name: infra-arc-controller  # Helm release name from ArgoCD application
-  namespace: arc-systems  # Controller namespace
+  name: infra-arc-controller
+  namespace: arc-systems
 
-# Autoscaling configuration
 minRunners: 1
 maxRunners: 3
 
-# Container mode - use dind (Docker-in-Docker) for container jobs
-containerMode:
-  type: dind
-
-# Template specification for runner pods
 template:
   spec:
     securityContext:
       fsGroup: 1000
+    restartPolicy: Never
     initContainers:
+      - name: init-dind-externals
+        image: ghcr.io/actions/actions-runner:latest
+        command: ["cp"]
+        args: ["-r", "/home/runner/externals/.", "/home/runner/tmpDir/"]
+        volumeMounts:
+          - name: dind-externals
+            mountPath: /home/runner/tmpDir
       - name: dind
         image: docker:dind
+        restartPolicy: Always
+        args:
+          - dockerd
+          - --host=unix:///var/run/docker.sock
+          - --group=$(DOCKER_GROUP_GID)
+        env:
+          - name: DOCKER_GROUP_GID
+            value: "123"
+        securityContext:
+          privileged: true
         startupProbe:
           exec:
             command: ["docker", "info"]
@@ -47,6 +49,13 @@ template:
           periodSeconds: 5
           timeoutSeconds: 10
           failureThreshold: 24
+        volumeMounts:
+          - name: work
+            mountPath: /home/runner/_work
+          - name: dind-sock
+            mountPath: /var/run
+          - name: dind-externals
+            mountPath: /home/runner/externals
     containers:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest
@@ -67,6 +76,17 @@ template:
               secretKeyRef:
                 name: runner-ci-credentials
                 key: GITOPS_PAT
+        volumeMounts:
+          - name: work
+            mountPath: /home/runner/_work
+          - name: dind-sock
+            mountPath: /var/run
+    volumes:
+      - name: dind-sock
+        emptyDir: {}
+      - name: dind-externals
+        emptyDir: {}
+      - name: work
+        emptyDir: {}
 
-# Namespace override
 namespaceOverride: arc-runners
