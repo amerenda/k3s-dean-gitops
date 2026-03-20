@@ -1,0 +1,39 @@
+External Secrets Operator with Bitwarden Integration
+====================================================
+
+The External Secrets Operator has been deployed with Bitwarden integration.
+
+Next Steps:
+-----------
+
+1. Create your Bitwarden credentials secret:
+   ```bash
+   # Edit the secret file and add your raw Bitwarden access token
+   nano ../../bootstrap/bitwarden-credentials-secret.yaml
+   # Replace the token with your actual Bitwarden access token
+   
+   # Apply the secret (Kubernetes will handle base64 encoding automatically)
+   kubectl apply -f ../../bootstrap/bitwarden-credentials-secret.yaml
+   ```
+
+2. The Bitwarden SecretStore will be automatically deployed:
+   ```bash
+   # The SecretStore is automatically deployed by ArgoCD
+   # No manual steps needed - it's included in the Helm chart
+   ```
+
+3. Verify the deployment:
+   ```bash
+   kubectl get pods -n default
+   kubectl get secretstore -n default
+   ```
+
+3. Create your first ExternalSecret:
+   ```bash
+   # Copy the example
+   cp example-externalsecret.yaml my-secret.yaml
+   # Edit the file with your Bitwarden secret IDs and properties
+   kubectl apply -f my-secret.yaml
+   ```
+
+For more information, see the README.md file in this directory.

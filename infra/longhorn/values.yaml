@@ -1,0 +1,76 @@
+# Longhorn Helm Chart Values
+
+# Install CRDs automatically
+installCRDs: true
+
+# Global tolerations and node selector for Longhorn components
+tolerations:
+  - key: "longhorn"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+
+nodeSelector:
+  longhorn-storage: "true"
+
+# Longhorn configuration
+longhorn:
+  # Enable Longhorn manager
+  manager:
+    enabled: true
+    replicas: 1
+    
+  # Storage class configuration
+  storageClass:
+    name: longhorn
+    defaultClass: true
+    reclaimPolicy: Delete
+    allowVolumeExpansion: true
+    volumeBindingMode: Immediate
+    
+  # Resource limits for Pi hardware
+  resources:
+    manager:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    ui:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+        
+  settings:
+    default-replica-count: "3"
+    system-managed-components-node-selector: "longhorn-storage=true"
+    replica-auto-balance: "disabled"
+    concurrent-replica-rebuild-per-node-limit: "2"
+    concurrent-automatic-engine-upgrade-per-node-limit: "1"
+    disable-scheduling-on-cordoned-node: "true"
+    node-drain-policy: "block-if-contains-last-replica"
+    create-default-disk-labeled-nodes: "true"
+    replica-soft-anti-affinity: "false"
+    replica-hard-anti-affinity: "false"
+    kubelet-root-dir: "/var/lib/rancher/k3s/agent/kubelet"
+
+# Disable pre-upgrade hook to avoid service account dependency issues
+preUpgradeChecker:
+  jobEnabled: false
+
+defaultBackupStore:
+  backupTarget: s3://amerenda-backups@us/k3s/dean
+  backupTargetCredentialSecret: gcs-backup-credentials
+  pollInterval: 300
+
+service:
+  ui:
+    type: LoadBalancer
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: longhorn.amer.home
+      external-dns.alpha.kubernetes.io/ttl: "1"
+      metallb.universe.tf/loadBalancerIPs: "10.100.20.202"

@@ -1,0 +1,17 @@
+---
+# Certificate for unifi.amer.home using self-signed issuer
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: unifi-amer-home-tls
+  namespace: unifi-network-application
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"  # After selfsigned-issuer ClusterIssuer (managed by helm chart)
+spec:
+  secretName: unifi-amer-home-tls
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - unifi.amer.home
+

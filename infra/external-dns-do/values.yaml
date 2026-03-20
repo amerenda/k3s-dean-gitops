@@ -1,0 +1,55 @@
+replicaCount: 1
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+provider:
+  name: digitalocean
+
+env:
+  - name: DO_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: do-dns-api-key
+        key: api-key
+
+# Only manage amer.dev records
+domainFilters:
+  - amer.dev
+
+sources:
+  - ingress
+  - service
+  - crd
+
+policy: sync
+interval: 5m
+minEventSyncInterval: 5m
+
+# Separate TXT owner ID from the amer.home instance to avoid conflicts
+txtOwnerId: "external-dns-do"
+txtPrefix: "do-"
+
+logLevel: info
+logFormat: text
+
+nodeSelector:
+  kubernetes.io/arch: arm64
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - external-dns-do
+        topologyKey: kubernetes.io/hostname

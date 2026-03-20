@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bind9
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: bind9
+  template:
+    metadata:
+      labels:
+        app: bind9
+      annotations:
+        # Reloader will automatically detect changes in ConfigMaps/Secrets
+        # with reloader.stakater.com/auto: "true" annotation (bind9-config has this)
+        reloader.stakater.com/search: "true"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - bind9
+              topologyKey: kubernetes.io/hostname
+      initContainers:
+      - name: init-zones
+        image: busybox
+        command: ["/bin/sh","-c"]
+        args:
+          - >
+            set -e;
+            mkdir -p /cache;
+            for f in /config/*.zone; do
+              base="$(basename "$f" .zone)";
+              [ -f "/cache/${base}.db" ] || cp "$f" "/cache/${base}.db";
+            done;
+        volumeMounts:
+        - name: zones
+          mountPath: /config
+        - name: cache
+          mountPath: /cache
+      - name: format-tsig
+        image: busybox
+        command: ["/bin/sh","-c"]
+        args:
+          - |
+            set -e;
+            RAW_KEY=$(cat /etc/bind/keys-raw/key.conf);
+            cat > /tmp/tsig/key.conf << EOF
+            key "externaldns-key." {
+                algorithm hmac-sha256;
+                secret "$RAW_KEY";
+            };
+            EOF
+        volumeMounts:
+        - name: tsig-raw
+          mountPath: /etc/bind/keys-raw
+        - name: tsig
+          mountPath: /tmp/tsig
+      containers:
+      - name: bind9
+        image: ubuntu/bind9:latest
+        ports:
+        - name: dns-tcp
+          containerPort: 53
+          protocol: TCP
+        - name: dns-udp
+          containerPort: 53
+          protocol: UDP
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        volumeMounts:
+        - name: conf
+          mountPath: /etc/bind
+        - name: zones
+          mountPath: /var/lib/bind
+        - name: cache
+          mountPath: /var/cache/bind
+        - name: tsig
+          mountPath: /etc/bind/keys
+        livenessProbe:
+          tcpSocket: { port: 53 }
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket: { port: 53 }
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: conf
+        configMap:
+          name: bind9-config
+          items:
+          - key: named.conf
+            path: named.conf
+      - name: zones
+        configMap:
+          name: bind9-config
+          items:
+          - { key: merenda.home.arpa.zone,           path: merenda.home.arpa.zone }
+          # amer.local removed
+          - { key: amer.home.zone,                   path: amer.home.zone }
+          - { key: 20.100.10.in-addr.arpa.zone,      path: 20.100.10.in-addr.arpa.zone }
+      - name: cache
+        emptyDir: {}
+      - name: tsig-raw
+        secret:
+          secretName: bind9-tsig
+      - name: tsig
+        emptyDir: {}

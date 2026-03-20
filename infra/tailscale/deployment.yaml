@@ -1,0 +1,177 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tailscale
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tailscale
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "create", "update", "patch"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "create", "patch"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tailscale
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tailscale
+subjects:
+- kind: ServiceAccount
+  name: tailscale
+  namespace: default
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tailscale
+  namespace: default
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+  selector:
+    matchLabels:
+      app: tailscale
+  template:
+    metadata:
+      labels:
+        app: tailscale
+    spec:
+      serviceAccountName: tailscale
+      # Use Pi-hole for DNS so .amer.home names resolve correctly through the exit node.
+      # Pi-hole forwards .amer.home to BIND9 (10.100.20.241) internally.
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - 10.100.20.240  # Pi-hole
+        searches:
+          - default.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+      # Prefer spreading replicas across nodes, but allow scheduling to proceed during updates
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - tailscale
+              topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: tailscale
+      containers:
+      - name: tailscale
+        image: tailscale/tailscale:latest
+        env:
+        - name: TS_FORCE_REAUTH
+          value: "false"
+        - name: TS_AUTH_ONCE
+          value: "false"
+        - name: TS_STATE_DIR
+          value: "/var/lib/tailscale"
+        - name: TS_ACCEPT_DNS
+          value: "true"
+        - name: TS_EXTRA_ARGS
+          value: "--advertise-routes=10.100.20.0/24 --advertise-tags=tag:inner-sanctum --advertise-exit-node"
+        - name: TS_AUTHKEY
+          valueFrom:
+            secretKeyRef:
+              name: tailscale-auth-key
+              key: authkey
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        command: ["/bin/sh"]
+        args: 
+        - "-c"
+        - |
+          export TS_HOSTNAME="${POD_NAME}"
+          # Enable IP forwarding for exit node
+          sysctl -w net.ipv4.ip_forward=1
+          sysctl -w net.ipv6.conf.all.forwarding=1
+          tailscaled --state=/var/lib/tailscale/tailscaled.state --statedir=/var/lib/tailscale &
+          PID=$!
+          sleep 5
+          if ! tailscale up --authkey="${TS_AUTHKEY}" --hostname="${TS_HOSTNAME}" --advertise-routes=10.100.20.0/24 --advertise-exit-node --accept-dns=true --reset=false; then
+            echo "tailscale up failed"
+            kill $PID
+            exit 1
+          fi
+          wait $PID
+        livenessProbe:
+          exec:
+            command:
+            - tailscale
+            - status
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - tailscale
+            - status
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          failureThreshold: 3
+        volumeMounts:
+        - name: tailscale-state
+          mountPath: /var/lib/tailscale
+        - name: dev-net-tun
+          mountPath: /dev/net/tun
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
+            - SYS_MODULE
+          privileged: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      volumes:
+      - name: tailscale-state
+        emptyDir: {}
+      - name: dev-net-tun
+        hostPath:
+          path: /dev/net/tun
+          type: CharDevice

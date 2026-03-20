@@ -1,0 +1,17 @@
+---
+# Static DNS record for murderbot in public amer.dev zone.
+# This creates murderbot.amer.dev → 10.100.20.19 in DigitalOcean DNS via external-dns-do.
+# Used by the moltbook ExternalName service so Traefik can resolve the backend
+# via public DNS (1.1.1.1/8.8.8.8) — the cluster nodes don't use internal BIND9 for amer.home.
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: murderbot-dev-static
+  namespace: default
+spec:
+  endpoints:
+    - dnsName: murderbot.amer.dev
+      recordType: A
+      targets:
+        - "10.100.20.19"
+      recordTTL: 300

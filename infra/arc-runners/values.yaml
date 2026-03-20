@@ -1,0 +1,79 @@
+# GitHub Actions Runner Scale Set Helm Chart Values
+# Deploy ARC runner scale set to arc-runners namespace
+# Based on: https://docs.github.com/en/actions/tutorials/use-actions-runner-controller/quickstart
+
+# GitHub configuration - repo-level (personal account, org-level not supported)
+githubConfigUrl: "https://github.com/amerenda/k3s-dean-gitops"
+
+# Runner scale set name (used as runs-on in workflows)
+# This must match the runs-on label in GitHub Actions workflows
+runnerScaleSetName: arc-runner-set
+
+# GitHub App authentication
+# Reference existing secret created by ExternalSecret
+# The secret 'controller-manager' in arc-runners namespace contains:
+# - github_app_id
+# - github_app_installation_id
+# - github_app_private_key
+githubConfigSecret: controller-manager
+
+# Controller service account configuration
+# Explicitly set to avoid lookup issues during Helm template rendering
+# Service account name matches the Helm release name (ArgoCD application name)
+controllerServiceAccount:
+  name: infra-arc-controller  # Helm release name from ArgoCD application
+  namespace: arc-systems  # Controller namespace
+
+# Runner scale set configuration
+autoscalingRunnerSet:
+  # Runner labels (must match runs-on in workflows)
+  runnerLabels:
+    - self-hosted
+    - linux
+    - arc-runner-set
+  
+  # Runner resources
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  
+  # Docker configuration for container jobs
+  dockerdWithinRunnerContainer: true
+  dockerEnabled: true
+
+# Autoscaling configuration (at root level, not under autoscalingRunnerSet)
+minRunners: 1
+maxRunners: 3
+
+# Container mode - use dind (Docker-in-Docker) for container jobs
+containerMode:
+  type: dind
+
+# Template specification for runner pods
+template:
+  spec:
+    securityContext:
+      fsGroup: 1000
+    containers:
+      - name: runner
+        env:
+          - name: DOCKERHUB_USERNAME
+            value: "amerenda"
+          - name: DOCKERHUB_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: runner-ci-credentials
+                key: DOCKERHUB_TOKEN
+          - name: GITOPS_PAT
+            valueFrom:
+              secretKeyRef:
+                name: runner-ci-credentials
+                key: GITOPS_PAT
+
+# Namespace override
+namespaceOverride: arc-runners
+

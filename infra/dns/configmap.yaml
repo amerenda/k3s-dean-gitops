@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bind9-config
+  namespace: default
+  annotations:
+    reloader.stakater.com/auto: "true"
+data:
+  named.conf: |
+    options {
+      directory "/var/cache/bind";
+      listen-on port 53 { any; };
+      allow-query { any; };
+      recursion no;
+      # optional hardening:
+      # allow-transfer { none; };
+      # allow-query-cache { none; };
+    };
+
+    include "/etc/bind/keys/key.conf";
+
+    zone "merenda.home.arpa" IN {
+      type master;
+      file "/var/cache/bind/merenda.home.arpa.db";
+      allow-update { key "externaldns-key."; };
+    };
+
+    // zone "amer.local" removed; using amer.home only
+
+    zone "amer.home" IN {
+      type master;
+      file "/var/cache/bind/amer.home.db";
+      allow-update { key "externaldns-key."; };
+      allow-transfer { key "externaldns-key."; };
+    };
+
+    zone "20.100.10.in-addr.arpa" IN {
+      type master;
+      file "/var/cache/bind/20.100.10.in-addr.arpa.db";
+      allow-update { key "externaldns-key."; };
+    };
+  merenda.home.arpa.zone: |
+    $TTL 3600
+    @   IN SOA ns1.merenda.home.arpa. hostmaster.merenda.home.arpa. (2025100401 60 30 604800 60)
+        IN NS ns1.merenda.home.arpa.
+    ns1 IN A 10.100.20.241
+  # amer.local.zone removed
+  amer.home.zone: |
+    $TTL 3600
+    @   IN SOA ns1.amer.home. hostmaster.amer.home. (2025100401 60 30 604800 60)
+        IN NS ns1.amer.home.
+    ns1   IN A 10.100.20.241
+    media IN A 10.100.20.25
+  20.100.10.in-addr.arpa.zone: |
+    $TTL 3600
+    @   IN SOA ns1.merenda.home.arpa. hostmaster.merenda.home.arpa. (2025100401 60 30 604800 60)
+        IN NS ns1.merenda.home.arpa.
+    241 IN PTR ns1.merenda.home.arpa.

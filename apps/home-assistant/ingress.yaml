@@ -1,0 +1,43 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homeassistant-ingress
+  namespace: home-assistant
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    external-dns.alpha.kubernetes.io/hostname: home.amer.home,ha.amer.home,homeassistant.amer.home
+    external-dns.alpha.kubernetes.io/ttl: "1"
+    external-dns.alpha.kubernetes.io/manage-record-types: "A"
+spec:
+  ingressClassName: infra-traefik
+  rules:
+  - host: home.amer.home
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: homeassistant
+            port:
+              number: 8123
+  - host: ha.amer.home
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: homeassistant
+            port:
+              number: 8123
+  - host: homeassistant.amer.home
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: homeassistant
+            port:
+              number: 8123

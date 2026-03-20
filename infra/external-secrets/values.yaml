@@ -1,0 +1,86 @@
+# External Secrets Operator Helm Chart Values
+# This file contains the configuration for the External Secrets Operator with Bitwarden SecretStore
+
+# Reloader: restart ESO when bitwarden-tls-certs secret changes (e.g. cert renewal)
+deploymentAnnotations:
+  reloader.stakater.com/search: "true"
+extraVolumes:
+  - name: bitwarden-tls-certs
+    secret:
+      secretName: bitwarden-tls-certs
+extraVolumeMounts:
+  - name: bitwarden-tls-certs
+    mountPath: /etc/bitwarden-ca
+    readOnly: true
+
+# Bitwarden SecretStore configuration
+remoteRef:
+  accessToken: "bitwarden-access-token"
+  property: "password"
+
+# Enable Bitwarden SDK Server
+bitwarden-sdk-server:
+  enabled: true
+  # Reloader: restart SDK server when bitwarden-tls-certs secret changes (e.g. cert renewal)
+  deploymentAnnotations:
+    secret.reloader.stakater.com/reload: "bitwarden-tls-certs"
+  # Enable TLS for secure communication
+  tls:
+    enabled: true
+    # Use cert-manager to generate certificates
+    certManager:
+      enabled: true
+      issuerRef:
+        name: selfsigned-issuer
+        kind: ClusterIssuer
+      # Certificate configuration for default namespace
+      certificate:
+        name: bitwarden-sdk-server-tls
+        namespace: default
+
+# External Secrets Operator configuration
+external-secrets:
+  # Install CRDs automatically
+  installCRDs: true
+  
+  # Service account configuration
+  serviceAccount:
+    create: true
+    name: external-secrets
+  
+  # RBAC configuration
+  rbac:
+    create: true
+  
+  # Webhook configuration
+  webhook:
+    enabled: true
+    port: 9443
+    tls:
+      enabled: true
+      certManager:
+        enabled: true
+        issuerRef:
+          name: selfsigned-issuer
+          kind: ClusterIssuer
+        certificate:
+          name: external-secrets-webhook-cert
+          namespace: default
+  
+  # Metrics configuration
+  metrics:
+    enabled: true
+    port: 8080
+    path: /metrics
+  
+  # Health check
+  health:
+    enabled: true
+    port: 8081
+    path: /healthz
+  
+  # Readiness check
+  readiness:
+    enabled: true
+    port: 8081
+    path: /readyz

@@ -1,0 +1,50 @@
+---
+# UniFi Controller Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: unifi-controller
+  namespace: unifi-network-application
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: unifi.amer.home
+    external-dns.alpha.kubernetes.io/ttl: "1"
+    external-dns.alpha.kubernetes.io/manage-record-types: "A"
+spec:
+  loadBalancerIP: 10.100.20.204
+  type: LoadBalancer
+  selector:
+    app: unifi-controller
+  ports:
+    - name: unifi-discovery
+      port: 10001
+      protocol: UDP
+      targetPort: 10001
+    - name: stun
+      port: 3478
+      protocol: UDP
+      targetPort: 3478
+    - name: syslog
+      port: 5514
+      protocol: UDP
+      targetPort: 5514
+    - name: https-ui
+      port: 8843
+      protocol: TCP
+      targetPort: 8843
+    - name: api
+      port: 8443
+      protocol: TCP
+      targetPort: 8443
+    - name: http-portal
+      port: 8880
+      protocol: TCP
+      targetPort: 8880
+    - name: controller
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - name: speed-test
+      port: 6789
+      protocol: TCP
+      targetPort: 6789
+

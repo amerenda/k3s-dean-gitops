@@ -1,0 +1,107 @@
+# Traefik Ingress Controller Configuration
+# Optimized for k3s on Raspberry Pi
+
+# Enable Traefik dashboard
+dashboard:
+  enabled: true
+  service:
+    type: LoadBalancer
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: traefik.amer.home
+      external-dns.alpha.kubernetes.io/ttl: "1"
+
+# Replica count for high availability
+replicaCount: 1
+
+# Resource limits for Raspberry Pi
+resources:
+  limits:
+    cpu: 200m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 64Mi
+
+# Enable metrics for monitoring
+metrics:
+  prometheus:
+    enabled: true
+
+# Global configuration
+globalArguments:
+  - "--global.checkNewVersion=false"
+  - "--global.sendAnonymousUsage=false"
+  - "--log.level=INFO"
+  - "--accesslog=true"
+  - "--api.dashboard=true"
+  - "--api.insecure=true"
+  - "--providers.kubernetesingress=true"
+  - "--providers.kubernetescrd=true"
+  - "--entrypoints.web.address=:80"
+  - "--entrypoints.websecure.address=:443"
+
+# Additional arguments for k3s optimization
+additionalArguments:
+  - "--serversTransport.insecureSkipVerify=true"
+
+# Provider configuration via Helm values (takes precedence over globalArguments flags)
+providers:
+  kubernetesIngress:
+    ingressClass: "infra-traefik"
+    allowExternalNameServices: true
+
+# Service configuration
+service:
+  type: LoadBalancer
+  # externalTrafficPolicy: Local preserves real source IPs through kube-proxy so
+  # Traefik middleware (e.g. ipAllowList) sees the actual client IP rather than a
+  # random node IP after SNAT. Required for Tailscale-based IP filtering.
+  spec:
+    externalTrafficPolicy: Local
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: traefik.amer.home
+    external-dns.alpha.kubernetes.io/ttl: "3600"
+    metallb.universe.tf/loadBalancerIPs: "10.100.20.203"
+
+# Pod disruption budget for high availability
+podDisruptionBudget:
+  enabled: false
+
+deployment:
+  strategy:
+    type: Recreate
+
+# Node selector for Raspberry Pi nodes
+nodeSelector:
+  kubernetes.io/arch: arm64
+
+# Tolerations for any taints
+tolerations: []
+
+# Affinity for better distribution
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - traefik
+        topologyKey: kubernetes.io/hostname
+
+# Security context
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 65532
+
+# Persistence disabled — all TLS is managed by cert-manager, not Traefik's built-in ACME.
+# This also prevents Longhorn RWO PVC deadlocks during rolling updates.
+persistence:
+  enabled: false

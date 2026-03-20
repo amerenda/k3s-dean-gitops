@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bind9-tsig-formatter
+  namespace: default
+data:
+  format-tsig.sh: |
+    #!/bin/bash
+    # This script formats the raw TSIG key into a proper BIND9 key configuration
+    RAW_KEY=$(cat /etc/bind/keys-raw/key.conf)
+    cat > /etc/bind/keys/key.conf << EOF
+    key "externaldns-key." {
+        algorithm hmac-sha256;
+        secret "$RAW_KEY";
+    };
+    EOF

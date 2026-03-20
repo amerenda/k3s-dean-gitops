@@ -1,0 +1,1010 @@
+---
+# Infrastructure: ArgoCD Config (resource exclusions override)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-argocd-config
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: infra/argocd-config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# ArgoCD App-of-Apps Root Application
+# This is the main application that manages all other applications in the cluster
+# TODO: Replace <REPLACE_ME> with your actual GitHub username/organization
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: default
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: .
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - IgnoreExtraneous=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Infrastructure: Flannel CNI
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-flannel
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"  # Install first - critical for networking
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: infra/flannel
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Infrastructure: Longhorn Storage
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-longhorn
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"  # Install after external-secrets (needs GCS credentials)
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: https://charts.longhorn.io
+      chart: longhorn
+      targetRevision: 1.10.0
+      helm:
+        valueFiles:
+          - $values/infra/longhorn/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      path: infra/longhorn/backups
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+  - group: "apiextensions.k8s.io"
+    kind: CustomResourceDefinition
+    name: engineimages.longhorn.io
+    jsonPointers:
+    - /spec/subresources
+    - /spec/preserveUnknownFields
+  - group: "apiextensions.k8s.io"
+    kind: CustomResourceDefinition
+    name: nodes.longhorn.io
+    jsonPointers:
+    - /spec/subresources
+    - /spec/preserveUnknownFields
+  - group: "apiextensions.k8s.io"
+    kind: CustomResourceDefinition
+    name: volumes.longhorn.io
+    jsonPointers:
+    - /spec/subresources
+    - /spec/preserveUnknownFields
+  - group: ""
+    kind: Service
+    name: longhorn-frontend
+    jsonPointers:
+    - /spec/ports/0/nodePort
+
+---
+# Infrastructure: External Secrets Operator
+# Deploys External Secrets Operator using Helm chart with custom templates
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-external-secrets
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"  # Install after cert-manager (needs TLS for Bitwarden)
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: https://charts.external-secrets.io
+      chart: external-secrets
+      targetRevision: 0.19.2
+      helm:
+        valueFiles:
+          - $values/infra/external-secrets/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      path: infra/external-secrets/templates
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Infrastructure: Monitoring Stack (Prometheus + Grafana)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-monitoring
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"  # Install last - depends on all infrastructure
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: "82.1.0"
+      helm:
+        valueFiles:
+          - $values/infra/monitoring/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      path: infra/monitoring/ingress
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      path: infra/monitoring/dashboards
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Application: Pi-hole DNS
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-pihole
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"  # Install after infrastructure (needs storage and secrets)
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  sources:
+    - repoURL: https://mojo2600.github.io/pihole-kubernetes/
+      chart: pihole
+      targetRevision: "2.34.0"
+      helm:
+        valueFiles:
+          - $values/apps/pihole/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      path: apps/pihole
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pihole
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  # The mojo2600/pihole chart hardcodes kubernetes.io/arch: arm64 in nodeSelector.
+  # We override it to {} in values.yaml but Helm's `with` block treats empty as falsy,
+  # so the chart's default wins. Ignore the field so our manual patch (no nodeSelector)
+  # is not overwritten by ArgoCD selfHeal.
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    name: app-pihole
+    jsonPointers:
+    - /spec/template/spec/nodeSelector
+
+---
+# Application: Home Assistant
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-home-assistant
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"  # Install after infrastructure (needs storage)
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  sources:
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      path: apps/home-assistant
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: home-assistant
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Application: Ecdysis (React frontend)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-ecdysis
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/ecdysis
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ecdysis
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Application: Moltbook (proxy to murderbot:3002 on the LAN)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-moltbook
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/moltbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: moltbook
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Application: UniFi Network Application
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-unifi-network-application
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"  # Install after infrastructure (needs storage)
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/unifi-network-application
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: unifi-network-application
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-tailscale
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"  # Install after infrastructure (needs secrets)
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: infra/tailscale
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Infrastructure: MetalLB Load Balancer
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-metallb
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"  # Install first - no dependencies
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: infra/metallb
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: metallb-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+      - IgnoreExtraneous=true
+      - ServerSideApply=true
+  ignoreDifferences:
+  - group: "apiextensions.k8s.io"
+    kind: CustomResourceDefinition
+    name: bgppeers.metallb.io
+    jsonPointers:
+    - /spec/conversion/webhook/clientConfig/caBundle
+
+---
+# Infrastructure: cert-manager
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-cert-manager
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"  # Install first - critical for TLS certificates
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: https://charts.jetstack.io
+      chart: cert-manager
+      targetRevision: v1.19.0
+      helm:
+        valueFiles:
+          - $values/infra/cert-manager/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Infrastructure: cert-manager External Resources
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-cert-manager-external
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"  # Install last - after all infrastructure is ready
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: infra/cert-manager
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Infrastructure: DNS (BIND9)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-dns
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"  # Install after external-secrets (needs TSIG key)
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: infra/dns
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Infrastructure: Traefik Ingress Controller
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-traefik
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"  # Install early - needed for ingress
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: https://traefik.github.io/charts
+      chart: traefik
+      targetRevision: 37.2.0
+      helm:
+        valueFiles:
+          - $values/infra/traefik/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Infrastructure: External DNS
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-external-dns
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"  # Install with DNS (needs BIND9 for TSIG)
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: https://kubernetes-sigs.github.io/external-dns/
+      chart: external-dns
+      targetRevision: 1.19.0
+      helm:
+        valueFiles:
+          - $values/infra/external-dns/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Infrastructure: External DNS (Digital Ocean — manages amer.dev public DNS)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-external-dns-do
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"  # After cert-manager-external (needs do-dns-api-key secret)
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: https://kubernetes-sigs.github.io/external-dns/
+      chart: external-dns
+      targetRevision: 1.19.0
+      helm:
+        releaseName: external-dns-do
+        valueFiles:
+          - $values/infra/external-dns-do/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Infrastructure: amer.dev Ingresses (ArgoCD + Longhorn, both in default namespace)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-ingresses
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"  # After cert-manager-external (needs letsencrypt-prod ClusterIssuer)
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: infra/ingresses
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Infrastructure: Reloader
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-reloader
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"  # Install early - useful for watching config changes
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: https://stakater.github.io/stakater-charts
+      chart: reloader
+      targetRevision: 2.2.3
+      helm:
+        valueFiles:
+          - $values/infra/reloader/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Infrastructure: GitHub Actions Runner Controller (ARC)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-arc-controller
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"  # Install early - needed for runners
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set-controller
+      path: .
+      targetRevision: 0.13.0
+      helm:
+        valueFiles:
+          - $values/infra/arc-controller/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      path: infra/arc-controller
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arc-systems
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+  - group: "apiextensions.k8s.io"
+    kind: CustomResourceDefinition
+    jsonPointers:
+    - /spec/preserveUnknownFields
+  - group: "external-secrets.io"
+    kind: ExternalSecret
+    name: controller-manager
+    jsonPointers:
+    - /spec/data/0/remoteRef/conversionStrategy
+    - /spec/data/0/remoteRef/decodingStrategy
+    - /spec/data/0/remoteRef/metadataPolicy
+    - /spec/data/1/remoteRef/conversionStrategy
+    - /spec/data/1/remoteRef/decodingStrategy
+    - /spec/data/1/remoteRef/metadataPolicy
+    - /spec/data/2/remoteRef/conversionStrategy
+    - /spec/data/2/remoteRef/decodingStrategy
+    - /spec/data/2/remoteRef/metadataPolicy
+
+---
+# Infrastructure: GitHub Actions Runner Scale Set
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-arc-runners
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"  # Install after controller and external-secrets
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
+      path: .
+      targetRevision: 0.13.0
+      helm:
+        valueFiles:
+          - $values/infra/arc-runners/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      path: infra/arc-runners
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arc-runners
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+  - group: "apiextensions.k8s.io"
+    kind: CustomResourceDefinition
+    jsonPointers:
+    - /spec/preserveUnknownFields
+  - group: "external-secrets.io"
+    kind: ExternalSecret
+    name: controller-manager
+    jsonPointers:
+    - /spec/data/0/remoteRef/conversionStrategy
+    - /spec/data/0/remoteRef/decodingStrategy
+    - /spec/data/0/remoteRef/metadataPolicy
+    - /spec/data/1/remoteRef/conversionStrategy
+    - /spec/data/1/remoteRef/decodingStrategy
+    - /spec/data/1/remoteRef/metadataPolicy
+    - /spec/data/2/remoteRef/conversionStrategy
+    - /spec/data/2/remoteRef/decodingStrategy
+    - /spec/data/2/remoteRef/metadataPolicy
+  - group: "actions.summerwind.dev"
+    kind: HorizontalRunnerAutoscaler
+    jsonPointers:
+    - /spec/scaleUpTriggers
+  - group: "actions.github.com"
+    kind: AutoscalingRunnerSet
+    jsonPointers:
+    - /status/pendingEphemeralRunners
+    - /status/currentRunners
+
+---
+# Application: LLM Manager (DaemonSet backend + UI + PostgreSQL on GPU nodes)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-llm-manager
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/llm-manager
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: llm-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Application: LLM Agents (Piper TTS agent in dedicated namespace)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-llm-agents
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/llm-agents
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: llm-agents
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

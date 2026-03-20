@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-ingress-amer-dev
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: grafana.amer.dev
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  ingressClassName: infra-traefik
+  tls:
+    - hosts:
+        - grafana.amer.dev
+      secretName: grafana-amer-dev-tls
+  rules:
+    - host: grafana.amer.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: infra-monitoring-grafana
+                port:
+                  number: 80

@@ -1,0 +1,6 @@
+# Ignore files with sensitive information
+bitwarden-secretstore.yaml
+bitwarden-credentials-secret.yaml
+
+# Note: bitwarden-secretstore.yaml is also configured with git update-index --skip-worktree
+# to prevent accidental commits of local changes

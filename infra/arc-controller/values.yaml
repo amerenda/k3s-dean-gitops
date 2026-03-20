@@ -1,0 +1,48 @@
+# GitHub Actions Runner Scale Set Controller Helm Chart Values
+# Deploy ARC controller to arc-systems namespace
+# Based on: https://docs.github.com/en/actions/tutorials/use-actions-runner-controller/quickstart
+
+# Override the default namespace
+namespaceOverride: arc-systems
+
+# Controller replica count
+replicaCount: 1
+
+# Image configuration
+image:
+  repository: ghcr.io/actions/gha-runner-scale-set-controller
+  pullPolicy: IfNotPresent
+  tag: ""  # Uses chart appVersion by default
+
+# Service account configuration
+serviceAccount:
+  create: true
+  name: ""  # Auto-generated if not set
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+    - ALL
+
+# Pod security context
+podSecurityContext:
+  fsGroup: 1000
+
+# Resource limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+# Logging
+flags:
+  logLevel: "info"
+
+# Watch all namespaces (set to namespace name to watch single namespace)
+# watchSingleNamespace: ""

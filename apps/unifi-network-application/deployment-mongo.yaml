@@ -1,0 +1,93 @@
+---
+# MongoDB Deployment (Official MongoDB container)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unifi-db
+  namespace: unifi-network-application
+spec:
+  replicas: 1
+  progressDeadlineSeconds: 600
+  revisionHistoryLimit: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  selector:
+    matchLabels:
+      app: unifi-db
+  template:
+    metadata:
+      labels:
+        app: unifi-db
+    spec:
+      securityContext:
+        fsGroup: 999
+      initContainers:
+        - name: fix-permissions
+          image: mongo:4.4.10
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            privileged: true
+          command:
+            - /bin/bash
+            - -c
+            - |
+              echo "[DEBUG] fix-permissions initContainer started as user $(id -u):$(id -g)."
+              echo "[DEBUG] Current ownership in /data/db:"
+              ls -la /data/db || true
+
+              echo "[DEBUG] Setting everything wide open with chown/chmod."
+              chown -R mongodb:mongodb /data/db || true
+              chmod -R 0755 /data/db || true
+
+              echo "[DEBUG] Post-chown/chmod listing:"
+              ls -la /data/db
+              echo "[DEBUG] fix-permissions complete. Next container..."
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+
+      containers:
+        - name: mongo
+          image: mongo:4.4.10
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 999
+            runAsGroup: 999
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: "root"
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: unifi-mongo-credentials
+                  key: password
+            - name: MONGO_INITDB_DATABASE
+              value: "unifi"
+
+          args:
+            - --bind_ip_all
+
+          resources: {}
+
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+            - name: mongo-init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+
+      volumes:
+        - name: mongo-data
+          persistentVolumeClaim:
+            claimName: mongo-data
+        - name: mongo-init-scripts
+          configMap:
+            name: mongo-init-grant
+            items:
+              - key: zzz-grant-unifi-stat.sh
+                path: zzz-grant-unifi-stat.sh
+

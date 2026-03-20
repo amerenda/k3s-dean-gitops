@@ -1,0 +1,98 @@
+# External DNS Helm Chart Values
+# Official external-dns chart configuration for BIND9 integration
+
+# Replica count
+replicaCount: 1
+
+# Service account configuration
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+# Service monitor for Prometheus
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Rolling update strategy
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 1
+
+# Pod anti-affinity for high availability
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - external-dns
+        topologyKey: kubernetes.io/hostname
+
+# External DNS configuration
+provider:
+  name: rfc2136
+
+# Extra arguments for RFC2136 provider
+extraArgs:
+  - --rfc2136-host=bind9.default.svc.cluster.local
+  - --rfc2136-port=53
+  - --rfc2136-zone=amer.home
+  - --rfc2136-tsig-secret-alg=hmac-sha256
+  - --rfc2136-tsig-axfr
+
+# Environment variables for TSIG secret
+env:
+  - name: "EXTERNAL_DNS_RFC2136_TSIG_SECRET"
+    valueFrom:
+      secretKeyRef:
+        name: bind9-tsig
+        key: key.conf
+  - name: "EXTERNAL_DNS_RFC2136_TSIG_KEYNAME"
+    value: "externaldns-key."
+
+# Domain filters
+domainFilters:
+  - amer.home
+# Exclude domains
+excludeDomains: []
+
+# DNS record types to manage
+sources:
+  - service
+  - node
+  - pod
+  - ingress
+  - crd
+
+# Policy for DNS record management
+# sync: Creates, updates, and deletes DNS records to match Kubernetes resources
+policy: sync
+
+# Sync intervals
+interval: 5m
+minEventSyncInterval: 5m
+
+# TXT record configuration
+txtOwnerId: "external-dns"
+txtPrefix: ""
+
+# Log level
+logLevel: info
+logFormat: text

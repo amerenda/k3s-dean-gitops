@@ -1,0 +1,111 @@
+# kube-prometheus-stack Helm Values
+# Monitoring stack for K3s on Raspberry Pi
+
+# --- AlertManager: disabled ---
+alertmanager:
+  enabled: false
+
+# --- Prometheus ---
+prometheus:
+  prometheusSpec:
+    retention: 7d
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+# --- Grafana (ClusterIP; exposed via Ingress with TLS below) ---
+grafana:
+  # Required for browser login when accessed via Ingress (cookies/redirects)
+  grafana.ini:
+    server:
+      root_url: https://grafana.amer.home
+      domain: grafana.amer.home
+  # Explicit Prometheus URL so Grafana can reach Prometheus (chart default can be wrong)
+  sidecar:
+    datasources:
+      url: "http://infra-monitoring-kube-prom-prometheus:9090"
+  # Recreate strategy so only one pod uses the RWO PVC at a time (avoids Multi-Attach)
+  deploymentStrategy:
+    type: Recreate
+  service:
+    type: ClusterIP
+  persistence:
+    enabled: true
+    storageClassName: longhorn
+    accessModes: ["ReadWriteOnce"]
+    size: 2Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  defaultDashboardsEnabled: true
+  defaultDashboardsTimezone: America/New_York
+
+# --- Prometheus Operator ---
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# --- node-exporter ---
+prometheus-node-exporter:
+  tolerations:
+    - key: "longhorn"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
+# --- kube-state-metrics ---
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# --- Disabled K3s-inaccessible components ---
+# K3s binds these to localhost; Prometheus cannot scrape them from the cluster.
+kubeProxy:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+# Kubelet metrics (port 10250) are not reachable from pods on K3s; use node-exporter for node metrics.
+kubelet:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+defaultRules:
+  rules:
+    kubelet: false

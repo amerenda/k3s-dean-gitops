@@ -1,0 +1,36 @@
+# Wildcard certificate for amer.dev
+# Temporarily disabled to avoid DigitalOcean API rate limits
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: amer-dev-wildcard
+#   namespace: default
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "22"  # After ClusterIssuer is created
+# spec:
+#   secretName: amer-dev-wildcard-tls
+#   issuerRef:
+#     name: letsencrypt-prod
+#     kind: ClusterIssuer
+#   dnsNames:
+#   - "*.amer.dev"
+#   - "amer.dev"
+
+---
+# Wildcard certificate for amerenda.dev
+# Temporarily disabled to avoid DigitalOcean API rate limits
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: amerenda-dev-wildcard
+#   namespace: default
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "22"  # After ClusterIssuer is created
+# spec:
+#   secretName: amerenda-dev-wildcard-tls
+#   issuerRef:
+#     name: letsencrypt-prod
+#     kind: ClusterIssuer
+#   dnsNames:
+#   - "*.amerenda.dev"
+#   - "amerenda.dev"

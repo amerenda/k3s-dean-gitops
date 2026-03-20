@@ -1,0 +1,206 @@
+name: Home Assistant Configuration Check
+
+on:
+  push:
+    # Run on main branch for HA config changes OR any branch when workflow file changes (for testing)
+    paths:
+      - 'gitops/apps/home-assistant/**'
+      - '.github/workflows/ha-config-check.yaml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'gitops/apps/home-assistant/**'
+      - '.github/workflows/ha-config-check.yaml'
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+jobs:
+  yaml-lint:
+    name: YAML Lint
+    runs-on: arc-runner-set
+    # Run on PRs and pushes to main
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    container:
+      image: amerenda/k3s-runners:home-assistant
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run yamllint on raw configuration files
+        shell: bash
+        run: |
+          echo "Running yamllint on raw Home Assistant configuration files..."
+          echo ""
+          
+          # Build list of directories to check (only if they exist)
+          DIRS_TO_CHECK=()
+          if [ -d "gitops/apps/home-assistant/configuration/automations" ]; then
+            DIRS_TO_CHECK+=("gitops/apps/home-assistant/configuration/automations")
+          fi
+          if [ -d "gitops/apps/home-assistant/configuration/blueprints" ]; then
+            DIRS_TO_CHECK+=("gitops/apps/home-assistant/configuration/blueprints")
+          fi
+          if [ -d "gitops/apps/home-assistant/configuration/scripts" ]; then
+            DIRS_TO_CHECK+=("gitops/apps/home-assistant/configuration/scripts")
+          fi
+          if [ -d "gitops/apps/home-assistant/configuration/dashboards" ]; then
+            DIRS_TO_CHECK+=("gitops/apps/home-assistant/configuration/dashboards")
+          fi
+          if [ -d "gitops/apps/home-assistant/configuration/helpers/input_text" ]; then
+            DIRS_TO_CHECK+=("gitops/apps/home-assistant/configuration/helpers/input_text")
+          fi
+          if [ -d "gitops/apps/home-assistant/configuration/helpers/generated" ]; then
+            DIRS_TO_CHECK+=("gitops/apps/home-assistant/configuration/helpers/generated")
+          fi
+          
+          if [ ${#DIRS_TO_CHECK[@]} -eq 0 ]; then
+            echo "No directories found to lint."
+            exit 0
+          fi
+          
+          echo "Checking directories: ${DIRS_TO_CHECK[*]}"
+          echo ""
+          
+          # Capture yamllint output and exit code properly
+          set +e
+          yamllint -c .yamllint.yaml "${DIRS_TO_CHECK[@]}" 2>&1 | tee /tmp/yamllint-output.txt
+          YAMLLINT_EXIT=${PIPESTATUS[0]}
+          set -e
+          
+          # Check if there were any errors in the output (even if exit code is 0)
+          ERROR_COUNT=0
+          if [ -f /tmp/yamllint-output.txt ]; then
+            ERROR_COUNT=$(grep -c "error:" /tmp/yamllint-output.txt || true)
+          fi
+          
+          # Fail if yamllint exited with error OR if we found error messages
+          if [ $YAMLLINT_EXIT -ne 0 ] || [ "$ERROR_COUNT" -gt 0 ]; then
+            echo ""
+            echo "::error::YAML linting found errors in raw configuration files. See details below."
+            echo ""
+            echo "=== YAML Linting Errors ==="
+            echo ""
+            
+            # Track unique files with errors
+            declare -A files_with_errors
+            
+            # Parse yamllint output and format errors
+            while IFS= read -r line; do
+              # Match yamllint format: file:line:col: level: message
+              if [[ "$line" =~ ^([^:]+):([0-9]+):([0-9]+):[[:space:]]*(warning|error):[[:space:]]*(.+)$ ]]; then
+                file="${BASH_REMATCH[1]}"
+                line_num="${BASH_REMATCH[2]}"
+                col_num="${BASH_REMATCH[3]}"
+                level="${BASH_REMATCH[4]}"
+                message="${BASH_REMATCH[5]}"
+                
+                # Track this file
+                files_with_errors["$file"]=1
+                
+                # Create GitHub annotation
+                echo "::${level} file=${file},line=${line_num},col=${col_num}::${file}:${line_num}:${col_num}: ${message}"
+                
+                # Print formatted error
+                echo "📄 ${file}"
+                echo "   Line ${line_num}, Column ${col_num}: ${message}"
+                
+                # Provide helpful hints
+                case "$message" in
+                  *"indentation"*)
+                    echo "   💡 Hint: Use 2 spaces for indentation (not tabs)"
+                    ;;
+                  *"line too long"*|*"line-length"*)
+                    echo "   💡 Hint: Line exceeds 120 characters. Break it into multiple lines"
+                    ;;
+                  *"trailing spaces"*)
+                    echo "   💡 Hint: Remove trailing whitespace"
+                    ;;
+                  *"document-start"*)
+                    echo "   💡 Hint: Add '---' at the start of the file if needed"
+                    ;;
+                  *"duplication"*|*"key-duplicates"*)
+                    echo "   💡 Hint: Check for duplicate keys in the same section"
+                    ;;
+                  *"truthy"*)
+                    echo "   💡 Hint: Quote values like 'yes', 'no', 'on', 'off' if they're not booleans"
+                    ;;
+                  *"empty-lines"*)
+                    echo "   💡 Hint: Too many empty lines (max 2 consecutive)"
+                    ;;
+                esac
+                echo ""
+              # Handle config errors (invalid config messages)
+              elif [[ "$line" =~ "invalid config" ]] || [[ "$line" =~ "unknown option" ]] || [[ "$line" =~ "no such rule" ]]; then
+                echo "::error::${line}"
+                echo "⚠️  Configuration Error: ${line}"
+                echo ""
+              fi
+            done < /tmp/yamllint-output.txt
+            
+            echo "=== Files with errors ==="
+            for file in "${!files_with_errors[@]}"; do
+              echo "  - ${file}"
+            done | sort
+            echo ""
+            echo "=== End of YAML Linting Errors ==="
+            exit 1
+          else
+            echo ""
+            echo "✅ YAML linting passed - no errors found in raw configuration files!"
+          fi
+      
+      - name: Validate generated ConfigMaps (basic YAML syntax only)
+        shell: bash
+        run: |
+          echo "Validating generated ConfigMaps for basic YAML syntax..."
+          echo ""
+          
+          # Find all ConfigMap files
+          CONFIGMAP_FILES=$(find gitops/apps/home-assistant/ -name "*-configmap.yaml" -type f 2>/dev/null || true)
+          
+          if [ -z "$CONFIGMAP_FILES" ]; then
+            echo "No ConfigMap files found to validate."
+            exit 0
+          fi
+          
+          # Use yamllint with a minimal config that only checks syntax (no style rules)
+          cat > /tmp/configmap-lint.yaml << 'EOF'
+          extends: default
+          rules:
+            # Only check for syntax errors, not style
+            line-length: disable
+            comments: disable
+            indentation: disable
+            truthy: disable
+            brackets: disable
+            braces: disable
+            commas: disable
+            colons: disable
+            hyphens: disable
+            trailing-spaces: disable
+            empty-lines: disable
+            document-start: disable
+            document-end: disable
+            quoted-strings: disable
+            octal-values: disable
+          EOF
+          
+          set +e
+          ERROR_COUNT=0
+          for file in $CONFIGMAP_FILES; do
+            echo "Checking: ${file}"
+            if ! yamllint -c /tmp/configmap-lint.yaml "$file" 2>&1; then
+              echo "::error file=${file}::ConfigMap ${file} has YAML syntax errors"
+              ERROR_COUNT=$((ERROR_COUNT + 1))
+            fi
+          done
+          set -e
+          
+          if [ $ERROR_COUNT -gt 0 ]; then
+            echo ""
+            echo "::error::Found ${ERROR_COUNT} ConfigMap file(s) with YAML syntax errors"
+            exit 1
+          else
+            echo ""
+            echo "✅ All ConfigMaps have valid YAML syntax!"
+          fi

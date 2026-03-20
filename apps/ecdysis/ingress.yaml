@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: moltbook-manager-ingress
+  namespace: ecdysis
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.middlewares: moltbook-manager-tailscale-only@kubernetescrd
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: moltbook-manager.amer.dev
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  ingressClassName: infra-traefik
+  tls:
+    - hosts:
+        - moltbook-manager.amer.dev
+      secretName: moltbook-manager-amer-dev-tls
+  rules:
+    - host: moltbook-manager.amer.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: moltbook-frontend
+                port:
+                  number: 80

@@ -1,0 +1,24 @@
+---
+# Dummy service whose sole purpose is to create murderbot.amer.dev → 10.100.20.19
+# in DigitalOcean DNS via external-dns-do (service source + target annotation).
+#
+# The moltbook ExternalName service uses murderbot.amer.dev as its backend hostname.
+# Since k3s cluster nodes use 1.1.1.1/8.8.8.8 (not amer.home BIND9), Traefik
+# can only resolve it via public DNS — hence the amer.dev record.
+apiVersion: v1
+kind: Service
+metadata:
+  name: murderbot-dev-dns
+  namespace: default
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: murderbot.amer.dev
+    external-dns.alpha.kubernetes.io/target: "10.100.20.19"
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector: {}
+  ports:
+    - name: placeholder
+      port: 80
+      protocol: TCP

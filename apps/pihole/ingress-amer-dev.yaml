@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pihole-ingress-amer-dev
+  namespace: pihole
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: pihole.amer.dev
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  ingressClassName: infra-traefik
+  tls:
+    - hosts:
+        - pihole.amer.dev
+      secretName: pihole-amer-dev-tls
+  rules:
+    - host: pihole.amer.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app-pihole-web
+                port:
+                  number: 80

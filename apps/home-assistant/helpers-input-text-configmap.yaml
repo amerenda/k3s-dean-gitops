@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homeassistant-helpers-input-text
+data:
+  alex_last_significant_zone.yaml: |
+    alex_last_significant_zone:
+      name: "Alex Last Significant Zone"
+      initial: "home"
+      max: 50
+    
+  event_image_location.yaml: |
+    # Global input_text helper for pet detection event location
+    event_image_location:
+      name: "Event Image Location Text"
+      initial: ""
+      max: 50
+  event_image_timestamp.yaml: |
+    # Global input_text helper for pet detection event timestamp
+    event_image_timestamp:
+      name: "Event Image Timestamp Text"
+      initial: ""
+      max: 20
+  intruder_image_location.yaml: |
+    # Global input_text helper for intruder detection event location
+    intruder_image_location:
+      name: "Intruder Image Location"
+      initial: ""
+      max: 50
+    
+  intruder_image_timestamp.yaml: |
+    # Global input_text helper for intruder detection event timestamp
+    intruder_image_timestamp:
+      name: "Intruder Image Timestamp"
+      initial: ""
+      max: 20
+    
+  scene_name_bathroom.yaml: |
+    scene_name_bathroom:
+      name: "Bathroom Scene Name"
+      initial: ""
+      max: 100
+    
+  scene_name_bedroom.yaml: |
+    scene_name_bedroom:
+      name: "Bedroom Scene Name"
+      initial: ""
+      max: 100
+    
+  scene_name_hallway.yaml: |
+    scene_name_hallway:
+      name: "Hallway Scene Name"
+      initial: ""
+      max: 100
+    
+  scene_name_kitchen.yaml: |
+    scene_name_kitchen:
+      name: "Kitchen Scene Name"
+      initial: ""
+      max: 100
+    
+  scene_name_living_room.yaml: |
+    scene_name_living_room:
+      name: "Living Room Scene Name"
+      initial: ""
+      max: 100
+    
+  set_value.yaml: |
+    # Global input_text helper for set_value automation
+    set_value:
+      name: "Set Value"
+      initial: ""
+      max: 255

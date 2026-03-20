@@ -1,0 +1,16 @@
+---
+# Static DNS record for murderbot — managed by external-dns via DNSEndpoint CRD.
+# This injects the record dynamically into BIND9 without needing to edit the
+# static zone file (which only takes effect on first pod start).
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: murderbot-static
+  namespace: default
+spec:
+  endpoints:
+    - dnsName: murderbot.amer.home
+      recordType: A
+      targets:
+        - "10.100.20.19"
+      recordTTL: 300

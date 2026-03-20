@@ -1,0 +1,29 @@
+---
+# TLS Certificate for Bitwarden SDK Server with CA certificate included
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: bitwarden-sdk-server-tls
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  secretName: bitwarden-tls-certs
+  secretTemplate:
+    annotations:
+      reloader.stakater.com/match: "true"
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - bitwarden-sdk-server.default.svc.cluster.local
+    - bitwarden-sdk-server.default.svc
+    - bitwarden-sdk-server
+  commonName: bitwarden-sdk-server.default.svc.cluster.local
+  # Setting isCA: true makes cert-manager include ca.crt in the generated secret
+  isCA: true
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth

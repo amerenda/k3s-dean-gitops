@@ -1,0 +1,20 @@
+name: Validate manifests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'infra/**'
+      - 'apps/**'
+      - 'root-app.yaml'
+
+jobs:
+  validate:
+    runs-on: arc-runner-set
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate YAML
+        run: |
+          find . -name '*.yaml' -o -name '*.yml' | head -200 | while read f; do
+            python3 -c "import yaml; yaml.safe_load(open('$f'))" 2>/dev/null || echo "INVALID: $f"
+          done

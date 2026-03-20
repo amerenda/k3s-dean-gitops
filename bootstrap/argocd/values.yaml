@@ -1,0 +1,99 @@
+# ArgoCD Helm Values for Home k3s Cluster
+# This configuration sets up ArgoCD with LoadBalancer access and optimized settings
+
+# Namespace configuration
+namespace: default
+
+# Server configuration
+server:
+  service:
+    type: LoadBalancer
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: argocd.amer.home,argocd.amer.local
+      external-dns.alpha.kubernetes.io/ttl: "300"
+  extraArgs:
+    - "--insecure"
+  # Disable TLS for local network access
+  config:
+    url: "https://argocd.amer.home"
+    application.instanceLabelKey: "argocd.argoproj.io/instance"
+    exec.enabled: "true"
+
+# Repository server configuration
+repoServer:
+  replicas: 1
+  # Resource limits for Pi hardware
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# Controller configuration
+controller:
+  replicas: 1
+  # Resource limits for Pi hardware
+  # Increased memory limits due to OOM issues with multiple applications
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "100m"
+    limits:
+      memory: "1536Mi"  # 1.5Gi - increased from 512Mi to handle ~17 applications
+      cpu: "500m"
+
+# Application controller configuration
+configs:
+  cm:
+    # Increase timeout for slower Pi hardware
+    timeout.reconciliation: "120s"
+    # Disable TLS verification for local repos
+    tls.config: |
+      insecure: true
+    # Repository connection timeout
+    repo.server.timeout: "60s"
+    # Application sync timeout
+    application.instanceLabelKey: "argocd.argoproj.io/instance"
+
+# Redis configuration (optional, uses in-memory by default)
+redis:
+  enabled: true
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+# Dex configuration (disabled for local setup)
+dex:
+  enabled: false
+
+# Notifications (disabled for minimal setup)
+notifications:
+  enabled: false
+
+# ApplicationSet controller (enabled for app-of-apps)
+applicationSet:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+# Global configuration
+global:
+  # Disable TLS for local network
+  domain: "argocd.amer.home"
+  # Security context for Pi hardware
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    fsGroup: 999

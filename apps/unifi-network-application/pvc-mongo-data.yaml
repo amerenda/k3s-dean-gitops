@@ -1,0 +1,15 @@
+---
+# PersistentVolumeClaim for Mongo data
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-data
+  namespace: unifi-network-application
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: longhorn
+

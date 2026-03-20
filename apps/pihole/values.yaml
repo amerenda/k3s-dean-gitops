@@ -1,0 +1,142 @@
+# --- Pi-hole on K3s for your LAN ---
+
+# Admin password configuration
+adminPasswordExistingSecret: "pihole-admin"
+
+# DNS Service Configuration
+serviceDns:
+  type: LoadBalancer
+  loadBalancerIP: 10.100.20.240
+  annotations:
+    metallb.universe.tf/allow-shared-ip: "pihole"
+  externalTrafficPolicy: Local
+  port: 53
+
+# Web Service Configuration  
+serviceWeb:
+  type: LoadBalancer
+  loadBalancerIP: 10.100.20.242
+  annotations:
+    metallb.universe.tf/allow-shared-ip: "pihole"
+    external-dns.alpha.kubernetes.io/hostname: pihole.amer.home,pi.amer.home,pi-hole.amer.home
+    external-dns.alpha.kubernetes.io/ttl: "300"
+  externalTrafficPolicy: Cluster
+  port: 80
+
+persistentVolumeClaim:
+  enabled: true
+  storageClass: longhorn
+  accessModes: [ReadWriteOnce]
+  size: 10Gi
+
+# DNS Configuration
+dnsmasq:
+  upstreamServers:
+    - server=/amer.home/10.100.20.241
+    - server=/merenda.home.arpa/10.100.20.241
+  # Cache configuration
+  # Note: localTTL only affects /etc/hosts records, not upstream queries
+  # Setting cacheSize to 0 completely disables DNS caching
+  # This ensures all queries go to upstream (BIND9 for local, Cloudflare for external)
+  # Trade-off: No caching means more upstream queries but always fresh results
+  cacheSize: 0
+  negTTL: 0
+  localTTL: 0  # Only affects local /etc/hosts records
+  # Disable negative caching to force fresh lookups
+  noNegcache: true
+
+# Environment variables
+extraEnvVars:
+  DNSMASQ_LISTENING: "all"
+  TZ: "America/New_York"
+  FTLCONF_LOCAL_IPV4: "10.100.20.240"
+  PIHOLE_DNS_: "1.1.1.1;1.0.0.1;8.8.8.8;8.8.4.4"
+  # Disable DNS caching completely via FTL configuration
+  FTLCONF_dns_cache_size: "0"
+  # Cache settings for external domains (respect TTL from upstream, max 5 minutes)
+  CACHE_QUERY_MINIMUM_TTL: "0"
+  CACHE_QUERY_MAXIMUM_TTL: "300"
+
+# DoH (DNS over HTTPS) configuration
+doh:
+  enabled: true
+  pullPolicy: Always
+  envVars:
+    DOH_UPSTREAM: "https://1.1.1.1/dns-query"
+  # cloudflared was OOMKilling at 128Mi (59 restarts in logs). Bumped to 256Mi.
+  resources:
+    requests:
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
+# The chart defaults to nodeSelector: {kubernetes.io/arch: arm64} which blocks x86 nodes.
+# Clear it so murderbot (x86) is a valid scheduling target.
+nodeSelector: {}
+
+# Prefer murderbot (x86, 12 cores, 16GB) — critical DNS service needs headroom.
+# Falls back to any node (Pi or x86) automatically if murderbot is unavailable.
+# Pi-hole was logging "load avg 6-7 > 4 cores" and database lock errors on rpi5-1.
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - murderbot
+    # No requiredDuringSchedulingIgnoredDuringExecution — allows fallback to Pi nodes.
+
+# Pi-hole resources — bumped from 384Mi limit to handle real-world load on rpi5-1.
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+
+
+
+# Allowlist — domains Pi-hole should never block
+whitelist:
+  # Paramount+ - Core streaming / auth
+  - paramountplus.com
+  - cbsinteractive.com
+  - cbsivideo.com
+  - cbsi.com
+  # Paramount+ - CDN / video delivery
+  - airspace-cdn.cbsivideo.com
+  - airspace-f.cbsivideo.com
+  # Paramount+ - Analytics (required for playback)
+  - cbsinteractive.hb.omtrdc.net
+  - cbsi.com.ssl.sc.omtrdc.net
+  - doppler-client-events.cbsivideo.com
+  - doppler-tasks.cbsivideo.com
+  # Paramount+ - Ad infrastructure (required to unblock video)
+  - pubads.g.doubleclick.net
+  - s0.2mdn.net
+  - imasdk.googleapis.com
+  # Paramount+ - Measurement / metrics
+  - scorecardresearch.com
+  - conviva.com
+  - bam.nr-data.net
+  # Google Home / Chromecast - Connectivity and casting
+  - connectivitycheck.gstatic.com
+  - gstatic.com
+  - googleapis.com
+  - clients1.google.com
+  - clients2.google.com
+  - clients3.google.com
+  - clients4.google.com
+  - accounts.google.com
+  # Google Home / Chromecast - Device setup / discovery
+  - cloudconfig.googleapis.com
+  - notifications.google.com
+  - gcm.googleapis.com
+  - gcm-http.googleapis.com
+
+# Cloudflare for everything else

@@ -1,0 +1,12 @@
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: unifi-network-application
+  labels:
+    # Essentially disables PodSecurity for this namespace
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: privileged
+    pod-security.kubernetes.io/audit: privileged
+

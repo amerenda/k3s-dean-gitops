@@ -1,0 +1,16 @@
+---
+# MongoDB Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: unifi-db
+  namespace: unifi-network-application
+spec:
+  selector:
+    app: unifi-db
+  ports:
+    - name: mongodb
+      port: 27017
+      targetPort: 27017
+      protocol: TCP
+

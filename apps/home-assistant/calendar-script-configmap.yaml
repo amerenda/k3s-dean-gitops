@@ -1,0 +1,126 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: home-assistant-calendar-script
+  namespace: home-assistant
+  annotations:
+    reloader.stakater.com/auto: "false"  # Exclude from Reloader - only used by CronJob
+data:
+  download_calendar.sh: |
+    #!/bin/sh
+    set -e
+    
+    CALENDAR_URL="https://outlook.office365.com/owa/calendar/96b4509ebff1403fb979cc5d1a19b192@jainglobal.com/2ba2f72869cd482e99af95f77b227b7e17421443293132355961/calendar.ics"
+    OUTPUT_FILE="/config/www/calendar_cache/local_calendar.work.ics"
+    TEMP_FILE="${OUTPUT_FILE}.tmp"
+
+    # Ensure .storage directory exists
+    mkdir -p /config/www/calendar_cache
+    
+    echo "[Calendar-Cache] Starting calendar download from ${CALENDAR_URL}"
+    
+    # Download calendar to temporary file
+    if curl -f -s -S --max-time 30 -o "${TEMP_FILE}" "${CALENDAR_URL}"; then
+        # Verify it's a valid ICS file (check for BEGIN:VCALENDAR)
+        if head -n 1 "${TEMP_FILE}" | grep -q "BEGIN:VCALENDAR"; then
+            # Move file to final location atomically
+            mv "${TEMP_FILE}" "${OUTPUT_FILE}"
+            
+            echo "[Calendar-Cache] Successfully downloaded and cached calendar to ${OUTPUT_FILE}"
+            # Show file size for verification
+            ls -lh "${OUTPUT_FILE}"
+        else
+            echo "[Calendar-Cache] ERROR: Downloaded file does not appear to be a valid ICS file"
+            rm -f "${TEMP_FILE}"
+            exit 1
+        fi
+    else
+        echo "[Calendar-Cache] ERROR: Failed to download calendar from ${CALENDAR_URL}"
+        rm -f "${TEMP_FILE}"
+        exit 1
+    fi
+  filter_calendar.py: |
+    #!/usr/bin/env python3
+    """Filter ICS calendar events by date range to reduce file size and improve load times."""
+    import sys
+    import re
+    from datetime import datetime, timedelta
+    
+    if len(sys.argv) != 5:
+        print("Usage: filter_calendar.py <input_file> <output_file> <past_days> <future_days>")
+        sys.exit(1)
+    
+    input_file = sys.argv[1]
+    output_file = sys.argv[2]
+    past_days = int(sys.argv[3])
+    future_days = int(sys.argv[4])
+    
+    # Calculate date range
+    now = datetime.now()
+    min_date = now - timedelta(days=past_days)
+    max_date = now + timedelta(days=future_days)
+    
+    # Read the ICS file
+    with open(input_file, 'r', encoding='utf-8', errors='ignore') as f:
+        content = f.read()
+    
+    # Split into calendar header, events, and footer
+    calendar_parts = re.split(r'(BEGIN:VCALENDAR)', content, maxsplit=1, flags=re.IGNORECASE)
+    if len(calendar_parts) < 2:
+        print("ERROR: Invalid ICS file - no BEGIN:VCALENDAR found")
+        sys.exit(1)
+    
+    header = calendar_parts[0] + calendar_parts[1]
+    rest = calendar_parts[2] if len(calendar_parts) > 2 else ""
+    
+    # Extract all VEVENT blocks
+    events = re.findall(r'(BEGIN:VEVENT.*?END:VEVENT)', rest, flags=re.DOTALL)
+    
+    filtered_events = []
+    events_kept = 0
+    events_removed = 0
+    
+    for event in events:
+        # Extract DTSTART date
+        dtstart_match = re.search(r'DTSTART(?:;.*?)?:(.*)', event, re.MULTILINE)
+        if dtstart_match:
+            dtstart_str = dtstart_match.group(1).strip()
+            # Handle different date formats (YYYYMMDD, YYYYMMDDTHHMMSS, etc.)
+            try:
+                # Remove timezone suffix if present
+                dtstart_str = re.sub(r'[A-Z]$', '', dtstart_str)
+                
+                if 'T' in dtstart_str:
+                    # Date-time format: YYYYMMDDTHHMMSS or YYYYMMDDTHHMMSSZ
+                    event_date = datetime.strptime(dtstart_str[:15], '%Y%m%dT%H%M%S')
+                else:
+                    # Date-only format: YYYYMMDD
+                    event_date = datetime.strptime(dtstart_str[:8], '%Y%m%d')
+                
+                # Check if event is within date range
+                if min_date <= event_date <= max_date:
+                    filtered_events.append(event)
+                    events_kept += 1
+                else:
+                    events_removed += 1
+            except (ValueError, IndexError) as e:
+                # If date parsing fails, keep the event to be safe
+                filtered_events.append(event)
+                events_kept += 1
+        else:
+            # No DTSTART found, keep event to be safe
+            filtered_events.append(event)
+            events_kept += 1
+    
+    # Extract footer (everything after last END:VEVENT)
+    footer_match = re.search(r'(END:VCALENDAR.*?)$', rest, flags=re.DOTALL | re.IGNORECASE)
+    footer = footer_match.group(1) if footer_match else "\nEND:VCALENDAR\n"
+    
+    # Reconstruct calendar file
+    filtered_content = header + "\n".join(filtered_events) + "\n" + footer
+    
+    # Write filtered content
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(filtered_content)
+    
+    print(f"[Calendar-Cache] Filtered calendar: kept {events_kept} events, removed {events_removed} old/future events")

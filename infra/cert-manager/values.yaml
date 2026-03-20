@@ -1,0 +1,94 @@
+# cert-manager Helm Chart Values
+# This file contains the configuration for cert-manager v1.19.0
+
+# Global configuration
+global:
+  leaderElection:
+    namespace: default
+
+# Install CRDs automatically
+installCRDs: true
+
+# Image configuration
+image:
+  repository: quay.io/jetstack/cert-manager-controller
+  tag: v1.19.0
+  pullPolicy: IfNotPresent
+
+# Webhook configuration
+webhook:
+  image:
+    repository: quay.io/jetstack/cert-manager-webhook
+    tag: v1.19.0
+    pullPolicy: IfNotPresent
+  hostNetwork: false
+
+# CA Injector configuration
+cainjector:
+  image:
+    repository: quay.io/jetstack/cert-manager-cainjector
+    tag: v1.19.0
+    pullPolicy: IfNotPresent
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+# Resources
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Service account
+serviceAccount:
+  create: true
+  annotations: {}
+  # Additional RBAC permissions for DigitalOcean DNS validation
+  automountServiceAccountToken: true
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod labels
+podLabels: {}
+
+# Service annotations
+serviceAnnotations: {}
+
+# Service labels
+serviceLabels: {}
+
+# Extra arguments
+extraArgs: 
+  - --enable-certificate-owner-ref=true
+  - --max-concurrent-challenges=1
+  - --dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53
+  - --dns01-recursive-nameservers-only
+
+# Extra environment variables
+extraEnv: []
+
+# Note: extraVolumes and extraVolumeMounts are not supported in cert-manager v1.19.0
+# Use the official cert-manager chart configuration options instead
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+  maxUnavailable: 1

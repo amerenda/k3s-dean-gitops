@@ -1,0 +1,21 @@
+# CoreDNS stub zone for amer.dev
+# Bypasses the default resolver chain and queries 1.1.1.1 directly.
+# Required so all k8s pods can resolve *.amer.dev hostnames
+# (e.g. llm-manager-backend.amer.dev, moltbook-manager.amer.dev).
+#
+# Background: Debian's default nsswitch.conf has [NOTFOUND=return] after
+# mdns4_minimal, which short-circuits the lookup before the real DNS resolver
+# runs. CoreDNS's default forward goes to /etc/resolv.conf which may have the
+# same issue on nodes. This stub zone bypasses that entirely.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  amer.dev.server: |
+    amer.dev:53 {
+        forward . 1.1.1.1 1.0.0.1
+        cache 300
+        log
+    }

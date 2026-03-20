@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: moltbook-frontend
+  namespace: ecdysis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: moltbook-frontend
+  template:
+    metadata:
+      labels:
+        app: moltbook-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: amerenda/ecdysis:frontend-sha-placeholder
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi

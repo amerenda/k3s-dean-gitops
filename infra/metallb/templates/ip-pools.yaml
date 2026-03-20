@@ -1,0 +1,46 @@
+---
+# MetalLB IP Address Pools
+# Load Balancer IP Pool for general applications
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: loadbalancer-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 10.100.20.201-10.100.20.239
+  autoAssign: true
+
+---
+# DNS IP Pool for DNS applications
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: dns-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 10.100.20.240-10.100.20.250
+  autoAssign: false  # Manual assignment for DNS services
+
+---
+# L2 Advertisement for Load Balancer Pool
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: loadbalancer-advertisement
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - loadbalancer-pool
+
+---
+# L2 Advertisement for DNS Pool
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: dns-advertisement
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - dns-pool

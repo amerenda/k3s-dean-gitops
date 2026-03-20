@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: unifi-ingress-amer-dev
+  namespace: unifi-network-application
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: unifi.amer.dev
+    external-dns.alpha.kubernetes.io/ttl: "300"
+    # Tell Traefik the backend speaks HTTPS (UniFi on 8443 with self-signed cert)
+    # insecureSkipVerify is already set globally in traefik values
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+spec:
+  ingressClassName: infra-traefik
+  tls:
+    - hosts:
+        - unifi.amer.dev
+      secretName: unifi-amer-dev-tls
+  rules:
+    - host: unifi.amer.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: unifi-controller
+                port:
+                  number: 8443

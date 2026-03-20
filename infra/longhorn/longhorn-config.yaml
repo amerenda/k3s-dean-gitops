@@ -1,0 +1,99 @@
+# Longhorn Configuration for Raspberry Pi Cluster
+# This manifest applies the configuration changes made to optimize Longhorn
+# for a 2-node Raspberry Pi setup with archlinux excluded from storage
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: longhorn-storageclass-config
+  namespace: default
+data:
+  # Set default replica count to 2 (matching 2 storage nodes)
+  default-replica-count: "2"
+  
+  # Configure system components to only run on storage nodes
+  system-managed-components-node-selector: "longhorn.io/storage: true"
+  
+  # Enable automatic replica balancing
+  replica-auto-balance: "disabled"
+  
+  # Set concurrent limits for Pi hardware
+  concurrent-replica-rebuild-per-node-limit: "2"
+  concurrent-automatic-engine-upgrade-per-node-limit: "1"
+  
+  # Disable scheduling on cordoned nodes
+  disable-scheduling-on-cordoned-node: "true"
+  
+  # Node drain policy for safety
+  node-drain-policy: "block-if-contains-last-replica"
+
+---
+# Node labels for storage configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: longhorn-node-labels
+  namespace: default
+data:
+  # Instructions for applying node labels:
+  # kubectl label node <node-name> longhorn.io/storage=true
+  # kubectl label node <node-name> longhorn.io/exclude-from-backup=true
+  storage-nodes: "rpi5-0,rpi5-1"
+  excluded-nodes: "archlinux"
+
+---
+# Longhorn Settings CRD (if using Longhorn v1.6.0+)
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: default-replica-count
+  namespace: default
+value: "2"
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: system-managed-components-node-selector
+  namespace: default
+value: "longhorn.io/storage: true"
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: replica-auto-balance
+  namespace: default
+value: "disabled"
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: concurrent-replica-rebuild-per-node-limit
+  namespace: default
+value: "2"
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: concurrent-automatic-engine-upgrade-per-node-limit
+  namespace: default
+value: "1"
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: disable-scheduling-on-cordoned-node
+  namespace: default
+value: "true"
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: node-drain-policy
+  namespace: default
+value: "block-if-contains-last-replica"

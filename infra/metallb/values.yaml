@@ -1,0 +1,53 @@
+# MetalLB Helm Chart Values
+# Deploy MetalLB to metallb-system namespace
+
+# Override the default namespace
+namespaceOverride: metallb-system
+
+# Install CRDs automatically
+installCRDs: true
+
+# Controller configuration
+controller:
+  enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 100Mi
+    limits:
+      cpu: 100m
+      memory: 100Mi
+
+# Speaker configuration
+speaker:
+  enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 100Mi
+    limits:
+      cpu: 100m
+      memory: 100Mi
+
+# Pod security labels for Kubernetes 1.23+
+podSecurityPolicy:
+  enabled: false
+
+# Service account configuration
+serviceAccount:
+  create: true
+  name: metallb-controller
+  annotations: {}
+
+# RBAC configuration
+rbac:
+  create: true
+
+# Webhook configuration
+webhook:
+  enabled: true
+  port: 9443
+  certificate:
+    create: true
+    duration: 8760h # 1 year
+    renewBefore: 360h # 15 days

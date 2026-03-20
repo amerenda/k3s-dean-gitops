@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: tailscale-only
+  namespace: ecdysis
+spec:
+  ipAllowList:
+    # 10.100.20.0/24  — direct LAN access (home network)
+    # 10.42.0.0/16    — Flannel pod CIDR; Tailscale subnet router pods masquerade
+    #                   traffic from 100.x.x.x Tailscale clients to their pod IP
+    #                   before forwarding into the cluster, so this is what Traefik
+    #                   sees for any Tailscale-routed request.
+    # 127.0.0.1/32    — localhost (healthchecks, kube-probe)
+    sourceRange:
+      - 10.100.20.0/24
+      - 10.42.0.0/16
+      - 127.0.0.1/32

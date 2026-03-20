@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: homeassistant-config
+  namespace: home-assistant
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeName: pvc-ae3f90ab-68e9-46f9-9c3f-afcf3b01d34e
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: longhorn

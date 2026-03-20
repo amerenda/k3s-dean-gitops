@@ -1,0 +1,256 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homeassistant-automations
+data:
+  alex_reolink_human_detect_alert.yaml: |
+    alias: "Alex - Reolink Human Alert (Away)"
+    mode: "queued"
+    triggers:
+      - trigger: "state"
+        entity_id:
+          - "binary_sensor.living_room_person"
+          - "binary_sensor.bedroom_person"
+        from: "off"
+        to: "on"
+    conditions:
+      - condition: "not"
+        conditions:
+          - condition: "state"
+            entity_id: "person.alex_merenda"
+            state: "home"
+    variables:
+      CAM_MAP: >
+        {{
+          {
+            'binary_sensor.living_room_person':
+              {'camera': 'camera.living_room_fluent','room':'Living Room','slug':'living_room'},
+            'binary_sensor.bedroom_person':
+              {'camera': 'camera.bedroom_fluent',    'room':'Bedroom',    'slug':'bedroom'}
+          }
+        }}
+      cam: "{{ CAM_MAP[trigger.entity_id]['camera'] }}"
+      room: "{{ CAM_MAP[trigger.entity_id]['room'] }}"
+      slug: "{{ CAM_MAP[trigger.entity_id]['slug'] }}"
+      timestamp: "{{ now().strftime('%Y%m%d_%H%M%S') }}"
+      path: "/config/www/intruders/{{ slug }}_{{ timestamp }}.jpg"
+      url: "/local/intruders/{{ slug }}_{{ timestamp }}.jpg"
+    actions:
+      - action: "camera.snapshot"
+        target: { entity_id: "{{ cam }}" }
+        data:
+          filename: "{{ path }}"
+      - action: "input_text.set_value"
+        target: { entity_id: "input_text.intruder_image_location" }
+        data: { value: "{{ slug }}" }
+      - action: "input_text.set_value"
+        target: { entity_id: "input_text.intruder_image_timestamp" }
+        data: { value: "{{ timestamp }}" }
+      - action: "notify.mobile_app_pixel_9_pro_xl"
+        data:
+          title: "Human detected - {{ room }}"
+          message: "{{ now().strftime('%-I:%M %p on %b %-d') }}"
+          data:
+            image: "{{ url }}"
+            tag: "human-{{ slug }}"
+            importance: "high"
+            sticky: true
+  alex_reolink_pet_detect_snapshot.yaml: |
+    alias: "Alex - Reolink Pet Snapshot (Away)"
+    mode: "queued"
+    triggers:
+      - trigger: "state"
+        entity_id:
+          - "binary_sensor.living_room_animal"
+          - "binary_sensor.bedroom_animal"
+        from: "off"
+        to: "on"
+    conditions:
+      - condition: "not"
+        conditions:
+          - condition: "state"
+            entity_id: "person.alex_merenda"
+            state: "home"
+    variables:
+      CAM_MAP: >
+        {{
+          {
+            'binary_sensor.living_room_animal':
+              {'camera': 'camera.living_room_fluent', 'room':'Living Room','slug':'living_room'},
+            'binary_sensor.bedroom_animal':
+              {'camera': 'camera.bedroom_fluent',     'room':'Bedroom',    'slug':'bedroom'}
+          }
+        }}
+      cam: "{{ CAM_MAP[trigger.entity_id]['camera'] }}"
+      room: "{{ CAM_MAP[trigger.entity_id]['room'] }}"
+      slug: "{{ CAM_MAP[trigger.entity_id]['slug'] }}"
+      timestamp: "{{ now().strftime('%Y%m%d_%H%M%S') }}"
+      path: "/config/www/pets/{{ slug }}_{{ timestamp }}.jpg"
+      url: "/local/pets/{{ slug }}_{{ timestamp }}.jpg"
+    actions:
+      - action: "camera.snapshot"
+        target: { entity_id: "{{ cam }}" }
+        data:
+          filename: "{{ path }}"
+      - action: "input_text.set_value"
+        target: { entity_id: "input_text.event_image_location" }
+        data: { value: "{{ slug }}" }
+      - action: "input_text.set_value"
+        target: { entity_id: "input_text.event_image_timestamp" }
+        data: { value: "{{ timestamp }}" }
+      - action: "notify.mobile_app_pixel_9_pro_xl"
+        data:
+          title: "Pet detected - {{ room }}"
+          message: "{{ now().strftime('%-I:%M %p on %b %-d') }}"
+          data:
+            image: "{{ url }}"
+            tag: "pet-{{ slug }}"
+            importance: "low"
+            sticky: true
+  alex_update_last_zone.yaml: |
+    alias: "Alex - Update Last Significant Zone"
+    mode: queued
+    triggers:
+      - trigger: state
+        entity_id: device_tracker.pixel_9_pro_xl
+      - trigger: homeassistant
+        event: start
+    variables:
+      current_zone: >-
+        {% if trigger.platform == 'state' %}
+          {{ trigger.to_state.state | lower }}
+        {% else %}
+          {{ states('device_tracker.pixel_9_pro_xl') | lower }}
+        {% endif %}
+    actions:
+      - service: logbook.log
+        data:
+          name: "Alex Last Zone Debug"
+          message: "Detected zone change to: {{ current_zone }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ current_zone in ['home', 'work'] }}"
+            sequence:
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.alex_last_significant_zone
+                data:
+                  value: "{{ current_zone }}"
+              - service: logbook.log
+                data:
+                  name: "Alex Last Zone Update"
+                  message: "Updated last significant zone to: {{ current_zone }}"
+  cleanup_old_photos.yaml: |
+    alias: "System - Cleanup Old Photos (30+ days)"
+    mode: "single"
+    triggers:
+      - platform: "time"
+        at: "02:00:00"
+    conditions: []
+    actions:
+      - service: "shell_command.cleanup_old_photos"
+        data: {}
+  guest_camera_privacy_wifi_away.yaml: |
+    alias: "Guest - Camera Privacy (WiFi Disconnected)"
+    mode: "restart"
+    triggers:
+      - trigger: "state"
+        entity_id:
+          - "group.guests"
+        from: "home"
+    actions:
+      - action: script.manage_camera_privacy
+  guest_camera_privacy_wifi_home.yaml: |
+    alias: "Guest - Camera Privacy Home (WiFi Connected)"
+    mode: "restart"
+    triggers:
+      - trigger: "state"
+        entity_id:
+          - "group.guests"
+        to: "home"
+    actions:
+      - action: script.manage_camera_privacy
+  members_camera_privacy_away.yaml: |
+    alias: "Members - Camera Privacy (Away)"
+    mode: "restart"
+    triggers:
+      - trigger: "state"
+        entity_id: "group.members"
+        to: "not_home"
+        from: "home"
+    actions:
+      - action: script.manage_camera_privacy
+  members_camera_privacy_home.yaml: |
+    alias: "Members - Camera Privacy (Home)"
+    mode: "restart"
+    triggers:
+      - trigger: "state"
+        entity_id: "group.members"
+        to: "home"
+        from: "not_home"
+    actions:
+      - action: script.manage_camera_privacy
+  monitor_camera_privacy.yaml: |
+    alias: "System - Monitor Camera Privacy"
+    mode: "single"
+    triggers:
+      - trigger: "time_pattern"
+        minutes: "/1"
+    actions:
+      - action: script.manage_camera_privacy
+  pet_water_fountain_alert.yaml: |
+    alias: "Pet - Water Fountain Alert"
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.eversweet_solo_2_water_level
+        from: "on"
+        to: "off"
+        for:
+          minutes: 5
+      - trigger: state
+        entity_id: switch.eversweet_solo_2_power
+        to: "off"
+        for:
+          minutes: 5
+      # Fallback: Run on startup to catch if it was already off
+      - trigger: homeassistant
+        event: start
+    conditions:
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: binary_sensor.eversweet_solo_2_water_level
+            state: "off"
+            for:
+              minutes: 5
+          - condition: state
+            entity_id: switch.eversweet_solo_2_power
+            state: "off"
+            for:
+              minutes: 5
+    actions:
+      - action: notify.mobile_app_pixel_9_pro_xl
+        data:
+          title: "Water Fountain Alert"
+          message: >
+            {% if trigger.entity_id == 'binary_sensor.eversweet_solo_2_water_level' %}
+              Water level is low! Refill needed.
+            {% else %}
+              Fountain power is OFF! Check connection.
+            {% endif %}
+          data:
+            tag: "water-fountain-alert"
+            importance: "high"
+            sticky: true
+      - action: persistent_notification.create
+        data:
+          title: "Water Fountain Alert"
+          message: >
+            {% if trigger.entity_id == 'binary_sensor.eversweet_solo_2_water_level' %}
+              Water level is low! Refill needed.
+            {% else %}
+              Fountain power is OFF! Check connection.
+            {% endif %}
+          notification_id: "water_fountain_alert"
