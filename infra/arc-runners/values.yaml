@@ -24,28 +24,7 @@ controllerServiceAccount:
   name: infra-arc-controller  # Helm release name from ArgoCD application
   namespace: arc-systems  # Controller namespace
 
-# Runner scale set configuration
-autoscalingRunnerSet:
-  # Runner labels (must match runs-on in workflows)
-  runnerLabels:
-    - self-hosted
-    - linux
-    - arc-runner-set
-  
-  # Runner resources
-  resources:
-    requests:
-      cpu: 200m
-      memory: 256Mi
-    limits:
-      cpu: 1000m
-      memory: 1Gi
-  
-  # Docker configuration for container jobs
-  dockerdWithinRunnerContainer: true
-  dockerEnabled: true
-
-# Autoscaling configuration (at root level, not under autoscalingRunnerSet)
+# Autoscaling configuration
 minRunners: 1
 maxRunners: 3
 
@@ -58,10 +37,24 @@ template:
   spec:
     securityContext:
       fsGroup: 1000
+    initContainers:
+      - name: dind
+        image: docker:dind
+        startupProbe:
+          exec:
+            command: ["docker", "info"]
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 10
+          failureThreshold: 24
     containers:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest
         env:
+          - name: DOCKER_HOST
+            value: "unix:///var/run/docker.sock"
+          - name: RUNNER_WAIT_FOR_DOCKER_IN_SECONDS
+            value: "120"
           - name: DOCKERHUB_USERNAME
             value: "amerenda"
           - name: DOCKERHUB_TOKEN
@@ -77,4 +70,3 @@ template:
 
 # Namespace override
 namespaceOverride: arc-runners
-

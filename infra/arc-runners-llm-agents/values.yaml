@@ -13,10 +13,24 @@ template:
   spec:
     securityContext:
       fsGroup: 1000
+    initContainers:
+      - name: dind
+        image: docker:dind
+        startupProbe:
+          exec:
+            command: ["docker", "info"]
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 10
+          failureThreshold: 24
     containers:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest
         env:
+          - name: DOCKER_HOST
+            value: "unix:///var/run/docker.sock"
+          - name: RUNNER_WAIT_FOR_DOCKER_IN_SECONDS
+            value: "120"
           - name: DOCKERHUB_USERNAME
             value: "amerenda"
           - name: DOCKERHUB_TOKEN
