@@ -1,0 +1,32 @@
+# ARC runner scale set for amerenda/ecdysis
+githubConfigUrl: "https://github.com/amerenda/ecdysis"
+runnerScaleSetName: arc-runner-set
+githubConfigSecret: controller-manager
+controllerServiceAccount:
+  name: infra-arc-controller
+  namespace: arc-systems
+minRunners: 0
+maxRunners: 3
+containerMode:
+  type: dind
+template:
+  spec:
+    securityContext:
+      fsGroup: 1000
+    containers:
+      - name: runner
+        image: ghcr.io/actions/actions-runner:latest
+        env:
+          - name: DOCKERHUB_USERNAME
+            value: "amerenda"
+          - name: DOCKERHUB_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: runner-ci-credentials
+                key: DOCKERHUB_TOKEN
+          - name: GITOPS_PAT
+            valueFrom:
+              secretKeyRef:
+                name: runner-ci-credentials
+                key: GITOPS_PAT
+namespaceOverride: arc-runners-ecdysis

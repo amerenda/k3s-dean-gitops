@@ -60,6 +60,7 @@ template:
       fsGroup: 1000
     containers:
       - name: runner
+        image: ghcr.io/actions/actions-runner:latest
         env:
           - name: DOCKERHUB_USERNAME
             value: "amerenda"
