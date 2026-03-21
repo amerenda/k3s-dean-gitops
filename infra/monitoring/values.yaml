@@ -8,7 +8,7 @@ alertmanager:
 # --- Prometheus ---
 prometheus:
   prometheusSpec:
-    retention: 7d
+    retention: 14d
     resources:
       requests:
         cpu: 200m
