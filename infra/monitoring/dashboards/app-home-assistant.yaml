@@ -451,7 +451,7 @@ data:
           },
           "targets": [
             {
-              "expr": "increase(homeassistant_automation_triggered_count_total[1h]) > 0",
+              "expr": "increase(homeassistant_automation_triggered_count_total[1h])",
               "legendFormat": "{{friendly_name}}",
               "refId": "A",
               "datasource": {
@@ -810,7 +810,7 @@ data:
         }
       ],
       "time": {
-        "from": "now-24h",
+        "from": "now-1h",
         "to": "now"
       },
       "timepicker": {},
