@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: amerenda/ecdysis:frontend-sha-4ae2265
+          image: amerenda/ecdysis:frontend-ef6003b
           imagePullPolicy: Always
           ports:
             - containerPort: 80
