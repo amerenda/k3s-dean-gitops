@@ -423,3 +423,17 @@ data:
       step: 1
       unit_of_measurement: "min"
       initial: 15
+  light_latency.yaml: |
+    light_latency_ms:
+      name: "Light Switch Latency (ms)"
+      min: 0
+      max: 10000
+      step: 1
+      unit_of_measurement: "ms"
+      initial: 0
+    light_latency_press_ts:
+      name: "Light Switch Press Timestamp"
+      min: 0
+      max: 9999999999
+      step: 0.001
+      initial: 0

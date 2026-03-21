@@ -408,6 +408,193 @@ data:
           ]
         },
         {
+          "type": "row",
+          "title": "Switch-to-Light Latency",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 13
+          },
+          "id": 100
+        },
+        {
+          "type": "stat",
+          "title": "Last Latency",
+          "id": 101,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 0,
+            "y": 14
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "thresholds": {
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 500
+                  },
+                  {
+                    "color": "red",
+                    "value": 2000
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "colorMode": "background",
+            "graphMode": "area"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "homeassistant_input_number_state{entity='input_number.light_latency_ms'}",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Last Switch",
+          "id": 102,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 4,
+            "y": 14
+          },
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "homeassistant_input_number_state{entity='input_number.light_latency_press_ts'}",
+              "legendFormat": "{{friendly_name}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Switch-to-Light Latency Over Time",
+          "id": 103,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 16,
+            "x": 8,
+            "y": 14
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "min": 0,
+              "thresholds": {
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 500
+                  },
+                  {
+                    "color": "red",
+                    "value": 2000
+                  }
+                ]
+              },
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "showPoints": "always",
+                "pointSize": 6,
+                "thresholdsStyle": {
+                  "mode": "line"
+                }
+              }
+            }
+          },
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "homeassistant_input_number_state{entity='input_number.light_latency_ms'}",
+              "legendFormat": "Latency",
+              "refId": "A"
+            }
+          ]
+        },
+        {
           "type": "timeseries",
           "title": "Automation Triggers Over Time",
           "id": 11,
@@ -419,7 +606,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 5
+            "y": 11
           },
           "fieldConfig": {
             "defaults": {
@@ -469,7 +656,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 13
+            "y": 19
           },
           "id": 20
         },
@@ -485,7 +672,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 14
+            "y": 20
           },
           "fieldConfig": {
             "defaults": {
@@ -536,7 +723,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 14
+            "y": 20
           },
           "fieldConfig": {
             "defaults": {
@@ -583,7 +770,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 22
+            "y": 28
           },
           "id": 30
         },
@@ -599,7 +786,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 23
+            "y": 29
           },
           "fieldConfig": {
             "defaults": {
@@ -660,7 +847,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 23
+            "y": 29
           },
           "fieldConfig": {
             "defaults": {
@@ -707,7 +894,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 29
+            "y": 35
           },
           "id": 40
         },
@@ -723,7 +910,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 30
+            "y": 36
           },
           "fieldConfig": {
             "defaults": {
@@ -772,7 +959,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 30
+            "y": 36
           },
           "fieldConfig": {
             "defaults": {
