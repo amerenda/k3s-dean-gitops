@@ -13,6 +13,24 @@ spec:
       labels:
         app: moltbook-frontend
     spec:
+      initContainers:
+        - name: register-with-llm-manager
+          image: curlimages/curl:latest
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "Registering ecdysis with llm-manager..."
+              curl -sf -X POST \
+                http://llm-manager-backend.llm-manager.svc.cluster.local:8081/api/apps/discover \
+                -H "Content-Type: application/json" \
+                -d "{\"name\":\"ecdysis\",\"base_url\":\"http://moltbook-frontend.ecdysis.svc.cluster.local\",\"registration_secret\":\"${REGISTRATION_SECRET}\",\"capabilities\":[\"moltbook-agents\"]}" \
+              && echo "Registration complete" || echo "Registration failed (may already be registered)"
+          env:
+            - name: REGISTRATION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: registration-secret
+                  key: registration-secret
       containers:
         - name: frontend
           image: amerenda/ecdysis:frontend-cba3291
