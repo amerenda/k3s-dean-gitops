@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: llm-library-refresh
+  namespace: llm-manager
+spec:
+  # Run every 12 hours (twice a day) — low enough to not get blocked by Ollama
+  schedule: "0 */12 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      ttlSecondsAfterFinished: 3600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: refresh
+              image: curlimages/curl:latest
+              command: ["sh", "-c"]
+              args:
+                - |
+                  echo "Refreshing Ollama library cache..."
+                  RESULT=$(curl -sf -X POST \
+                    http://llm-manager-backend.llm-manager.svc.cluster.local:8081/api/library/refresh \
+                    -H "Content-Type: application/json" 2>&1)
+                  echo "Result: $RESULT"
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 16Mi
+                limits:
+                  cpu: 100m
+                  memory: 64Mi
