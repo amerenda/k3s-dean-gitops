@@ -10,17 +10,18 @@ metadata:
 data:
   app-llm-manager.json: |
     {
-      "title": "LLM Manager",
-      "uid": "llm-manager",
-      "tags": ["llm", "gpu", "ai"],
-      "timezone": "browser",
+      "annotations": {"list": []},
+      "editable": true,
+      "fiscalYearStartMonth": 0,
       "graphTooltip": 1,
-      "refresh": "30s",
-      "schemaVersion": 38,
+      "id": null,
+      "links": [],
+      "liveNow": false,
       "panels": [
         {
           "type": "row",
-          "title": "GPU & Hardware",
+          "title": "GPU & Hardware Overview",
+          "collapsed": false,
           "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
           "id": 1
         },
@@ -44,17 +45,19 @@ data:
               }
             }
           },
-          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}},
+          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "showThresholdMarkers": true},
           "targets": [
             {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
               "expr": "llm_agent_gpu_vram_used_bytes",
-              "legendFormat": "{{node}}"
+              "legendFormat": "{{node}}",
+              "refId": "A"
             }
           ]
         },
         {
           "type": "stat",
-          "title": "VRAM Utilization",
+          "title": "VRAM Utilization %",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
           "gridPos": {"h": 5, "w": 4, "x": 6, "y": 1},
           "id": 3,
@@ -71,9 +74,14 @@ data:
               }
             }
           },
-          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background"},
+          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
           "targets": [
-            {"expr": "llm_agent_gpu_vram_utilization_pct", "legendFormat": "{{node}}"}
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_agent_gpu_vram_utilization_pct",
+              "legendFormat": "{{node}}",
+              "refId": "A"
+            }
           ]
         },
         {
@@ -95,29 +103,45 @@ data:
               }
             }
           },
-          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background"},
+          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
           "targets": [
-            {"expr": "llm_agent_cpu_usage_pct", "legendFormat": "{{node}}"}
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_agent_cpu_usage_pct",
+              "legendFormat": "{{node}}",
+              "refId": "A"
+            }
           ]
         },
         {
-          "type": "stat",
-          "title": "Memory Used",
+          "type": "gauge",
+          "title": "Memory Usage",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
           "gridPos": {"h": 5, "w": 5, "x": 14, "y": 1},
           "id": 5,
           "fieldConfig": {
             "defaults": {
-              "unit": "bytes",
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
               "thresholds": {
                 "mode": "absolute",
-                "steps": [{"color": "blue", "value": null}]
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 70},
+                  {"color": "red", "value": 90}
+                ]
               }
             }
           },
-          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background"},
+          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "showThresholdMarkers": true},
           "targets": [
-            {"expr": "llm_agent_memory_used_bytes", "legendFormat": "{{node}}"}
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "100 * llm_agent_memory_used_bytes / llm_agent_memory_total_bytes",
+              "legendFormat": "{{node}}",
+              "refId": "A"
+            }
           ]
         },
         {
@@ -136,12 +160,18 @@ data:
           },
           "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background"},
           "targets": [
-            {"expr": "llm_agent_comfyui_running", "legendFormat": "{{node}}"}
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_agent_comfyui_running",
+              "legendFormat": "{{node}}",
+              "refId": "A"
+            }
           ]
         },
         {
           "type": "row",
-          "title": "Models & Requests",
+          "title": "Models & Services",
+          "collapsed": false,
           "gridPos": {"h": 1, "w": 24, "x": 0, "y": 6},
           "id": 10
         },
@@ -156,9 +186,14 @@ data:
               "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]}
             }
           },
-          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background"},
+          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none"},
           "targets": [
-            {"expr": "llm_agent_ollama_models_loaded", "legendFormat": "{{node}}"}
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_agent_ollama_models_loaded",
+              "legendFormat": "{{node}}",
+              "refId": "A"
+            }
           ]
         },
         {
@@ -169,12 +204,17 @@ data:
           "id": 12,
           "fieldConfig": {
             "defaults": {
-              "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]}
+              "thresholds": {"mode": "absolute", "steps": [{"color": "purple", "value": null}]}
             }
           },
-          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background"},
+          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none"},
           "targets": [
-            {"expr": "llm_backend_registered_apps", "legendFormat": "apps"}
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_backend_registered_apps",
+              "legendFormat": "apps",
+              "refId": "A"
+            }
           ]
         },
         {
@@ -185,89 +225,403 @@ data:
           "id": 13,
           "fieldConfig": {
             "defaults": {
+              "thresholds": {"mode": "absolute", "steps": [{"color": "orange", "value": null}]}
+            }
+          },
+          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
+          "targets": [
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_backend_moltbook_agents_running",
+              "legendFormat": "agents",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Memory Used",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 4, "x": 12, "y": 7},
+          "id": 14,
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
               "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]}
             }
           },
-          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background"},
-          "targets": [
-            {"expr": "llm_backend_moltbook_agents_running", "legendFormat": "agents"}
-          ]
-        },
-        {
-          "type": "timeseries",
-          "title": "LLM Request Rate (req/s)",
-          "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 7},
-          "id": 14,
-          "fieldConfig": {
-            "defaults": {"unit": "reqps", "custom": {"lineWidth": 2}}
-          },
+          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
           "targets": [
             {
-              "expr": "rate(llm_agent_requests_total[5m])",
-              "legendFormat": "{{node}} / {{endpoint}} / {{model}}"
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_agent_memory_used_bytes",
+              "legendFormat": "{{node}}",
+              "refId": "A"
             }
           ]
         },
         {
-          "type": "timeseries",
-          "title": "Request Duration p95 (s)",
+          "type": "stat",
+          "title": "Memory Total",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 11},
+          "gridPos": {"h": 4, "w": 4, "x": 16, "y": 7},
           "id": 15,
           "fieldConfig": {
-            "defaults": {"unit": "s", "custom": {"lineWidth": 2}}
+            "defaults": {
+              "unit": "bytes",
+              "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]}
+            }
           },
+          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "value", "graphMode": "none"},
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, rate(llm_agent_request_duration_seconds_bucket[5m]))",
-              "legendFormat": "p95 {{endpoint}}"
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_agent_memory_total_bytes",
+              "legendFormat": "{{node}}",
+              "refId": "A"
             }
           ]
         },
         {
-          "type": "timeseries",
-          "title": "Backend API Request Rate",
+          "type": "stat",
+          "title": "VRAM Total",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 15},
+          "gridPos": {"h": 4, "w": 4, "x": 20, "y": 7},
           "id": 16,
           "fieldConfig": {
-            "defaults": {"unit": "reqps", "custom": {"lineWidth": 2}}
+            "defaults": {
+              "unit": "bytes",
+              "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]}
+            }
           },
+          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "value", "graphMode": "none"},
           "targets": [
             {
-              "expr": "rate(llm_backend_api_requests_total[5m])",
-              "legendFormat": "{{method}} {{endpoint}} {{status}}"
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_agent_gpu_vram_total_bytes",
+              "legendFormat": "{{node}}",
+              "refId": "A"
             }
           ]
         },
         {
           "type": "row",
-          "title": "VRAM Over Time",
-          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 23},
+          "title": "Request Traffic",
+          "collapsed": false,
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 11},
           "id": 20
+        },
+        {
+          "type": "timeseries",
+          "title": "LLM Agent Request Rate (req/s)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+          "id": 21,
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": {"lineWidth": 2, "fillOpacity": 10, "showPoints": "never", "spanNulls": true}
+            }
+          },
+          "options": {
+            "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom"},
+            "tooltip": {"mode": "multi", "sort": "desc"}
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "rate(llm_agent_requests_total[5m])",
+              "legendFormat": "{{node}} / {{endpoint}} / {{model}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Backend API Request Rate (req/s)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+          "id": 22,
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": {"lineWidth": 2, "fillOpacity": 10, "showPoints": "never", "spanNulls": true}
+            }
+          },
+          "options": {
+            "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom"},
+            "tooltip": {"mode": "multi", "sort": "desc"}
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "rate(llm_backend_api_requests_total[5m])",
+              "legendFormat": "{{method}} {{endpoint}} {{status}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Request Duration p50 / p95 / p99",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+          "id": 23,
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {"lineWidth": 2, "fillOpacity": 5, "showPoints": "never", "spanNulls": true}
+            }
+          },
+          "options": {
+            "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom"},
+            "tooltip": {"mode": "multi", "sort": "desc"}
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "histogram_quantile(0.50, rate(llm_agent_request_duration_seconds_bucket[5m]))",
+              "legendFormat": "p50 {{endpoint}}",
+              "refId": "A"
+            },
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "histogram_quantile(0.95, rate(llm_agent_request_duration_seconds_bucket[5m]))",
+              "legendFormat": "p95 {{endpoint}}",
+              "refId": "B"
+            },
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "histogram_quantile(0.99, rate(llm_agent_request_duration_seconds_bucket[5m]))",
+              "legendFormat": "p99 {{endpoint}}",
+              "refId": "C"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Backend API Errors",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+          "id": 24,
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": {"lineWidth": 2, "fillOpacity": 10, "showPoints": "never", "spanNulls": true}
+            }
+          },
+          "options": {
+            "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom"},
+            "tooltip": {"mode": "multi", "sort": "desc"}
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "rate(llm_backend_api_requests_total{status=~\"5..\"}[5m])",
+              "legendFormat": "{{method}} {{endpoint}} {{status}}",
+              "refId": "A"
+            },
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "rate(llm_backend_api_requests_total{status=~\"4..\"}[5m])",
+              "legendFormat": "{{method}} {{endpoint}} {{status}}",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "title": "VRAM & Resources Over Time",
+          "collapsed": false,
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 28},
+          "id": 30
         },
         {
           "type": "timeseries",
           "title": "GPU VRAM Used / Total",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24},
-          "id": 21,
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 29},
+          "id": 31,
           "fieldConfig": {
-            "defaults": {"unit": "bytes", "custom": {"lineWidth": 2, "fillOpacity": 10}}
+            "defaults": {
+              "unit": "bytes",
+              "custom": {"lineWidth": 2, "fillOpacity": 10, "showPoints": "never", "spanNulls": true}
+            }
+          },
+          "options": {
+            "legend": {"calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom"},
+            "tooltip": {"mode": "multi", "sort": "desc"}
           },
           "targets": [
             {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
               "expr": "llm_agent_gpu_vram_used_bytes",
-              "legendFormat": "{{node}} used"
+              "legendFormat": "{{node}} used",
+              "refId": "A"
             },
             {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
               "expr": "llm_agent_gpu_vram_total_bytes",
-              "legendFormat": "{{node}} total"
+              "legendFormat": "{{node}} total",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "GPU VRAM Utilization %",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 29},
+          "id": 32,
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "custom": {"lineWidth": 2, "fillOpacity": 15, "showPoints": "never", "spanNulls": true},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 70},
+                  {"color": "red", "value": 90}
+                ]
+              }
+            }
+          },
+          "options": {
+            "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom"},
+            "tooltip": {"mode": "multi", "sort": "desc"}
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_agent_gpu_vram_utilization_pct",
+              "legendFormat": "{{node}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "CPU Usage Over Time",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 37},
+          "id": 33,
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "custom": {"lineWidth": 2, "fillOpacity": 10, "showPoints": "never", "spanNulls": true}
+            }
+          },
+          "options": {
+            "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom"},
+            "tooltip": {"mode": "multi", "sort": "desc"}
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_agent_cpu_usage_pct",
+              "legendFormat": "{{node}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Memory Used Over Time",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 37},
+          "id": 34,
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {"lineWidth": 2, "fillOpacity": 10, "showPoints": "never", "spanNulls": true}
+            }
+          },
+          "options": {
+            "legend": {"calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom"},
+            "tooltip": {"mode": "multi", "sort": "desc"}
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_agent_memory_used_bytes",
+              "legendFormat": "{{node}} used",
+              "refId": "A"
+            },
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_agent_memory_total_bytes",
+              "legendFormat": "{{node}} total",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Ollama Models Loaded Over Time",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 45},
+          "id": 35,
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 0,
+              "custom": {"lineWidth": 2, "fillOpacity": 10, "showPoints": "never", "spanNulls": true}
+            }
+          },
+          "options": {
+            "legend": {"calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom"},
+            "tooltip": {"mode": "multi", "sort": "desc"}
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_agent_ollama_models_loaded",
+              "legendFormat": "{{node}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Moltbook Agents Running Over Time",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 45},
+          "id": 36,
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 0,
+              "custom": {"lineWidth": 2, "fillOpacity": 10, "showPoints": "never", "spanNulls": true}
+            }
+          },
+          "options": {
+            "legend": {"calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom"},
+            "tooltip": {"mode": "multi", "sort": "desc"}
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "expr": "llm_backend_moltbook_agents_running",
+              "legendFormat": "agents",
+              "refId": "A"
             }
           ]
         }
       ],
+      "refresh": "30s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["llm", "gpu", "ai"],
+      "templating": {"list": []},
       "time": {"from": "now-1h", "to": "now"},
-      "timepicker": {}
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "LLM Manager",
+      "uid": "llm-manager",
+      "version": 1
     }
