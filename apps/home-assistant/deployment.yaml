@@ -15,6 +15,16 @@ spec:
       labels:
         app: homeassistant
     spec:
+      # Prefer rpi5-1 (16GB) over rpi5-0 (8GB) to reduce memory pressure on rpi5-0
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values: ["rpi5-1"]
       hostAliases:
         - ip: "10.100.20.204"
           hostnames:
