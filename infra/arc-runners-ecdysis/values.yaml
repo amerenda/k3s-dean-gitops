@@ -18,6 +18,8 @@ containerMode:
         storage: 1Gi
 template:
   spec:
+    nodeSelector:
+      kubernetes.io/hostname: murderbot
     securityContext:
       fsGroup: 1001
     containers:
