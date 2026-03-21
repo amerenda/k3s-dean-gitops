@@ -24,6 +24,9 @@ prometheus:
           resources:
             requests:
               storage: 10Gi
+    # ServiceMonitor selector: watch all namespaces, match release label
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
 
 # --- Grafana (ClusterIP; exposed via Ingress with TLS below) ---
 grafana:
