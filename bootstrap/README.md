@@ -17,6 +17,12 @@ Kubernetes Secret template for Bitwarden integration:
 - **External Secrets**: Required for fetching secrets from Bitwarden
 - **Security**: Must be applied manually for security
 
+### `argocd-repo-secret.yaml`
+Kubernetes Secret for ArgoCD to access the gitops repo:
+- **Required**: GitHub HTTPS blocks `git fetch <SHA>` without auth, breaking ArgoCD's revision metadata
+- **Credentials**: Uses a GitHub PAT with repo read scope
+- **Security**: Must be applied manually — replace the placeholder PAT before applying
+
 ### `appprojects.yaml`
 ArgoCD AppProject resources defining project permissions:
 - **infra Project**: For infrastructure components (storage, networking, DNS, etc.)
@@ -33,7 +39,16 @@ The ArgoCD values are automatically used during cluster setup:
 ansible-playbook -i inventory.ini setup-k3s-cluster.yml -e k3s_token=$K3S_TOKEN
 ```
 
-### 2. ArgoCD Projects Setup
+### 2. ArgoCD Repo Secret
+**IMPORTANT**: ArgoCD needs authenticated access to the gitops repo — GitHub blocks SHA-based git fetches over unauthenticated HTTPS.
+
+1. **Update the PAT** in `bootstrap/argocd-repo-secret.yaml` with your `GITOPS_PAT`
+2. **Apply**:
+   ```bash
+   kubectl apply -f bootstrap/argocd-repo-secret.yaml
+   ```
+
+### 3. ArgoCD Projects Setup
 **IMPORTANT**: These must be created before applications using project references can sync:
 
 1. **Apply AppProjects**:
@@ -59,7 +74,7 @@ ansible-playbook -i inventory.ini setup-k3s-cluster.yml -e k3s_token=$K3S_TOKEN
 
 **Note**: These projects define which repositories, namespaces, and resources ArgoCD applications can use. Both `infra` and `application` projects are configured with permissive settings (`*` for all) to allow flexibility.
 
-### 3. Bitwarden Secret Setup
+### 4. Bitwarden Secret Setup
 **IMPORTANT**: This must be done manually after cluster setup:
 
 1. **Get Bitwarden Access Token**:
