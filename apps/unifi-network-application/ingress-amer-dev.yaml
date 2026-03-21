@@ -1,31 +1,46 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+# Traefik v3 Ingress annotation service.serversscheme doesn't work reliably.
+# Use IngressRoute CRD + ServersTransport for HTTPS backends instead.
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
 metadata:
-  name: unifi-ingress-amer-dev
+  name: unifi-skip-verify
+  namespace: unifi-network-application
+spec:
+  insecureSkipVerify: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: unifi-amer-dev
   namespace: unifi-network-application
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    cert-manager.io/cluster-issuer: letsencrypt-prod
     external-dns.alpha.kubernetes.io/hostname: unifi.amer.dev
     external-dns.alpha.kubernetes.io/ttl: "300"
-    # Tell Traefik the backend speaks HTTPS (UniFi on 8443 with self-signed cert)
-    # insecureSkipVerify is already set globally in traefik values
-    traefik.ingress.kubernetes.io/service.serversscheme: https
 spec:
-  ingressClassName: infra-traefik
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`unifi.amer.dev`)
+      kind: Rule
+      services:
+        - name: unifi-controller
+          port: 8443
+          scheme: https
+          serversTransport: unifi-skip-verify
   tls:
-    - hosts:
-        - unifi.amer.dev
-      secretName: unifi-amer-dev-tls
-  rules:
-    - host: unifi.amer.dev
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: unifi-controller
-                port:
-                  number: 8443
+    secretName: unifi-amer-dev-tls
+---
+# Certificate resource for cert-manager (IngressRoute doesn't auto-trigger it)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: unifi-amer-dev-tls
+  namespace: unifi-network-application
+spec:
+  secretName: unifi-amer-dev-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - unifi.amer.dev
