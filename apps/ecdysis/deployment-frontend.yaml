@@ -33,7 +33,7 @@ spec:
                   key: registration-secret
       containers:
         - name: frontend
-          image: amerenda/ecdysis:frontend-sha-02e79d8
+          image: amerenda/ecdysis:frontend-sha-84cb0db
           imagePullPolicy: Always
           ports:
             - containerPort: 80
