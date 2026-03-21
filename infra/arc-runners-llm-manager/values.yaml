@@ -1,5 +1,5 @@
 # ARC runner scale set for amerenda/llm-manager
-# Manual dind setup (containerMode.type: dind ignores initContainer overrides)
+# Kubernetes mode — Kaniko builds images, no Docker daemon needed
 githubConfigUrl: "https://github.com/amerenda/llm-manager"
 runnerScaleSetName: arc-runner-set
 githubConfigSecret: controller-manager
@@ -8,53 +8,20 @@ controllerServiceAccount:
   namespace: arc-systems
 minRunners: 0
 maxRunners: 3
+containerMode:
+  type: kubernetes
+  kubernetesModeWorkVolumeClaim:
+    accessModes: ["ReadWriteOnce"]
+    storageClassName: "local-path"
+    resources:
+      requests:
+        storage: 5Gi
 template:
   spec:
-    securityContext:
-      fsGroup: 1000
-    restartPolicy: Never
-    initContainers:
-      - name: init-dind-externals
-        image: ghcr.io/actions/actions-runner:latest
-        command: ["cp"]
-        args: ["-r", "/home/runner/externals/.", "/home/runner/tmpDir/"]
-        volumeMounts:
-          - name: dind-externals
-            mountPath: /home/runner/tmpDir
-      - name: dind
-        image: docker:dind
-        restartPolicy: Always
-        args:
-          - dockerd
-          - --host=unix:///var/run/docker.sock
-          - --group=$(DOCKER_GROUP_GID)
-        env:
-          - name: DOCKER_GROUP_GID
-            value: "123"
-        securityContext:
-          privileged: true
-        startupProbe:
-          exec:
-            command: ["docker", "info"]
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          timeoutSeconds: 10
-          failureThreshold: 24
-        volumeMounts:
-          - name: work
-            mountPath: /home/runner/_work
-          - name: dind-sock
-            mountPath: /var/run
-          - name: dind-externals
-            mountPath: /home/runner/externals
     containers:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest
         env:
-          - name: DOCKER_HOST
-            value: "unix:///var/run/docker.sock"
-          - name: RUNNER_WAIT_FOR_DOCKER_IN_SECONDS
-            value: "120"
           - name: DOCKERHUB_USERNAME
             value: "amerenda"
           - name: DOCKERHUB_TOKEN
@@ -67,16 +34,4 @@ template:
               secretKeyRef:
                 name: runner-ci-credentials
                 key: GITOPS_PAT
-        volumeMounts:
-          - name: work
-            mountPath: /home/runner/_work
-          - name: dind-sock
-            mountPath: /var/run
-    volumes:
-      - name: dind-sock
-        emptyDir: {}
-      - name: dind-externals
-        emptyDir: {}
-      - name: work
-        emptyDir: {}
 namespaceOverride: arc-runners-llm-manager
