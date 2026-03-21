@@ -11,12 +11,11 @@ maxRunners: 3
 containerMode:
   type: kubernetes
   kubernetesModeWorkVolumeClaim:
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      storageClassName: longhorn
-      resources:
-        requests:
-          storage: 1Gi
+    accessModes: ["ReadWriteOnce"]
+    storageClassName: longhorn
+    resources:
+      requests:
+        storage: 1Gi
 template:
   spec:
     containers:
