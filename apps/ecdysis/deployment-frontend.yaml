@@ -13,24 +13,6 @@ spec:
       labels:
         app: moltbook-frontend
     spec:
-      initContainers:
-        - name: register-with-llm-manager
-          image: curlimages/curl:latest
-          command: ["sh", "-c"]
-          args:
-            - |
-              echo "Registering ecdysis with llm-manager..."
-              curl -sf -X POST \
-                http://llm-manager-backend.llm-manager.svc.cluster.local:8081/api/apps/discover \
-                -H "Content-Type: application/json" \
-                -d "{\"name\":\"ecdysis\",\"base_url\":\"https://ecdysis.amer.dev\",\"registration_secret\":\"${REGISTRATION_SECRET}\",\"capabilities\":[\"moltbook-agents\"]}" \
-              && echo "Registration complete" || echo "Registration failed (may already be registered)"
-          env:
-            - name: REGISTRATION_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: registration-secret
-                  key: registration-secret
       containers:
         - name: frontend
           image: amerenda/ecdysis:frontend-sha-84cb0db
@@ -50,3 +32,55 @@ spec:
             limits:
               cpu: 200m
               memory: 128Mi
+        - name: llm-manager-sidecar
+          image: curlimages/curl:latest
+          command: ["sh", "-c"]
+          args:
+            - |
+              BACKEND="http://llm-manager-backend.llm-manager.svc.cluster.local:8081"
+              API_KEY=""
+
+              # Register/discover loop — get API key when approved
+              while true; do
+                RESP=$(curl -sf -X POST "$BACKEND/api/apps/discover" \
+                  -H "Content-Type: application/json" \
+                  -d "{\"name\":\"ecdysis\",\"base_url\":\"https://ecdysis.amer.dev\",\"registration_secret\":\"${REGISTRATION_SECRET}\",\"capabilities\":[\"moltbook-agents\"]}" 2>/dev/null)
+
+                STATUS=$(echo "$RESP" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
+                KEY=$(echo "$RESP" | grep -o '"api_key":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+                if [ -n "$KEY" ]; then
+                  API_KEY="$KEY"
+                  echo "Registered with API key"
+                  break
+                elif [ "$STATUS" = "pending" ]; then
+                  echo "Waiting for approval..."
+                  sleep 30
+                else
+                  echo "Registration attempt: $RESP"
+                  sleep 30
+                fi
+              done
+
+              # Heartbeat loop
+              while true; do
+                curl -sf -X POST "$BACKEND/api/apps/heartbeat" \
+                  -H "Authorization: Bearer $API_KEY" \
+                  -H "Content-Type: application/json" \
+                  -d '{"metadata":{"app":"ecdysis"}}' > /dev/null 2>&1 \
+                  && echo "Heartbeat OK" || echo "Heartbeat failed"
+                sleep 60
+              done
+          env:
+            - name: REGISTRATION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: registration-secret
+                  key: registration-secret
+          resources:
+            requests:
+              cpu: 10m
+              memory: 8Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
