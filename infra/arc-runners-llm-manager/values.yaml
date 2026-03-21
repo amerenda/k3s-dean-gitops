@@ -11,11 +11,12 @@ maxRunners: 3
 containerMode:
   type: kubernetes
   kubernetesModeWorkVolumeClaim:
-    accessModes: ["ReadWriteOnce"]
-    storageClassName: "local-path"
-    resources:
-      requests:
-        storage: 1Gi
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: local-path
+      resources:
+        requests:
+          storage: 1Gi
 template:
   spec:
     containers:
