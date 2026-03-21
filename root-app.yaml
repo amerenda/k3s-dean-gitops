@@ -1158,6 +1158,8 @@ spec:
     repoURL: https://github.com/amerenda/k3s-dean-gitops.git
     targetRevision: main
     path: apps/llm-manager
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: llm-manager
