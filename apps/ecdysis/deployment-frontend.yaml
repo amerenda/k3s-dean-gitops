@@ -13,6 +13,8 @@ spec:
       labels:
         app: moltbook-frontend
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: murderbot
       containers:
         - name: frontend
           image: amerenda/ecdysis:frontend-sha-84cb0db
