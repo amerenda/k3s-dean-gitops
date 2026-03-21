@@ -331,13 +331,9 @@ data:
           entity_id: input_text.light_latency_switch
         data:
           value: "{{ event_id }}"
-      - wait_for_trigger:
-          - platform: state
-            entity_id: all
-            to:
-        timeout:
-          seconds: 5
-        continue_on_timeout: true
+      # Wait for the automation pipeline to execute (button → automation → light)
+      - delay:
+          seconds: 3
       - service: input_number.set_value
         target:
           entity_id: input_number.light_latency_ms
