@@ -18,6 +18,8 @@ containerMode:
         storage: 1Gi
 template:
   spec:
+    securityContext:
+      fsGroup: 1001
     containers:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest
