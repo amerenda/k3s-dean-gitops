@@ -6,8 +6,7 @@ installCRDs: true
 # Global tolerations and node selector for Longhorn components
 tolerations:
   - key: "longhorn"
-    operator: "Equal"
-    value: "true"
+    operator: "Exists"
     effect: "NoSchedule"
 
 nodeSelector:
