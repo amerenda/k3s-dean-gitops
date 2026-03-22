@@ -1,0 +1,11 @@
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: macmini-static
+  namespace: default
+spec:
+  endpoints:
+    - dnsName: macmini.amer.home
+      recordType: A
+      targets: ["10.100.20.30"]
+      recordTTL: 300

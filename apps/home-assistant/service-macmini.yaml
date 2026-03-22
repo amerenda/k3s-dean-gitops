@@ -1,0 +1,34 @@
+# Phase 3: Replace HA deployment with this proxy service
+# Traefik routes home.amer.home / homeassistant.amer.dev to Mac Mini HA
+#
+# Apply after:
+#   1. Home Assistant is running on Mac Mini (10.100.20.30:8123)
+#   2. Remove deployment.yaml, storage.yaml, all *-configmap.yaml files
+#   3. Rename this file to service.yaml (replaces the existing one)
+apiVersion: v1
+kind: Service
+metadata:
+  name: homeassistant
+  namespace: home-assistant
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8123
+      targetPort: 8123
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: homeassistant-macmini
+  namespace: home-assistant
+  labels:
+    kubernetes.io/service-name: homeassistant
+addressType: IPv4
+endpoints:
+  - addresses: ["10.100.20.30"]
+    conditions:
+      ready: true
+ports:
+  - name: http
+    port: 8123

@@ -1,0 +1,48 @@
+# BIND9 Secondary ConfigMap — apply this AFTER Mac Mini BIND9 primary is running
+# This replaces configmap.yaml during Phase 1 of the migration
+# Steps:
+#   1. Start BIND9 primary on Mac Mini (10.100.20.30)
+#   2. Verify: dig @10.100.20.30 amer.home SOA
+#   3. Replace configmap.yaml with this file (rename this to configmap.yaml)
+#   4. Update external-dns values.yaml: --rfc2136-host=10.100.20.30
+#   5. Commit and push — ArgoCD will sync the secondary
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bind9-config
+  namespace: default
+  annotations:
+    reloader.stakater.com/auto: "true"
+data:
+  named.conf: |
+    options {
+      directory "/var/cache/bind";
+      listen-on port 53 { any; };
+      allow-query { any; };
+      recursion no;
+    };
+
+    include "/etc/bind/keys/key.conf";
+
+    zone "amer.home" IN {
+      type slave;
+      file "/var/cache/bind/amer.home.db";
+      masters { 10.100.20.30; };
+    };
+
+    zone "merenda.home.arpa" IN {
+      type slave;
+      file "/var/cache/bind/merenda.home.arpa.db";
+      masters { 10.100.20.30; };
+    };
+
+    zone "20.100.10.in-addr.arpa" IN {
+      type slave;
+      file "/var/cache/bind/20.100.10.in-addr.arpa.db";
+      masters { 10.100.20.30; };
+    };
+  # Zone seed files not needed for secondary — BIND9 pulls via AXFR
+  # Keeping empty placeholders so the ConfigMap volume mount doesn't break
+  merenda.home.arpa.zone: ""
+  amer.home.zone: ""
+  20.100.10.in-addr.arpa.zone: ""

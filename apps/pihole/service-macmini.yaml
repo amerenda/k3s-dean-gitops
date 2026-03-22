@@ -1,0 +1,35 @@
+# Phase 2: Replace pihole Helm deployment with this proxy service
+# Traefik routes pihole.amer.home / pihole.amer.dev to Mac Mini Pihole
+#
+# Apply after:
+#   1. Pihole is running on Mac Mini (10.100.20.31)
+#   2. Remove app-pihole from root-app.yaml
+#   3. Delete values.yaml and externalsecret.yaml
+#   4. Rename this file to service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: pihole-web
+  namespace: pihole
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: pihole-web
+  namespace: pihole
+  labels:
+    kubernetes.io/service-name: pihole-web
+addressType: IPv4
+endpoints:
+  - addresses: ["10.100.20.31"]
+    conditions:
+      ready: true
+ports:
+  - name: http
+    port: 80
