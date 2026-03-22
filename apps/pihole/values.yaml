@@ -35,15 +35,10 @@ dnsmasq:
     - server=/amer.home/10.100.20.241
     - server=/merenda.home.arpa/10.100.20.241
   # Cache configuration
-  # Note: localTTL only affects /etc/hosts records, not upstream queries
-  # Setting cacheSize to 0 completely disables DNS caching
-  # This ensures all queries go to upstream (BIND9 for local, Cloudflare for external)
-  # Trade-off: No caching means more upstream queries but always fresh results
-  cacheSize: 0
-  negTTL: 0
-  localTTL: 0  # Only affects local /etc/hosts records
-  # Disable negative caching to force fresh lookups
-  noNegcache: true
+  # 10k entries handles the ~1400 unique domains seen in typical 24h window.
+  # Respects upstream TTL; max 5 min cap via FTL env vars below.
+  cacheSize: 10000
+  localTTL: 300  # /etc/hosts records: 5 min
 
 # Environment variables
 extraEnvVars:
@@ -51,9 +46,8 @@ extraEnvVars:
   TZ: "America/New_York"
   FTLCONF_LOCAL_IPV4: "10.100.20.240"
   PIHOLE_DNS_: "1.1.1.1;1.0.0.1;8.8.8.8;8.8.4.4"
-  # Disable DNS caching completely via FTL configuration
-  FTLCONF_dns_cache_size: "0"
-  # Cache settings for external domains (respect TTL from upstream, max 5 minutes)
+  # Cache: respect upstream TTL, cap at 5 min so local records stay fresh
+  FTLCONF_dns_cache_size: "10000"
   CACHE_QUERY_MINIMUM_TTL: "0"
   CACHE_QUERY_MAXIMUM_TTL: "300"
 
