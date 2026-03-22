@@ -32,7 +32,10 @@ spec:
             - containerPort: 8082
           env:
             - name: DATABASE_URL
-              value: "postgresql://llm:llm@postgres.llm-manager.svc.cluster.local:5432/llmmanager"
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: postgres-url
             - name: LLM_MANAGER_AGENT_PSK
               valueFrom:
                 secretKeyRef:

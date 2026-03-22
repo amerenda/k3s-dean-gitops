@@ -21,6 +21,10 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 80
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
           readinessProbe:
             httpGet:
               path: /
@@ -86,3 +90,7 @@ spec:
             limits:
               cpu: 50m
               memory: 32Mi
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: ecdysis-nginx
