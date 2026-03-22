@@ -73,8 +73,7 @@ prometheusOperator:
 prometheus-node-exporter:
   tolerations:
     - key: "longhorn"
-      operator: "Equal"
-      value: "true"
+      operator: "Exists"
       effect: "NoSchedule"
   resources:
     requests:

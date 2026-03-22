@@ -38,8 +38,8 @@ data:
   # Instructions for applying node labels:
   # kubectl label node <node-name> longhorn.io/storage=true
   # kubectl label node <node-name> longhorn.io/exclude-from-backup=true
-  storage-nodes: "rpi5-0,rpi5-1,rpi4-0"
-  excluded-nodes: "murderbot,rpi3-0"
+  storage-nodes: "rpi5-0,rpi5-1,rpi4-0,rpi3-0"
+  excluded-nodes: "murderbot"
 
 ---
 # Longhorn Settings CRD (if using Longhorn v1.6.0+)

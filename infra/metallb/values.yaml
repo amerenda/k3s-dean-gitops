@@ -21,6 +21,10 @@ controller:
 # Speaker configuration
 speaker:
   enabled: true
+  tolerations:
+    - key: "longhorn"
+      operator: "Exists"
+      effect: "NoSchedule"
   resources:
     requests:
       cpu: 100m
