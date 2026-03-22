@@ -387,8 +387,7 @@ metadata:
   namespace: default
   annotations:
     argocd.argoproj.io/sync-wave: "5"
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io/background
+  finalizers: []
 spec:
   project: application
   source:
