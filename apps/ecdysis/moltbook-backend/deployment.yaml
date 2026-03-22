@@ -30,7 +30,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: moltbook-backend
-          image: amerenda/llm-manager:moltbook-sha-c2375d1
+          image: amerenda/llm-manager:moltbook-sha-0696f0e
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
