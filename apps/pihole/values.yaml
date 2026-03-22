@@ -63,31 +63,17 @@ doh:
   pullPolicy: Always
   envVars:
     DOH_UPSTREAM: "https://1.1.1.1/dns-query"
-  # cloudflared was OOMKilling at 128Mi (59 restarts in logs). Bumped to 256Mi.
+  # cloudflared was OOMKilling at 128Mi. Bumped requests and limits.
   resources:
     requests:
-      memory: 64Mi
+      memory: 128Mi
     limits:
       memory: 256Mi
 
-# The chart defaults to nodeSelector: {kubernetes.io/arch: arm64} which blocks x86 nodes.
-# Clear it so murderbot (x86) is a valid scheduling target.
-nodeSelector: {}
-
-# Prefer murderbot (x86, 12 cores, 16GB) — critical DNS service needs headroom.
-# Falls back to any node (Pi or x86) automatically if murderbot is unavailable.
-# Pi-hole was logging "load avg 6-7 > 4 cores" and database lock errors on rpi5-1.
-affinity:
-  nodeAffinity:
-    preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 100
-        preference:
-          matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values:
-                - murderbot
-    # No requiredDuringSchedulingIgnoredDuringExecution — allows fallback to Pi nodes.
+# Pin to murderbot — critical DNS service needs the headroom.
+# RPi nodes don't have enough disk/memory for pihole + its database.
+nodeSelector:
+  kubernetes.io/hostname: murderbot
 
 # Pi-hole resources — bumped from 384Mi limit to handle real-world load on rpi5-1.
 resources:
