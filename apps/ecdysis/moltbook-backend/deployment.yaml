@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: moltbook-backend
+  namespace: ecdysis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: moltbook-backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: moltbook-backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8082"
+        prometheus.io/path: "/metrics"
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: murderbot
+      containers:
+        - name: moltbook-backend
+          image: amerenda/llm-manager:moltbook-latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8082
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://llm:llm@postgres.llm-manager.svc.cluster.local:5432/llmmanager"
+            - name: LLM_MANAGER_AGENT_PSK
+              valueFrom:
+                secretKeyRef:
+                  name: agent-psk
+                  key: psk
+                  optional: true
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8082
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8082
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 384Mi

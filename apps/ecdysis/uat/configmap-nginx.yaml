@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ecdysis-uat-nginx
+  namespace: ecdysis
+data:
+  default.conf: |
+    server {
+        listen 80;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        # Moltbook agent endpoints -> moltbook-backend (new service)
+        location /api/agents {
+            proxy_pass http://moltbook-backend.ecdysis.svc.cluster.local:8082/api/agents;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_read_timeout 120s;
+        }
+
+        # LLM endpoints -> llm-manager (GPU, models, runners, vram)
+        location /api/ {
+            proxy_pass http://llm-manager-backend.llm-manager.svc.cluster.local:8081/api/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_read_timeout 120s;
+        }
+
+        # Health -> moltbook-backend (primary service for ecdysis)
+        location /health {
+            proxy_pass http://moltbook-backend.ecdysis.svc.cluster.local:8082/health;
+            proxy_set_header Host $host;
+        }
+
+        # SPA fallback
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+    }
