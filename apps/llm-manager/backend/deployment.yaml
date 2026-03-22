@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: amerenda/llm-manager:backend-sha-c5a3d86
+          image: amerenda/llm-manager:backend-sha-86de73a
           imagePullPolicy: Always
           ports:
             - containerPort: 8081
