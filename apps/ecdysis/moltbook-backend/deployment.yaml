@@ -24,9 +24,13 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: murderbot
+      tolerations:
+        - key: node.kubernetes.io/disk-pressure
+          operator: Exists
+          effect: NoSchedule
       containers:
         - name: moltbook-backend
-          image: amerenda/llm-manager:moltbook-sha-9ed409d
+          image: amerenda/llm-manager:moltbook-sha-c2375d1
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
