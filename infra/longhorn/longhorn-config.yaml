@@ -1,6 +1,6 @@
 # Longhorn Configuration for Raspberry Pi Cluster
-# This manifest applies the configuration changes made to optimize Longhorn
-# for a 2-node Raspberry Pi setup with archlinux excluded from storage
+# Storage nodes: rpi5-0, rpi5-1, rpi4-0 (3 RPi nodes)
+# Non-storage: murderbot (disk pressure), rpi3-0 (NotReady)
 
 apiVersion: v1
 kind: ConfigMap
@@ -8,8 +8,8 @@ metadata:
   name: longhorn-storageclass-config
   namespace: default
 data:
-  # Set default replica count to 2 (matching 2 storage nodes)
-  default-replica-count: "2"
+  # Set default replica count to 3 (matching 3 storage nodes)
+  default-replica-count: "3"
   
   # Configure system components to only run on storage nodes
   system-managed-components-node-selector: "longhorn.io/storage: true"
@@ -38,8 +38,8 @@ data:
   # Instructions for applying node labels:
   # kubectl label node <node-name> longhorn.io/storage=true
   # kubectl label node <node-name> longhorn.io/exclude-from-backup=true
-  storage-nodes: "rpi5-0,rpi5-1"
-  excluded-nodes: "archlinux"
+  storage-nodes: "rpi5-0,rpi5-1,rpi4-0"
+  excluded-nodes: "murderbot,rpi3-0"
 
 ---
 # Longhorn Settings CRD (if using Longhorn v1.6.0+)
@@ -48,7 +48,7 @@ kind: Setting
 metadata:
   name: default-replica-count
   namespace: default
-value: "2"
+value: "3"
 
 ---
 apiVersion: longhorn.io/v1beta2
