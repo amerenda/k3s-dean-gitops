@@ -64,10 +64,10 @@ doh:
     limits:
       memory: 256Mi
 
-# Pin to rpi5-1 — murderbot disk is full (adding new drive soon).
-# rpi5-1 has 4GB RAM which is enough for pihole + cloudflared.
+# Pin to rpi5-0 — most stable controller node (53% mem, lowest restart churn).
+# murderbot disk full, rpi5-1 has Longhorn/MetalLB restart loops causing instability.
 nodeSelector:
-  kubernetes.io/hostname: rpi5-1
+  kubernetes.io/hostname: rpi5-0
 
 # Pi-hole resources — bumped from 384Mi limit to handle real-world load on rpi5-1.
 resources:
