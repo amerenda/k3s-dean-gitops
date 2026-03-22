@@ -75,6 +75,13 @@ doh:
 nodeSelector:
   kubernetes.io/hostname: murderbot
 
+# Tolerate disk-pressure on murderbot — DNS is critical infrastructure
+# and must run even when the node is near disk threshold.
+tolerations:
+  - key: node.kubernetes.io/disk-pressure
+    operator: Exists
+    effect: NoSchedule
+
 # Pi-hole resources — bumped from 384Mi limit to handle real-world load on rpi5-1.
 resources:
   requests:
