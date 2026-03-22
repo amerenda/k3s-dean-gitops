@@ -70,17 +70,10 @@ doh:
     limits:
       memory: 256Mi
 
-# Pin to murderbot — critical DNS service needs the headroom.
-# RPi nodes don't have enough disk/memory for pihole + its database.
+# Pin to rpi5-1 — murderbot disk is full (adding new drive soon).
+# rpi5-1 has 4GB RAM which is enough for pihole + cloudflared.
 nodeSelector:
-  kubernetes.io/hostname: murderbot
-
-# Tolerate disk-pressure on murderbot — DNS is critical infrastructure
-# and must run even when the node is near disk threshold.
-tolerations:
-  - key: node.kubernetes.io/disk-pressure
-    operator: Exists
-    effect: NoSchedule
+  kubernetes.io/hostname: rpi5-1
 
 # Pi-hole resources — bumped from 384Mi limit to handle real-world load on rpi5-1.
 resources:
