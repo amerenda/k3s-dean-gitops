@@ -1160,11 +1160,11 @@ spec:
     - /status/currentRunners
 
 ---
-# Application: LLM Manager (DaemonSet backend + UI + PostgreSQL on GPU nodes)
+# Application: LLM Manager Backend
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app-llm-manager
+  name: app-llm-manager-backend
   namespace: default
   annotations:
     argocd.argoproj.io/sync-wave: "5"
@@ -1175,9 +1175,41 @@ spec:
   source:
     repoURL: https://github.com/amerenda/k3s-dean-gitops.git
     targetRevision: main
-    path: apps/llm-manager
-    directory:
-      recurse: true
+    path: apps/llm-manager/backend
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: llm-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Application: LLM Manager UI
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-llm-manager-ui
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/llm-manager/ui
   destination:
     server: https://kubernetes.default.svc
     namespace: llm-manager
