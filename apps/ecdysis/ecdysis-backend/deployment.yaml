@@ -1,13 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: moltbook-backend
+  name: ecdysis-backend
   namespace: ecdysis
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: moltbook-backend
+      app: ecdysis-backend
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -16,7 +16,7 @@ spec:
   template:
     metadata:
       labels:
-        app: moltbook-backend
+        app: ecdysis-backend
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "8082"
@@ -29,7 +29,7 @@ spec:
           operator: Exists
           effect: NoSchedule
       containers:
-        - name: moltbook-backend
+        - name: ecdysis-backend
           image: amerenda/ecdysis-backend:sha-a050fbd
           imagePullPolicy: Always
           ports:

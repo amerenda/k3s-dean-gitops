@@ -10,9 +10,9 @@ data:
         root /usr/share/nginx/html;
         index index.html;
 
-        # Moltbook agent endpoints -> moltbook-backend (extracted service)
+        # Moltbook agent endpoints -> ecdysis-backend (extracted service)
         location /api/agents {
-            proxy_pass http://moltbook-backend.ecdysis.svc.cluster.local:8082/api/agents;
+            proxy_pass http://ecdysis-backend.ecdysis.svc.cluster.local:8082/api/agents;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_read_timeout 120s;
@@ -26,9 +26,9 @@ data:
             proxy_read_timeout 120s;
         }
 
-        # Health -> moltbook-backend (primary backend for ecdysis)
+        # Health -> ecdysis-backend (primary backend for ecdysis)
         location /health {
-            proxy_pass http://moltbook-backend.ecdysis.svc.cluster.local:8082/health;
+            proxy_pass http://ecdysis-backend.ecdysis.svc.cluster.local:8082/health;
             proxy_set_header Host $host;
         }
 
