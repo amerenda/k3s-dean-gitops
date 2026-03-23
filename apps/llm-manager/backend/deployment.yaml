@@ -63,3 +63,27 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
+          args:
+            - "--private-ip"
+            - "--port=5432"
+            - "amerenda-k3s:us-east1:dean-postgres"
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /secrets/sa-key.json
+          volumeMounts:
+            - name: gcp-sa-key
+              mountPath: /secrets
+              readOnly: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+      volumes:
+        - name: gcp-sa-key
+          secret:
+            secretName: cloud-sql-sa-key

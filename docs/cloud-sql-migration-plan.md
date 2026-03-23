@@ -2,13 +2,16 @@
 
 ## Overview
 
-Migrate llm-manager and moltbook-backend from local Postgres to GCP Cloud SQL.
-Each app gets its own database on a shared Cloud SQL instance. No public IPs.
+Migrate llm-manager and ecdysis from local Postgres to GCP Cloud SQL.
+Each app gets its own database on a shared Cloud SQL instance (private IP only).
+
+**Instance**: `dean-postgres` in project `amerenda-k3s`, region `us-east1`.
+See [cloud-sql-bootstrap.md](cloud-sql-bootstrap.md) for provisioning commands.
 
 ## Current State
 
 - **Single Postgres** in `llm-manager` namespace on murderbot
-- **Shared database**: `llmmanager` with both LLM and moltbook tables
+- **Shared database**: `llmmanager` with both LLM and ecdysis tables
 - **Connection**: `postgresql://llm:PASSWORD@postgres.llm-manager.svc.cluster.local:5432/llmmanager`
 
 ## Target State
@@ -16,7 +19,7 @@ Each app gets its own database on a shared Cloud SQL instance. No public IPs.
 - **GCP Cloud SQL for PostgreSQL** (single instance, private IP only)
 - **Two databases**:
   - `llmmanager` — owned by user `llm` (llm-manager backend)
-  - `moltbook` — owned by user `moltbook` (moltbook-backend)
+  - `ecdysis` — owned by user `ecdysis` (ecdysis backend)
 - **Connectivity**: Cloud SQL Auth Proxy sidecar in each pod
 
 ## Table Ownership
@@ -40,7 +43,7 @@ Each app gets its own database on a shared Cloud SQL instance. No public IPs.
 | model_settings | Model-specific settings |
 | app_rate_limits | Per-app rate limits |
 
-### moltbook database (`moltbook`)
+### ecdysis database (`ecdysis`)
 
 | Table | Purpose |
 |-------|---------|
@@ -56,7 +59,7 @@ Each app gets its own database on a shared Cloud SQL instance. No public IPs.
 
 **After split**: Drop the FK. Moltbook-backend calls llm-manager's
 `GET /api/runners` HTTP API to resolve Ollama URLs instead of querying
-the table directly. Add `LLM_MANAGER_URL` env var to moltbook-backend.
+the table directly. Add `LLM_MANAGER_URL` env var to ecdysis-backend.
 
 ## GCP Connectivity: Cloud SQL Auth Proxy Sidecar
 
@@ -68,7 +71,7 @@ No public IPs. Each pod that needs DB access gets a sidecar container:
   args:
     - "--private-ip"
     - "--port=5432"
-    - "PROJECT_ID:REGION:INSTANCE_NAME"
+    - "amerenda-k3s:us-east1:dean-postgres"
   env:
     - name: GOOGLE_APPLICATION_CREDENTIALS
       value: /secrets/sa-key.json
@@ -99,7 +102,7 @@ Same proxy image works in docker-compose as a service:
 services:
   cloud-sql-proxy:
     image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
-    command: ["--private-ip", "--address", "0.0.0.0", "--port", "5432", "PROJECT:REGION:INSTANCE"]
+    command: ["--private-ip", "--address", "0.0.0.0", "--port", "5432", "amerenda-k3s:us-east1:dean-postgres"]
     volumes:
       - ./gcp-sa-key.json:/secrets/sa-key.json:ro
     environment:
@@ -114,17 +117,15 @@ services:
 
 ## Migration Steps
 
-### Phase 1: Provision GCP Resources
+### Phase 1: Provision GCP Resources — DONE
 
-1. Create Cloud SQL instance (private IP only, no public IP)
-   - Machine type: db-f1-micro or db-g1-small (homelab scale)
-   - Region: us-east1 (closest to home)
-   - PostgreSQL 15+
-   - Enable private IP, disable public IP
-2. Create databases: `llmmanager`, `moltbook`
-3. Create users: `llm`, `moltbook`
-4. Create GCP service account with `cloudsql.client` role
-5. Export SA key, store in Bitwarden
+See [cloud-sql-bootstrap.md](cloud-sql-bootstrap.md) for the full commands.
+
+- [x] Cloud SQL instance `dean-postgres` (PG16, db-f1-micro, us-east1, private IP only)
+- [x] Databases: `llmmanager`, `ecdysis`
+- [x] Users: `llm`, `ecdysis`
+- [x] Service accounts: `k3s-dean-psql` (RW), `k3s-dean-psql-ro` (RO)
+- [x] SA keys + passwords + URLs stored in Bitwarden (`dean-` prefix)
 
 ### Phase 2: Migrate llm-manager
 
@@ -147,36 +148,36 @@ services:
 5. Update DATABASE_URL secret to `postgresql://llm:PASS@localhost:5432/llmmanager`
 6. Scale llm-manager back to 1, verify
 
-### Phase 3: Migrate moltbook-backend
+### Phase 3: Migrate ecdysis-backend
 
-1. Stop moltbook-backend (scale to 0)
-2. `pg_dump` moltbook tables:
+1. Stop ecdysis-backend (scale to 0)
+2. `pg_dump` ecdysis tables:
    ```bash
    pg_dump -h localhost -U llm -d llmmanager \
      -t moltbook_configs -t moltbook_state -t moltbook_activity \
      -t moltbook_peer_posts -t moltbook_peer_interactions \
-     > moltbook-dump.sql
+     > ecdysis-dump.sql
    ```
-3. Restore to GCP `moltbook` database
-4. Add cloud-sql-proxy sidecar to moltbook-backend deployment
-5. Update DATABASE_URL to `postgresql://moltbook:PASS@localhost:5432/moltbook`
+3. Restore to GCP `ecdysis` database
+4. Add cloud-sql-proxy sidecar to ecdysis-backend deployment
+5. Update DATABASE_URL to `postgresql://ecdysis:PASS@localhost:5432/ecdysis`
 6. Scale back to 1, verify
 
 ### Phase 4: Handle llm_runners dependency
 
-1. Add `LLM_MANAGER_URL` env var to moltbook-backend deployment
+1. Add `LLM_MANAGER_URL` env var to ecdysis-backend deployment
    (value: `http://llm-manager-backend.llm-manager.svc.cluster.local:8081`)
-2. Update moltbook-backend code: replace direct `llm_runners` DB reads
+2. Update ecdysis-backend code: replace direct `llm_runners` DB reads
    with HTTP call to `GET /api/runners`
 3. Drop FK constraint:
    ```sql
    ALTER TABLE moltbook_configs DROP CONSTRAINT IF EXISTS moltbook_configs_llm_runner_id_fkey;
    ```
-4. Remove `get_active_runners` and `get_runner_by_id` from moltbook-backend db.py
+4. Remove `get_active_runners` and `get_runner_by_id` from ecdysis-backend db.py
 
 ### Phase 5: Cleanup
 
-1. Drop moltbook tables from local Postgres (already removed from llm-manager code)
+1. Drop ecdysis tables from local Postgres (already removed from llm-manager code)
 2. Keep local Postgres running read-only for 1 week as rollback safety
 3. After verification period, decommission local Postgres pod
 4. Remove postgres deployment/service/PVC from llm-manager k8s manifests
