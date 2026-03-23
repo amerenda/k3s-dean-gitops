@@ -25,7 +25,7 @@ spec:
                       - murderbot
       containers:
         - name: ui
-          image: amerenda/llm-manager:ui-sha-2ace85b
+          image: amerenda/llm-manager:ui-sha-be2b9c7
           imagePullPolicy: Always
           ports:
             - containerPort: 80
