@@ -70,7 +70,6 @@ spec:
         - name: cloud-sql-proxy
           image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
           args:
-            - "--private-ip"
             - "--port=5432"
             - "amerenda-k3s:us-east1:k3s-dean-postgres"
           env:
