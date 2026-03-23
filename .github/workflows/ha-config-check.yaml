@@ -4,12 +4,12 @@ on:
   push:
     # Run on main branch for HA config changes OR any branch when workflow file changes (for testing)
     paths:
-      - 'gitops/apps/home-assistant/**'
+      - 'apps/home-assistant/**'
       - '.github/workflows/ha-config-check.yaml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'gitops/apps/home-assistant/**'
+      - 'apps/home-assistant/**'
       - '.github/workflows/ha-config-check.yaml'
   # Allow manual triggering for testing
   workflow_dispatch:
@@ -17,7 +17,7 @@ on:
 jobs:
   yaml-lint:
     name: YAML Lint
-    runs-on: arc-runner-set
+    runs-on: ubuntu-latest
     # Run on PRs and pushes to main
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     container:
@@ -34,23 +34,23 @@ jobs:
           
           # Build list of directories to check (only if they exist)
           DIRS_TO_CHECK=()
-          if [ -d "gitops/apps/home-assistant/configuration/automations" ]; then
-            DIRS_TO_CHECK+=("gitops/apps/home-assistant/configuration/automations")
+          if [ -d "apps/home-assistant/configuration/automations" ]; then
+            DIRS_TO_CHECK+=("apps/home-assistant/configuration/automations")
           fi
-          if [ -d "gitops/apps/home-assistant/configuration/blueprints" ]; then
-            DIRS_TO_CHECK+=("gitops/apps/home-assistant/configuration/blueprints")
+          if [ -d "apps/home-assistant/configuration/blueprints" ]; then
+            DIRS_TO_CHECK+=("apps/home-assistant/configuration/blueprints")
           fi
-          if [ -d "gitops/apps/home-assistant/configuration/scripts" ]; then
-            DIRS_TO_CHECK+=("gitops/apps/home-assistant/configuration/scripts")
+          if [ -d "apps/home-assistant/configuration/scripts" ]; then
+            DIRS_TO_CHECK+=("apps/home-assistant/configuration/scripts")
           fi
-          if [ -d "gitops/apps/home-assistant/configuration/dashboards" ]; then
-            DIRS_TO_CHECK+=("gitops/apps/home-assistant/configuration/dashboards")
+          if [ -d "apps/home-assistant/configuration/dashboards" ]; then
+            DIRS_TO_CHECK+=("apps/home-assistant/configuration/dashboards")
           fi
-          if [ -d "gitops/apps/home-assistant/configuration/helpers/input_text" ]; then
-            DIRS_TO_CHECK+=("gitops/apps/home-assistant/configuration/helpers/input_text")
+          if [ -d "apps/home-assistant/configuration/helpers/input_text" ]; then
+            DIRS_TO_CHECK+=("apps/home-assistant/configuration/helpers/input_text")
           fi
-          if [ -d "gitops/apps/home-assistant/configuration/helpers/generated" ]; then
-            DIRS_TO_CHECK+=("gitops/apps/home-assistant/configuration/helpers/generated")
+          if [ -d "apps/home-assistant/configuration/helpers/generated" ]; then
+            DIRS_TO_CHECK+=("apps/home-assistant/configuration/helpers/generated")
           fi
           
           if [ ${#DIRS_TO_CHECK[@]} -eq 0 ]; then
@@ -156,7 +156,7 @@ jobs:
           echo ""
           
           # Find all ConfigMap files
-          CONFIGMAP_FILES=$(find gitops/apps/home-assistant/ -name "*-configmap.yaml" -type f 2>/dev/null || true)
+          CONFIGMAP_FILES=$(find apps/home-assistant/ -name "*-configmap.yaml" -type f 2>/dev/null || true)
           
           if [ -z "$CONFIGMAP_FILES" ]; then
             echo "No ConfigMap files found to validate."
