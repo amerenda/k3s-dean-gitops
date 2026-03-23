@@ -17,7 +17,7 @@ spec:
         kubernetes.io/hostname: murderbot
       containers:
         - name: frontend
-          image: amerenda/ecdysis-frontend:sha-e84f8fa
+          image: amerenda/ecdysis-frontend:sha-dc37112
           imagePullPolicy: Always
           ports:
             - containerPort: 80
