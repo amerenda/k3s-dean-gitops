@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ecdysis-backend
+  namespace: ecdysis
+  labels:
+    app: ecdysis-backend
+spec:
+  selector:
+    matchLabels:
+      app: ecdysis-backend
+  namespaceSelector:
+    matchNames:
+      - ecdysis
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

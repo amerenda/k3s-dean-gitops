@@ -1,0 +1,468 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-app-ecdysis
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "Apps"
+data:
+  app-ecdysis.json: |
+    {
+      "uid": "app-ecdysis",
+      "title": "Ecdysis",
+      "tags": ["ecdysis"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "templating": {
+        "list": []
+      },
+      "annotations": {
+        "list": []
+      },
+      "panels": [
+        {
+          "type": "row",
+          "title": "Overview",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "id": 1,
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "type": "stat",
+          "title": "Running Agents",
+          "id": 2,
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "moltbook_backend_agents_running",
+              "legendFormat": "",
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "type": "stat",
+          "title": "API Request Rate",
+          "id": 3,
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(moltbook_backend_api_requests_total[5m]))",
+              "legendFormat": "",
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "type": "stat",
+          "title": "API Requests (24h)",
+          "id": 4,
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(increase(moltbook_backend_api_requests_total[24h]))",
+              "legendFormat": "",
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "type": "row",
+          "title": "API Requests",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+          "id": 5,
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "type": "timeseries",
+          "title": "Request Rate Over Time",
+          "id": 6,
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(moltbook_backend_api_requests_total[5m])) by (method, endpoint)",
+              "legendFormat": "{{method}} {{endpoint}}",
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 10,
+                "spanNulls": false,
+                "drawStyle": "line",
+                "pointSize": 5,
+                "showPoints": "auto",
+                "stacking": { "mode": "none", "group": "A" },
+                "axisPlacement": "auto",
+                "gradientMode": "none",
+                "lineInterpolation": "linear"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": { "mode": "multi", "sort": "desc" },
+            "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] }
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Requests by Endpoint",
+          "id": 7,
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum by (endpoint) (increase(moltbook_backend_api_requests_total[1h]))",
+              "legendFormat": "{{endpoint}}",
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 100,
+                "spanNulls": false,
+                "drawStyle": "bars",
+                "pointSize": 5,
+                "showPoints": "never",
+                "stacking": { "mode": "normal", "group": "A" },
+                "axisPlacement": "auto",
+                "gradientMode": "none",
+                "lineInterpolation": "linear",
+                "barAlignment": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": { "mode": "multi", "sort": "desc" },
+            "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] }
+          }
+        },
+        {
+          "type": "row",
+          "title": "Process",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+          "id": 8,
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "type": "timeseries",
+          "title": "Process RSS Memory",
+          "id": 9,
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 15 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "process_resident_memory_bytes{job=\"ecdysis-backend\"}",
+              "legendFormat": "RSS",
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 10,
+                "spanNulls": false,
+                "drawStyle": "line",
+                "pointSize": 5,
+                "showPoints": "auto",
+                "stacking": { "mode": "none", "group": "A" },
+                "axisPlacement": "auto",
+                "gradientMode": "none",
+                "lineInterpolation": "linear"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": { "mode": "single", "sort": "none" },
+            "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] }
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Process CPU",
+          "id": 10,
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 15 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "rate(process_cpu_seconds_total{job=\"ecdysis-backend\"}[5m])",
+              "legendFormat": "CPU",
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 10,
+                "spanNulls": false,
+                "drawStyle": "line",
+                "pointSize": 5,
+                "showPoints": "auto",
+                "stacking": { "mode": "none", "group": "A" },
+                "axisPlacement": "auto",
+                "gradientMode": "none",
+                "lineInterpolation": "linear"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": { "mode": "single", "sort": "none" },
+            "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] }
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Open File Descriptors",
+          "id": 11,
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 15 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "process_open_fds{job=\"ecdysis-backend\"}",
+              "legendFormat": "Open FDs",
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 10,
+                "spanNulls": false,
+                "drawStyle": "line",
+                "pointSize": 5,
+                "showPoints": "auto",
+                "stacking": { "mode": "none", "group": "A" },
+                "axisPlacement": "auto",
+                "gradientMode": "none",
+                "lineInterpolation": "linear"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": { "mode": "single", "sort": "none" },
+            "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] }
+          }
+        },
+        {
+          "type": "row",
+          "title": "Pod Resources",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+          "id": 12,
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "type": "stat",
+          "title": "Pod Status",
+          "id": 13,
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 24 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "kube_pod_status_phase{namespace=\"ecdysis\", pod=~\"ecdysis-backend.*\", phase=\"Running\"}",
+              "legendFormat": "{{pod}}",
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              },
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "1": { "text": "Running", "color": "green" },
+                    "0": { "text": "Not Running", "color": "red" }
+                  }
+                }
+              ]
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "type": "stat",
+          "title": "Pod Restarts (24h)",
+          "id": 14,
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 24 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"ecdysis\", container=\"ecdysis-backend\"}[24h]))",
+              "legendFormat": "",
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 1 },
+                  { "color": "red", "value": 5 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto"
+          }
+        }
+      ]
+    }

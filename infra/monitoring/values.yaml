@@ -103,11 +103,17 @@ kubeScheduler:
   enabled: false
 kubeControllerManager:
   enabled: false
-# Kubelet metrics (port 10250) are not reachable from pods on K3s; use node-exporter for node metrics.
+# Kubelet metrics (port 10250) — accessible from pods with bearer token auth on K3s.
 kubelet:
   enabled: true
   serviceMonitor:
-    enabled: false
+    enabled: true
+    # cAdvisor metrics for container CPU/memory/network/filesystem
+    cAdvisor: true
+    # Probes metrics
+    probes: true
+    # Resource metrics
+    resource: true
 defaultRules:
   rules:
-    kubelet: false
+    kubelet: true

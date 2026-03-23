@@ -190,7 +190,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(coredns_dns_request_count_total[1m])) by (kubernetes_pod_name)",
+              "expr": "sum(rate(coredns_dns_requests_total[1m])) by (kubernetes_pod_name)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{kubernetes_pod_name}}",
@@ -303,7 +303,7 @@ data:
           "pluginVersion": "7.0.1",
           "targets": [
             {
-              "expr": "sum(rate(coredns_dns_request_count_total[1m]))",
+              "expr": "sum(rate(coredns_dns_requests_total[1m]))",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -378,7 +378,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(coredns_dns_request_count_total[1m])) by (proto)",
+              "expr": "sum(rate(coredns_dns_requests_total[1m])) by (proto)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
@@ -484,7 +484,7 @@ data:
           "pluginVersion": "7.0.1",
           "targets": [
             {
-              "expr": "sum(coredns_cache_size{type=\"denial\"})",
+              "expr": "sum(coredns_cache_entries{type=\"denial\"})",
               "format": "time_series",
               "intervalFactor": 1,
               "refId": "A",
@@ -551,7 +551,7 @@ data:
           "pluginVersion": "7.0.1",
           "targets": [
             {
-              "expr": "sum(coredns_cache_size{type=\"success\"})",
+              "expr": "sum(coredns_cache_entries{type=\"success\"})",
               "format": "time_series",
               "intervalFactor": 1,
               "refId": "A",
@@ -915,7 +915,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(coredns_dns_request_type_count_total[1m])) by (type)",
+              "expr": "sum(rate(coredns_dns_requests_total[1m])) by (type)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{type}}",
@@ -1018,7 +1018,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(coredns_dns_response_rcode_count_total[1m])) by (rcode)",
+              "expr": "sum(rate(coredns_dns_responses_total[1m])) by (rcode)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{rcode}}",
@@ -1126,7 +1126,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(coredns_dns_request_do_count_total[1m]))",
+              "expr": "sum(rate(coredns_dns_requests_total{do=\"true\"}[1m]))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "DO",
@@ -1138,7 +1138,7 @@ data:
               }
             },
             {
-              "expr": "sum(rate(coredns_dns_request_count_total[1m]))",
+              "expr": "sum(rate(coredns_dns_requests_total[1m]))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "total",
