@@ -232,7 +232,7 @@ data:
           "targets": [
             {
               "datasource": {"type": "prometheus", "uid": "prometheus"},
-              "expr": "llm_backend_moltbook_agents_running",
+              "expr": "moltbook_backend_agents_running",
               "legendFormat": "agents",
               "refId": "A"
             }
@@ -606,7 +606,7 @@ data:
           "targets": [
             {
               "datasource": {"type": "prometheus", "uid": "prometheus"},
-              "expr": "llm_backend_moltbook_agents_running",
+              "expr": "moltbook_backend_agents_running",
               "legendFormat": "agents",
               "refId": "A"
             }

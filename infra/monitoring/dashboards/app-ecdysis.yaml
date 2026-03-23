@@ -79,13 +79,13 @@ data:
         },
         {
           "type": "stat",
-          "title": "API Request Rate",
+          "title": "Process Uptime",
           "id": 3,
           "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "sum(rate(moltbook_backend_api_requests_total[5m]))",
+              "expr": "time() - process_start_time_seconds{job=\"ecdysis-backend\"}",
               "legendFormat": "",
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "refId": "A"
@@ -93,47 +93,7 @@ data:
           ],
           "fieldConfig": {
             "defaults": {
-              "unit": "reqps",
-              "color": { "mode": "thresholds" },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  { "color": "green", "value": null }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": ["lastNotNull"],
-              "fields": "",
-              "values": false
-            },
-            "orientation": "auto",
-            "textMode": "auto",
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto"
-          }
-        },
-        {
-          "type": "stat",
-          "title": "API Requests (24h)",
-          "id": 4,
-          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "targets": [
-            {
-              "expr": "sum(increase(moltbook_backend_api_requests_total[24h]))",
-              "legendFormat": "",
-              "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "refId": "A"
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
+              "unit": "s",
               "color": { "mode": "thresholds" },
               "thresholds": {
                 "mode": "absolute",
@@ -158,8 +118,48 @@ data:
           }
         },
         {
+          "type": "stat",
+          "title": "Process Memory",
+          "id": 4,
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "process_resident_memory_bytes{job=\"ecdysis-backend\"}",
+              "legendFormat": "",
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
           "type": "row",
-          "title": "API Requests",
+          "title": "Python Runtime",
           "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
           "id": 5,
           "collapsed": false,
@@ -167,21 +167,21 @@ data:
         },
         {
           "type": "timeseries",
-          "title": "Request Rate Over Time",
+          "title": "Python GC Collections",
           "id": 6,
           "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "sum(rate(moltbook_backend_api_requests_total[5m])) by (method, endpoint)",
-              "legendFormat": "{{method}} {{endpoint}}",
+              "expr": "rate(python_gc_collections_total{job=\"ecdysis-backend\"}[5m])",
+              "legendFormat": "gen {{generation}}",
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "refId": "A"
             }
           ],
           "fieldConfig": {
             "defaults": {
-              "unit": "reqps",
+              "unit": "ops",
               "color": { "mode": "palette-classic" },
               "custom": {
                 "lineWidth": 1,
@@ -205,14 +205,14 @@ data:
         },
         {
           "type": "timeseries",
-          "title": "Requests by Endpoint",
+          "title": "Process Open File Descriptors",
           "id": 7,
           "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "sum by (endpoint) (increase(moltbook_backend_api_requests_total[1h]))",
-              "legendFormat": "{{endpoint}}",
+              "expr": "process_open_fds{job=\"ecdysis-backend\"}",
+              "legendFormat": "Open FDs",
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "refId": "A"
             }
@@ -223,16 +223,15 @@ data:
               "color": { "mode": "palette-classic" },
               "custom": {
                 "lineWidth": 1,
-                "fillOpacity": 100,
+                "fillOpacity": 10,
                 "spanNulls": false,
-                "drawStyle": "bars",
+                "drawStyle": "line",
                 "pointSize": 5,
-                "showPoints": "never",
-                "stacking": { "mode": "normal", "group": "A" },
+                "showPoints": "auto",
+                "stacking": { "mode": "none", "group": "A" },
                 "axisPlacement": "auto",
                 "gradientMode": "none",
-                "lineInterpolation": "linear",
-                "barAlignment": 0
+                "lineInterpolation": "linear"
               }
             },
             "overrides": []

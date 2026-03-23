@@ -1087,7 +1087,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) / sum(machine_cpu_cores) by (node)",
+              "expr": "1 - avg by (node) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) / on(node) group_left sum by (node) (machine_cpu_cores)",
               "legendFormat": "{{node}}",
               "refId": "A"
             }
@@ -1431,7 +1431,7 @@ data:
         },
         {
           "type": "timeseries",
-          "title": "etcd Leader Status",
+          "title": "API Server Up",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
@@ -1473,7 +1473,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "etcd_server_has_leader",
+              "expr": "up{job=\"apiserver\"}",
               "legendFormat": "{{instance}}",
               "refId": "A"
             }
