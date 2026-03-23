@@ -30,7 +30,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: moltbook-backend
-          image: amerenda/ecdysis-backend:latest
+          image: amerenda/ecdysis-backend:sha-a050fbd
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
