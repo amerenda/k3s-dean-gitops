@@ -119,4 +119,19 @@ whitelist:
   - gcm.googleapis.com
   - gcm-http.googleapis.com
 
+# Prometheus metrics via pihole-exporter sidecar
+monitoring:
+  sidecar:
+    enabled: true
+    port: 9617
+    resources:
+      requests:
+        cpu: 10m
+        memory: 16Mi
+      limits:
+        cpu: 50m
+        memory: 32Mi
+  podMonitor:
+    enabled: true
+
 # Cloudflare for everything else
