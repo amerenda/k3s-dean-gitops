@@ -6,8 +6,8 @@ on:
 
 jobs:
   auto-merge:
-    if: github.actor == 'github-actions[bot]'
-    runs-on: arc-runner-set
+    if: startsWith(github.head_ref, 'deploy/') || startsWith(github.head_ref, 'release/')
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
