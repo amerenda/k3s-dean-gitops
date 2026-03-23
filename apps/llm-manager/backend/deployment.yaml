@@ -29,11 +29,13 @@ spec:
           ports:
             - containerPort: 8081
           env:
-            - name: DATABASE_URL
+            - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
                   name: cloud-sql-postgres-credentials
-                  key: postgres-url
+                  key: postgres-password
+            - name: DATABASE_URL
+              value: "postgresql://llm:$(PGPASSWORD)@127.0.0.1:5432/llmmanager"
             - name: LLM_MANAGER_AGENT_PSK
               valueFrom:
                 secretKeyRef:
@@ -68,7 +70,7 @@ spec:
           args:
             - "--private-ip"
             - "--port=5432"
-            - "amerenda-k3s:us-east1:dean-postgres"
+            - "amerenda-k3s:us-east1:k3s-dean-postgres"
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /secrets/sa-key.json

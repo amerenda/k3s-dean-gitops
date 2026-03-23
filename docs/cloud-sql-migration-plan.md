@@ -71,7 +71,7 @@ No public IPs. Each pod that needs DB access gets a sidecar container:
   args:
     - "--private-ip"
     - "--port=5432"
-    - "amerenda-k3s:us-east1:dean-postgres"
+    - "amerenda-k3s:us-east1:k3s-dean-postgres"
   env:
     - name: GOOGLE_APPLICATION_CREDENTIALS
       value: /secrets/sa-key.json
@@ -102,7 +102,7 @@ Same proxy image works in docker-compose as a service:
 services:
   cloud-sql-proxy:
     image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
-    command: ["--private-ip", "--address", "0.0.0.0", "--port", "5432", "amerenda-k3s:us-east1:dean-postgres"]
+    command: ["--private-ip", "--address", "0.0.0.0", "--port", "5432", "amerenda-k3s:us-east1:k3s-dean-postgres"]
     volumes:
       - ./gcp-sa-key.json:/secrets/sa-key.json:ro
     environment:

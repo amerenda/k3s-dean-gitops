@@ -1,7 +1,7 @@
 # Cloud SQL Bootstrap
 
 Commands to provision the GCP Cloud SQL instance for the dean cluster.
-Project: `amerenda-k3s`, Region: `us-east1`, Instance: `dean-postgres`.
+Project: `amerenda-k3s`, Region: `us-east1`, Instance: `k3s-dean-postgres`.
 
 ## Prerequisites: Enable APIs
 
@@ -35,7 +35,7 @@ gcloud services vpc-peerings connect \
 Private IP only, no public IP. The Cloud SQL Auth Proxy handles connectivity.
 
 ```bash
-gcloud sql instances create dean-postgres \
+gcloud sql instances create k3s-dean-postgres \
   --project=amerenda-k3s \
   --database-version=POSTGRES_16 \
   --region=us-east1 \
@@ -54,8 +54,8 @@ gcloud sql instances create dean-postgres \
 ## Create Databases
 
 ```bash
-gcloud sql databases create llmmanager --instance=dean-postgres --project=amerenda-k3s
-gcloud sql databases create ecdysis --instance=dean-postgres --project=amerenda-k3s
+gcloud sql databases create llmmanager --instance=k3s-dean-postgres --project=amerenda-k3s
+gcloud sql databases create ecdysis --instance=k3s-dean-postgres --project=amerenda-k3s
 ```
 
 ## Create Database Users
@@ -68,12 +68,12 @@ echo "llm password: $LLM_PASS"
 echo "ecdysis password: $ECDYSIS_PASS"
 
 gcloud sql users create llm \
-  --instance=dean-postgres \
+  --instance=k3s-dean-postgres \
   --password="$LLM_PASS" \
   --project=amerenda-k3s
 
 gcloud sql users create ecdysis \
-  --instance=dean-postgres \
+  --instance=k3s-dean-postgres \
   --password="$ECDYSIS_PASS" \
   --project=amerenda-k3s
 ```
@@ -136,5 +136,5 @@ rm /tmp/k3s-dean-psql-key.json /tmp/k3s-dean-psql-ro-key.json
 Used in Cloud SQL Auth Proxy sidecar config:
 
 ```
-amerenda-k3s:us-east1:dean-postgres
+amerenda-k3s:us-east1:k3s-dean-postgres
 ```
