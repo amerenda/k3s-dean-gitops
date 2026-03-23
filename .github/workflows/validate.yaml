@@ -12,7 +12,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Validate YAML
         run: |
           find . -name '*.yaml' -o -name '*.yml' | head -200 | while read f; do

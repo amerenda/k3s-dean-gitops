@@ -24,7 +24,7 @@ jobs:
       image: amerenda/k3s-runners:home-assistant
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run yamllint on raw configuration files
         shell: bash
