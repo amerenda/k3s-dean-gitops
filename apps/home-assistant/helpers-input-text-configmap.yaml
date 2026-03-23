@@ -71,8 +71,3 @@ data:
       name: "Set Value"
       initial: ""
       max: 255
-  light_latency_switch.yaml: |
-    light_latency_switch:
-      name: "Last Switch Pressed"
-      initial: ""
-      max: 100
