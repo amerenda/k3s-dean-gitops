@@ -66,6 +66,10 @@ defaultBackupStore:
   backupTargetCredentialSecret: gcs-backup-credentials
   pollInterval: 300
 
+metrics:
+  serviceMonitor:
+    enabled: true
+
 service:
   ui:
     type: LoadBalancer

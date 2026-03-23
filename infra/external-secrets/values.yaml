@@ -72,6 +72,12 @@ external-secrets:
     enabled: true
     port: 8080
     path: /metrics
+    service:
+      enabled: true
+      port: 8080
+    serviceMonitor:
+      enabled: true
+      interval: 60s
   
   # Health check
   health:
