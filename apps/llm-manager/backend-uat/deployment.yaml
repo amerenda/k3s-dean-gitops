@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-manager-backend-uat
+  namespace: llm-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm-manager-backend-uat
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: llm-manager-backend-uat
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8083"
+        prometheus.io/path: "/metrics"
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: murderbot
+      tolerations:
+        - key: node.kubernetes.io/disk-pressure
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: backend
+          image: amerenda/llm-manager:backend-latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8083
+          env:
+            - name: PORT
+              value: "8083"
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cloud-sql-postgres-credentials-uat
+                  key: postgres-password
+            - name: DATABASE_URL
+              value: "postgresql://llm_uat:$(PGPASSWORD)@127.0.0.1:5432/llm_manager_uat"
+            - name: LLM_MANAGER_AGENT_PSK
+              valueFrom:
+                secretKeyRef:
+                  name: agent-psk
+                  key: psk
+                  optional: true
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8083
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8083
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 384Mi
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
+          args:
+            - "--port=5432"
+            - "amerenda-k3s:us-east1:k3s-dean-postgres"
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /secrets/sa-key.json
+          volumeMounts:
+            - name: gcp-sa-key
+              mountPath: /secrets
+              readOnly: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+      volumes:
+        - name: gcp-sa-key
+          secret:
+            secretName: cloud-sql-sa-key
