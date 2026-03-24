@@ -18,7 +18,7 @@ metadata:
   namespace: default
 subsets:
   - addresses:
-      - ip: 10.100.20.18
+      - ip: 100.92.232.76  # Mac Mini Tailscale IP (WireGuard encrypted)
     ports:
       - port: 9120
         protocol: TCP
