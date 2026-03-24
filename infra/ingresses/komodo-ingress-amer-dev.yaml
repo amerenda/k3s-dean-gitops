@@ -22,8 +22,10 @@ addressType: IPv4
 endpoints:
   - addresses:
       - 100.92.232.76  # Mac Mini Tailscale IP (WireGuard encrypted)
+    conditions: {}
 ports:
-  - port: 9120
+  - name: ""
+    port: 9120
     protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
