@@ -22,39 +22,13 @@ spec:
           operator: Exists
           effect: NoSchedule
       restartPolicy: Never
-      shareProcessNamespace: true
-      containers:
-        - name: reset
-          image: postgres:16-alpine
-          command:
-            - sh
-            - -c
-            - |
-              echo "Waiting for cloud-sql-proxy..."
-              until pg_isready -h 127.0.0.1 -p 5432 -q; do sleep 2; done
-              echo "Connected."
-              psql -h 127.0.0.1 -p 5432 -U llm_uat -d llm_manager_uat -f /seed/seed.sql
-              echo "Done. Killing proxy..."
-              kill $(pgrep cloud-sql-proxy) 2>/dev/null || true
-          env:
-            - name: PGPASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: cloud-sql-postgres-credentials-uat
-                  key: postgres-password
-          volumeMounts:
-            - name: seed-data
-              mountPath: /seed
-              readOnly: true
+      initContainers:
         - name: cloud-sql-proxy
           image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
-          command:
-            - sh
-            - -c
-            - |
-              trap 'exit 0' TERM
-              /cloud-sql-proxy --port=5432 "amerenda-k3s:us-east1:k3s-dean-postgres" &
-              wait $!
+          restartPolicy: Always
+          args:
+            - "--port=5432"
+            - "amerenda-k3s:us-east1:k3s-dean-postgres"
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /secrets/sa-key.json
@@ -69,6 +43,28 @@ spec:
             limits:
               cpu: 100m
               memory: 64Mi
+      containers:
+        - name: reset
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for cloud-sql-proxy..."
+              until pg_isready -h 127.0.0.1 -p 5432 -q; do sleep 2; done
+              echo "Connected."
+              psql -h 127.0.0.1 -p 5432 -U llm_uat -d llm_manager_uat -f /seed/seed.sql
+              echo "Done."
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cloud-sql-postgres-credentials-uat
+                  key: postgres-password
+          volumeMounts:
+            - name: seed-data
+              mountPath: /seed
+              readOnly: true
       volumes:
         - name: seed-data
           configMap:
