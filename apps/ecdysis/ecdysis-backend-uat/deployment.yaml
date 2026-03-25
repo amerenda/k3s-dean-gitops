@@ -30,7 +30,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: ecdysis-backend
-          image: amerenda/ecdysis-backend:sha-82d2148
+          image: amerenda/ecdysis-backend:sha-30a4991
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
@@ -42,6 +42,10 @@ spec:
                   key: postgres-password
             - name: DATABASE_URL
               value: "postgresql://ecdysis_uat:$(PGPASSWORD)@127.0.0.1:5432/ecdysis_uat"
+            - name: DB_POOL_MIN
+              value: "1"
+            - name: DB_POOL_MAX
+              value: "5"
             - name: LLM_MANAGER_AGENT_PSK
               valueFrom:
                 secretKeyRef:
