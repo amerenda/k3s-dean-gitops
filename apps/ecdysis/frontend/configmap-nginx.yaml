@@ -18,6 +18,13 @@ data:
             proxy_read_timeout 120s;
         }
 
+        # System logs -> ecdysis-backend
+        location /api/logs {
+            proxy_pass http://ecdysis-backend.ecdysis.svc.cluster.local:8082/api/logs;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+
         # LLM endpoints -> llm-manager (GPU, models, runners, vram, apps)
         location /api/ {
             proxy_pass http://llm-manager-backend.llm-manager.svc.cluster.local:8081/api/;
