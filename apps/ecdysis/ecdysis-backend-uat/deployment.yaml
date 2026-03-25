@@ -41,7 +41,7 @@ spec:
                   name: cloud-sql-postgres-credentials-uat
                   key: postgres-password
             - name: DATABASE_URL
-              value: "postgresql://ecdysis_uat:$(PGPASSWORD)@127.0.0.1:5432/ecdysis"
+              value: "postgresql://ecdysis_uat:$(PGPASSWORD)@127.0.0.1:5432/ecdysis_uat"
             - name: LLM_MANAGER_AGENT_PSK
               valueFrom:
                 secretKeyRef:
@@ -71,7 +71,7 @@ spec:
           image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
           args:
             - "--port=5432"
-            - "amerenda-k3s:us-east1:k3s-dean-postgres-uat"
+            - "amerenda-k3s:us-east1:k3s-dean-postgres"
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /secrets/sa-key.json
