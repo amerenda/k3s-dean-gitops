@@ -11,6 +11,9 @@ spec:
   ttlSecondsAfterFinished: 300
   backoffLimit: 0
   template:
+    metadata:
+      labels:
+        app: llm-manager-uat-db-reset
     spec:
       nodeSelector:
         kubernetes.io/hostname: murderbot
@@ -19,10 +22,20 @@ spec:
           operator: Exists
           effect: NoSchedule
       restartPolicy: Never
+      shareProcessNamespace: true
       containers:
         - name: reset
           image: postgres:16-alpine
-          command: ["sh", "-c", "echo 'Waiting for cloud-sql-proxy...' && until pg_isready -h 127.0.0.1 -p 5432 -q; do sleep 2; done && echo 'Connected.' && psql -h 127.0.0.1 -p 5432 -U llm_uat -d llm_manager_uat -f /seed/seed.sql && echo 'Done. Stopping proxy...' && wget -qO- http://localhost:9091/quitquitquit || true"]
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for cloud-sql-proxy..."
+              until pg_isready -h 127.0.0.1 -p 5432 -q; do sleep 2; done
+              echo "Connected."
+              psql -h 127.0.0.1 -p 5432 -U llm_uat -d llm_manager_uat -f /seed/seed.sql
+              echo "Done. Killing proxy..."
+              kill $(pgrep cloud-sql-proxy) 2>/dev/null || true
           env:
             - name: PGPASSWORD
               valueFrom:
@@ -37,8 +50,6 @@ spec:
           image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
           args:
             - "--port=5432"
-            - "--quitquitquit"
-            - "--http-port=9091"
             - "amerenda-k3s:us-east1:k3s-dean-postgres"
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
