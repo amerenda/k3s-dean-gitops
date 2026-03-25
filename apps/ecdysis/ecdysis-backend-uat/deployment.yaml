@@ -4,7 +4,7 @@ metadata:
   name: ecdysis-backend-uat
   namespace: ecdysis
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: ecdysis-backend-uat
