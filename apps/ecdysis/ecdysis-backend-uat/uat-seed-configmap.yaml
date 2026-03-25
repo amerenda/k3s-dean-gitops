@@ -20,7 +20,8 @@ data:
       moltbook_peer_interactions,
       moltbook_peer_posts,
       moltbook_state,
-      moltbook_configs
+      moltbook_configs,
+      validated_submolts
     CASCADE;
 
     -- Seed 6 agent slots with test personas
