@@ -7,6 +7,6 @@ spec:
   selector:
     app: llm-manager-backend-uat
   ports:
-    - port: 8083
-      targetPort: 8083
+    - port: 8081
+      targetPort: 8081
       protocol: TCP
