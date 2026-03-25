@@ -19,14 +19,10 @@ spec:
           operator: Exists
           effect: NoSchedule
       restartPolicy: Never
-      initContainers:
-        - name: wait-for-proxy
-          image: postgres:16-alpine
-          command: ["sh", "-c", "until pg_isready -h 127.0.0.1 -p 5432; do echo 'waiting for cloud-sql-proxy...'; sleep 2; done"]
       containers:
         - name: reset
           image: postgres:16-alpine
-          command: ["psql", "-h", "127.0.0.1", "-p", "5432", "-U", "llm_uat", "-d", "llm_manager_uat", "-f", "/seed/seed.sql"]
+          command: ["sh", "-c", "echo 'Waiting for cloud-sql-proxy...' && until pg_isready -h 127.0.0.1 -p 5432 -q; do sleep 2; done && echo 'Connected.' && psql -h 127.0.0.1 -p 5432 -U llm_uat -d llm_manager_uat -f /seed/seed.sql && echo 'Done. Stopping proxy...' && curl -sf http://localhost:9091/quitquitquit || true"]
           env:
             - name: PGPASSWORD
               valueFrom:
@@ -42,6 +38,7 @@ spec:
           args:
             - "--port=5432"
             - "--quitquitquit"
+            - "--http-port=9091"
             - "amerenda-k3s:us-east1:k3s-dean-postgres"
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
