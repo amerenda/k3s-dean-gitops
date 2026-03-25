@@ -22,7 +22,8 @@ addressType: IPv4
 endpoints:
   - addresses:
       - 10.100.20.18  # Mac Mini LAN IP
-    conditions: {}
+    conditions:
+        ready: true
 ports:
   - name: ""
     port: 9120
