@@ -22,7 +22,7 @@ spec:
       containers:
         - name: reset
           image: postgres:16-alpine
-          command: ["sh", "-c", "echo 'Waiting for cloud-sql-proxy...' && until pg_isready -h 127.0.0.1 -p 5432 -q; do sleep 2; done && echo 'Connected.' && psql -h 127.0.0.1 -p 5432 -U llm_uat -d llm_manager_uat -f /seed/seed.sql && echo 'Done. Stopping proxy...' && curl -sf http://localhost:9091/quitquitquit || true"]
+          command: ["sh", "-c", "echo 'Waiting for cloud-sql-proxy...' && until pg_isready -h 127.0.0.1 -p 5432 -q; do sleep 2; done && echo 'Connected.' && psql -h 127.0.0.1 -p 5432 -U llm_uat -d llm_manager_uat -f /seed/seed.sql && echo 'Done. Stopping proxy...' && wget -qO- http://localhost:9091/quitquitquit || true"]
           env:
             - name: PGPASSWORD
               valueFrom:
