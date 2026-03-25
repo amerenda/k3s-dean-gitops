@@ -1,23 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: moltbook-frontend-uat
-  namespace: ecdysis
+  name: llm-manager-ui-uat
+  namespace: llm-manager
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: moltbook-frontend-uat
+      app: llm-manager-ui-uat
   template:
     metadata:
       labels:
-        app: moltbook-frontend-uat
+        app: llm-manager-ui-uat
     spec:
       nodeSelector:
         kubernetes.io/hostname: murderbot
+      tolerations:
+        - key: node.kubernetes.io/disk-pressure
+          operator: Exists
+          effect: NoSchedule
       containers:
-        - name: frontend
-          image: amerenda/ecdysis-frontend:sha-61f3145
+        - name: ui
+          image: amerenda/llm-manager:ui-sha-6119c94
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -41,4 +45,4 @@ spec:
       volumes:
         - name: nginx-conf
           configMap:
-            name: ecdysis-uat-nginx
+            name: llm-manager-ui-uat-nginx

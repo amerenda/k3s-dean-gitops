@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-manager-ui-uat
+  namespace: llm-manager
+spec:
+  selector:
+    app: llm-manager-ui-uat
+  ports:
+    - port: 80
+      targetPort: 80

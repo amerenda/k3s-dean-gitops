@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ecdysis-uat-seed-data
+  namespace: ecdysis
+data:
+  seed.sql: |
+    -- Safety check: abort if not UAT database
+    DO $$
+    BEGIN
+      IF current_database() NOT LIKE '%uat%' THEN
+        RAISE EXCEPTION 'Refusing to run: database "%" does not contain "uat"', current_database();
+      END IF;
+    END $$;
+
+    -- Truncate all tables
+    TRUNCATE TABLE
+      system_logs,
+      moltbook_activity,
+      moltbook_peer_interactions,
+      moltbook_peer_posts,
+      moltbook_state,
+      moltbook_configs
+    CASCADE;
+
+    -- Seed 6 agent slots with test personas
+    INSERT INTO moltbook_configs (slot, name, description, tone, topics, model, enabled) VALUES
+      (1, 'TestBot Alpha', 'A friendly test agent for UAT.', 'casual, upbeat', '["technology","gaming"]', 'qwen2.5:7b', false),
+      (2, 'TestBot Beta', 'A thoughtful test agent.', 'analytical, calm', '["science","philosophy"]', 'qwen2.5:7b', false),
+      (3, 'TestBot Gamma', 'A creative test agent.', 'witty, playful', '["art","music","humor"]', 'llama3.2:3b', false),
+      (4, 'TestBot Delta', 'A helpful test agent.', 'warm, supportive', '["advice","wellness"]', 'llama3.2:3b', false),
+      (5, 'TestBot Epsilon', 'A curious test agent.', 'inquisitive, friendly', '["news","current events"]', 'mistral:7b', false),
+      (6, 'TestBot Zeta', 'A chill test agent.', 'laid-back, humorous', '["memes","internet culture"]', 'mistral:7b', false);
+
+    -- Seed state rows for each slot
+    INSERT INTO moltbook_state (slot, karma) VALUES
+      (1, 42), (2, 15), (3, 88), (4, 5), (5, 23), (6, 0);
+
+    -- Seed some activity for slots 1-3
+    INSERT INTO moltbook_activity (slot, action, detail, created_at) VALUES
+      (1, 'heartbeat', 'Heartbeat completed: browsed feed, replied to 2 comments', NOW() - interval '30 minutes'),
+      (1, 'post', 'Posted: "Testing in UAT is the best kind of testing"', NOW() - interval '15 minutes'),
+      (1, 'comment', 'Replied to user123 on post abc: "Great point!"', NOW() - interval '10 minutes'),
+      (2, 'heartbeat', 'Heartbeat completed: no new notifications', NOW() - interval '1 hour'),
+      (2, 'skipped_post', 'LLM returned empty content', NOW() - interval '45 minutes'),
+      (3, 'heartbeat', 'Heartbeat completed: upvoted 3 posts', NOW() - interval '20 minutes'),
+      (3, 'post', 'Posted: "Art is just math with feelings"', NOW() - interval '5 minutes');
+
+    -- Seed system logs
+    INSERT INTO system_logs (source, level, logger_name, message, pod_name, created_at) VALUES
+      ('backend', 'INFO', '__main__', 'Database connected', 'ecdysis-backend-uat-abc123', NOW() - interval '2 hours'),
+      ('backend', 'INFO', '__main__', 'Advisory lock connection established', 'ecdysis-backend-uat-abc123', NOW() - interval '2 hours'),
+      ('backend', 'INFO', 'agent_runner', 'Slot 1 already running on another replica', 'ecdysis-backend-uat-def456', NOW() - interval '1 hour'),
+      ('backend', 'WARNING', 'agent_runner', 'Agent 2 lock check error: connection reset — retrying in 30s', 'ecdysis-backend-uat-abc123', NOW() - interval '30 minutes'),
+      ('backend', 'ERROR', 'agent_runner', 'Moltbook API returned 500 for post creation', 'ecdysis-backend-uat-abc123', NOW() - interval '15 minutes');

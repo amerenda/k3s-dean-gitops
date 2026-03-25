@@ -1,0 +1,74 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ecdysis-uat-db-reset
+  namespace: ecdysis
+  labels:
+    app: ecdysis-uat-db-reset
+  annotations:
+    argocd.argoproj.io/hook: Skip
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: ecdysis-uat-db-reset
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: murderbot
+      tolerations:
+        - key: node.kubernetes.io/disk-pressure
+          operator: Exists
+          effect: NoSchedule
+      restartPolicy: Never
+      initContainers:
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
+          restartPolicy: Always
+          args:
+            - "--port=5432"
+            - "amerenda-k3s:us-east1:k3s-dean-postgres"
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /secrets/sa-key.json
+          volumeMounts:
+            - name: gcp-sa-key
+              mountPath: /secrets
+              readOnly: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+      containers:
+        - name: reset
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for cloud-sql-proxy..."
+              until pg_isready -h 127.0.0.1 -p 5432 -q; do sleep 2; done
+              echo "Connected."
+              psql -h 127.0.0.1 -p 5432 -U ecdysis_uat -d ecdysis_uat -f /seed/seed.sql
+              echo "Done."
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cloud-sql-postgres-credentials-uat
+                  key: postgres-password
+          volumeMounts:
+            - name: seed-data
+              mountPath: /seed
+              readOnly: true
+      volumes:
+        - name: seed-data
+          configMap:
+            name: ecdysis-uat-seed-data
+        - name: gcp-sa-key
+          secret:
+            secretName: cloud-sql-sa-key

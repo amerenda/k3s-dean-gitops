@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: llm-manager-ui-uat-nginx
+  namespace: llm-manager
+data:
+  default.conf: |
+    server {
+        listen 80;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        # Proxy auth endpoints to the UAT backend
+        location /auth/ {
+            proxy_pass http://llm-manager-backend-uat:8081/auth/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+
+        # Proxy API calls to the UAT backend
+        location /api/ {
+            proxy_pass http://llm-manager-backend-uat:8081/api/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_read_timeout 120s;
+        }
+
+        # Proxy OpenAI-compat endpoints to UAT backend
+        location /v1/ {
+            proxy_pass http://llm-manager-backend-uat:8081/v1/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_read_timeout 300s;
+        }
+
+        # Never cache index.html
+        location = /index.html {
+            add_header Cache-Control "no-cache, no-store, must-revalidate";
+            add_header Pragma "no-cache";
+            expires 0;
+        }
+
+        # SPA fallback
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+    }

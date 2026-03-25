@@ -10,25 +10,32 @@ data:
         root /usr/share/nginx/html;
         index index.html;
 
-        # Moltbook agent endpoints -> ecdysis-backend (new service)
+        # Moltbook agent endpoints -> ecdysis-backend-uat
         location /api/agents {
-            proxy_pass http://ecdysis-backend.ecdysis.svc.cluster.local:8082/api/agents;
+            proxy_pass http://ecdysis-backend-uat.ecdysis.svc.cluster.local:8082/api/agents;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_read_timeout 120s;
         }
 
-        # LLM endpoints -> llm-manager (GPU, models, runners, vram)
+        # System logs -> ecdysis-backend-uat
+        location /api/logs {
+            proxy_pass http://ecdysis-backend-uat.ecdysis.svc.cluster.local:8082/api/logs;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+
+        # LLM endpoints -> llm-manager-backend-uat
         location /api/ {
-            proxy_pass http://llm-manager-backend.llm-manager.svc.cluster.local:8081/api/;
+            proxy_pass http://llm-manager-backend-uat.llm-manager.svc.cluster.local:8081/api/;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_read_timeout 120s;
         }
 
-        # Health -> ecdysis-backend (primary service for ecdysis)
+        # Health -> ecdysis-backend-uat
         location /health {
-            proxy_pass http://ecdysis-backend.ecdysis.svc.cluster.local:8082/health;
+            proxy_pass http://ecdysis-backend-uat.ecdysis.svc.cluster.local:8082/health;
             proxy_set_header Host $host;
         }
 

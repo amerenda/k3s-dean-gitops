@@ -30,7 +30,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: backend
-          image: amerenda/llm-manager:backend-latest
+          image: amerenda/llm-manager:backend-sha-6119c94
           imagePullPolicy: Always
           ports:
             - containerPort: 8081
@@ -48,6 +48,44 @@ spec:
                   name: agent-psk
                   key: psk
                   optional: true
+            - name: LLM_MANAGER_REGISTRATION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: registration-secret
+                  key: secret
+                  optional: true
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: github-oauth
+                  key: client-id
+                  optional: true
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: github-oauth
+                  key: client-secret
+                  optional: true
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: session-secret
+                  key: secret
+                  optional: true
+            - name: GITHUB_ALLOWED_USERS
+              value: "amerenda"
+            - name: API_KEY_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-key-encryption-key
+                  key: key
+                  optional: true
+            - name: DISABLE_SCHEDULER
+              value: "true"
+            - name: UAT_TEST_RUNNER
+              value: ""  # Set to runner name when always-on model is configured
+            - name: UAT_TEST_MODEL
+              value: ""  # Set to model name when always-on model is configured
           readinessProbe:
             httpGet:
               path: /health
