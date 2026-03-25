@@ -1,0 +1,23 @@
+# ARC runner scale set for amerenda/tailscale-acl
+# No Docker needed — just applies ACL policy via Tailscale API
+githubConfigUrl: "https://github.com/amerenda/tailscale-acl"
+runnerScaleSetName: arc-runner-set
+githubConfigSecret: controller-manager
+controllerServiceAccount:
+  name: infra-arc-controller
+  namespace: arc-systems
+minRunners: 0
+maxRunners: 3
+template:
+  spec:
+    containers:
+      - name: runner
+        image: ghcr.io/actions/actions-runner:latest
+        command: ["/home/runner/run.sh"]
+        env:
+          - name: TS_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: runner-ci-credentials
+                key: TS_API_KEY
+namespaceOverride: arc-runners-tailscale-acl
