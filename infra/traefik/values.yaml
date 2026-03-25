@@ -10,8 +10,10 @@ dashboard:
       external-dns.alpha.kubernetes.io/hostname: traefik.amer.home
       external-dns.alpha.kubernetes.io/ttl: "1"
 
-# Replica count for high availability
-replicaCount: 1
+# Replica count for high availability — must run on every node that hosts
+# Tailscale subnet router pods so externalTrafficPolicy: Local doesn't drop
+# subnet-routed traffic on nodes without a local Traefik endpoint.
+replicaCount: 2
 
 # Resource limits for Raspberry Pi
 resources:
@@ -69,11 +71,15 @@ service:
 
 # Pod disruption budget for high availability
 podDisruptionBudget:
-  enabled: false
+  enabled: true
+  minAvailable: 1
 
 deployment:
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
 
 # Node selector for Raspberry Pi nodes
 nodeSelector:
