@@ -48,9 +48,13 @@ spec:
               readOnly: true
         - name: cloud-sql-proxy
           image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
-          args:
-            - "--port=5432"
-            - "amerenda-k3s:us-east1:k3s-dean-postgres"
+          command:
+            - sh
+            - -c
+            - |
+              trap 'exit 0' TERM
+              /cloud-sql-proxy --port=5432 "amerenda-k3s:us-east1:k3s-dean-postgres" &
+              wait $!
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /secrets/sa-key.json
