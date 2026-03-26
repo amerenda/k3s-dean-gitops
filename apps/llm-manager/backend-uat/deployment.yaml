@@ -78,6 +78,8 @@ spec:
               value: "true"
             - name: DISABLE_AUTH
               value: "true"
+            - name: ENVIRONMENT
+              value: "uat"
             - name: UAT_TEST_RUNNER
               value: ""  # Set to runner name when always-on model is configured
             - name: UAT_TEST_MODEL
