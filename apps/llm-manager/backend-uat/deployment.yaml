@@ -30,7 +30,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: backend
-          image: amerenda/llm-manager:backend-sha-6119c94
+          image: amerenda/llm-manager:backend-sha-c115d94
           imagePullPolicy: Always
           ports:
             - containerPort: 8081
