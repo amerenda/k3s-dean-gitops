@@ -1,0 +1,17 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ecdysis-uat-amer-dev-tls
+  namespace: ecdysis
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  secretName: ecdysis-uat-amer-dev-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - ecdysis-uat.amer.dev
+  secretTemplate:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
