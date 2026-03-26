@@ -22,12 +22,6 @@ spec:
         prometheus.io/port: "8081"
         prometheus.io/path: "/metrics"
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: murderbot
-      tolerations:
-        - key: node.kubernetes.io/disk-pressure
-          operator: Exists
-          effect: NoSchedule
       containers:
         - name: backend
           image: amerenda/llm-manager:backend-sha-6119c94

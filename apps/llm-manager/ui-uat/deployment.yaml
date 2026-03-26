@@ -13,12 +13,6 @@ spec:
       labels:
         app: llm-manager-ui-uat
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: murderbot
-      tolerations:
-        - key: node.kubernetes.io/disk-pressure
-          operator: Exists
-          effect: NoSchedule
       containers:
         - name: ui
           image: amerenda/llm-manager:ui-sha-6119c94
