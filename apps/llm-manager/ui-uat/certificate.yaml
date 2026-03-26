@@ -1,0 +1,17 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: llm-manager-ui-uat-amer-dev-tls
+  namespace: llm-manager
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  secretName: llm-manager-ui-uat-amer-dev-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - llm-manager-uat.amer.dev
+  secretTemplate:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
