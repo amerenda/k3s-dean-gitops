@@ -1,0 +1,66 @@
+# ApplicationSet: UAT deployments from open PRs
+#
+# When a PR is opened to k3s-dean-gitops, this creates temporary ArgoCD
+# Applications that deploy UAT manifests from the PR branch. When the PR
+# is merged or closed, the UAT apps are automatically cleaned up.
+#
+# Matrix generator = PR generator × list of UAT app paths
+# Only apps with changed manifests will actually roll — unchanged apps
+# see no diff and ArgoCD does a no-op sync.
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: uat-deploy
+  namespace: default
+spec:
+  goTemplate: true
+  generators:
+  - matrix:
+      generators:
+      - pullRequest:
+          github:
+            owner: amerenda
+            repo: k3s-dean-gitops
+            appSecretName: argocd-deploy-bot
+          requeueAfterSeconds: 30
+      - list:
+          elements:
+          - app: ecdysis-frontend
+            path: apps/ecdysis/frontend-uat
+            namespace: ecdysis
+          - app: ecdysis-backend
+            path: apps/ecdysis/ecdysis-backend-uat
+            namespace: ecdysis
+          - app: llm-manager-backend
+            path: apps/llm-manager/backend-uat
+            namespace: llm-manager
+          - app: llm-manager-ui
+            path: apps/llm-manager/ui-uat
+            namespace: llm-manager
+  template:
+    metadata:
+      name: 'uat-{{.app}}-pr{{.number}}'
+      namespace: default
+    spec:
+      project: application
+      source:
+        repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+        targetRevision: '{{.branch}}'
+        path: '{{.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{.namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
