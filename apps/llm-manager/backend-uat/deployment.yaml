@@ -82,6 +82,8 @@ spec:
                   optional: true
             - name: DISABLE_SCHEDULER
               value: "true"
+            - name: DISABLE_AUTH
+              value: "true"
             - name: UAT_TEST_RUNNER
               value: ""  # Set to runner name when always-on model is configured
             - name: UAT_TEST_MODEL
