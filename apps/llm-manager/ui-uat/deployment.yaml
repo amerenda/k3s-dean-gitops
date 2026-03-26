@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: ui
-          image: amerenda/llm-manager:ui-sha-6119c94
+          image: amerenda/llm-manager:ui-sha-8af467d
           imagePullPolicy: Always
           ports:
             - containerPort: 80
