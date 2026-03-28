@@ -68,15 +68,20 @@ affinity: {}
 reloader:
   # Watch on all namespaces
   watchGlobally: true
-  
+
   # Log level
   logLevel: info
-  
+
   # Reload strategy
   reloadStrategy: default
-  
+
   # Ignore namespaces
   ignoreNamespaces: []
-  
+
   # Custom resource types to watch
   customResourceTypes: []
+
+  # Prometheus metrics
+  serviceMonitor:
+    enabled: true
+    interval: 30s
