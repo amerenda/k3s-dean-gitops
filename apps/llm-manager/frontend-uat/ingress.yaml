@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: llm-manager-ui-uat-ingress
+  name: llm-manager-frontend-uat-ingress
   namespace: llm-manager
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
@@ -13,7 +13,7 @@ spec:
   tls:
     - hosts:
         - llm-manager-uat.amer.dev
-      secretName: llm-manager-ui-uat-amer-dev-tls
+      secretName: llm-manager-frontend-uat-amer-dev-tls
   rules:
     - host: llm-manager-uat.amer.dev
       http:
@@ -22,6 +22,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: llm-manager-ui-uat
+                name: llm-manager-frontend-uat
                 port:
                   number: 80

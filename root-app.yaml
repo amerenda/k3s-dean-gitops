@@ -1156,7 +1156,7 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app-llm-manager-ui
+  name: app-llm-manager-frontend
   namespace: default
   annotations:
     argocd.argoproj.io/sync-wave: "5"
@@ -1167,7 +1167,7 @@ spec:
   source:
     repoURL: https://github.com/amerenda/k3s-dean-gitops.git
     targetRevision: main
-    path: apps/llm-manager/ui
+    path: apps/llm-manager/frontend
   destination:
     server: https://kubernetes.default.svc
     namespace: llm-manager

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: llm-manager-ui-uat-nginx
+  name: llm-manager-frontend-uat-nginx
   namespace: llm-manager
 data:
   default.conf: |

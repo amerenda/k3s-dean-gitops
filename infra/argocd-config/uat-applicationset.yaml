@@ -57,8 +57,8 @@ spec:
           - app: llm-manager-backend
             path: apps/llm-manager/backend-uat
             namespace: llm-manager
-          - app: llm-manager-ui
-            path: apps/llm-manager/ui-uat
+          - app: llm-manager-frontend
+            path: apps/llm-manager/frontend-uat
             namespace: llm-manager
 
   template:

@@ -1,34 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: llm-manager-ui
+  name: llm-manager-frontend-uat
   namespace: llm-manager
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: llm-manager-ui
+      app: llm-manager-frontend-uat
   template:
     metadata:
       labels:
-        app: llm-manager-ui
+        app: llm-manager-frontend-uat
     spec:
-      affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              preference:
-                matchExpressions:
-                  - key: kubernetes.io/hostname
-                    operator: In
-                    values:
-                      - murderbot
       containers:
-        - name: ui
-          image: amerenda/llm-manager:ui-sha-7e800b1
+        - name: frontend
+          image: amerenda/llm-manager:frontend-sha-7e800b1
           imagePullPolicy: Always
           ports:
             - containerPort: 80
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
           readinessProbe:
             httpGet:
               path: /
@@ -42,3 +36,7 @@ spec:
             limits:
               cpu: 200m
               memory: 128Mi
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: llm-manager-frontend-uat-nginx
