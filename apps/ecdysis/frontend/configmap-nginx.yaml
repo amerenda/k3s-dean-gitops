@@ -25,6 +25,13 @@ data:
             proxy_set_header X-Real-IP $remote_addr;
         }
 
+        # Global config -> ecdysis-backend
+        location /api/config {
+            proxy_pass http://ecdysis-backend.ecdysis.svc.cluster.local:8082/api/config;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+
         # GPU info -> ecdysis-backend (filters to allowed runners)
         location /api/gpu {
             proxy_pass http://ecdysis-backend.ecdysis.svc.cluster.local:8082/api/gpu;
