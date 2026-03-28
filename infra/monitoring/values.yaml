@@ -40,6 +40,9 @@ grafana:
     server:
       root_url: https://grafana.amer.dev
       domain: grafana.amer.dev
+    users:
+      # Redirect to home dashboard on login
+      home_page: /d/home/home
   # Explicit Prometheus URL so Grafana can reach Prometheus (chart default can be wrong)
   sidecar:
     datasources:
