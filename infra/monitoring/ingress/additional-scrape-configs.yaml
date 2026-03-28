@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: additional-scrape-configs
+  namespace: monitoring
+type: Opaque
+stringData:
+  scrape-configs.yaml: |
+    - job_name: llm-agent
+      scheme: https
+      tls_config:
+        insecure_skip_verify: true
+      static_configs:
+        - targets: ["10.100.20.19:8090"]
+          labels:
+            node: murderbot
+        - targets: ["10.100.20.25:8090"]
+          labels:
+            node: archlinux
