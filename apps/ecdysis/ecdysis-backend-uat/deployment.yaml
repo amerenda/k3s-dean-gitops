@@ -46,12 +46,11 @@ spec:
               value: "1"
             - name: DB_POOL_MAX
               value: "5"
-            - name: LLM_MANAGER_AGENT_PSK
+            - name: LLM_REGISTRATION_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: agent-psk
-                  key: psk
-                  optional: true
+                  name: registration-secret
+                  key: registration-secret
           readinessProbe:
             httpGet:
               path: /health

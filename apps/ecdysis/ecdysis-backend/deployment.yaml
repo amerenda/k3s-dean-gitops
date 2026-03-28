@@ -42,12 +42,11 @@ spec:
                   key: postgres-password
             - name: DATABASE_URL
               value: "postgresql://ecdysis:$(PGPASSWORD)@127.0.0.1:5432/ecdysis"
-            - name: LLM_MANAGER_AGENT_PSK
+            - name: LLM_REGISTRATION_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: agent-psk
-                  key: psk
-                  optional: true
+                  name: registration-secret
+                  key: registration-secret
           readinessProbe:
             httpGet:
               path: /health
