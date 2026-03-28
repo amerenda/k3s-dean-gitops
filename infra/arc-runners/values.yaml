@@ -1,5 +1,5 @@
-# GitHub Actions Runner Scale Set for k3s-dean-gitops
-# This runner handles HA config checks and auto-merge — no Docker needed
+# ARC runner scale set for amerenda/k3s-dean-gitops
+# CI-only — no Docker needed (HA config checks, auto-merge)
 githubConfigUrl: "https://github.com/amerenda/k3s-dean-gitops"
 runnerScaleSetName: arc-runner-set
 githubConfigSecret: controller-manager

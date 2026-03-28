@@ -1,5 +1,5 @@
 # ARC runner scale set for amerenda/tailscale-acl
-# No Docker needed — just applies ACL policy via Tailscale API
+# CI-only — no Docker needed (applies ACL policy via Tailscale API)
 githubConfigUrl: "https://github.com/amerenda/tailscale-acl"
 runnerScaleSetName: arc-runner-set
 githubConfigSecret: controller-manager

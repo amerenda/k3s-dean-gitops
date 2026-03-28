@@ -1,5 +1,5 @@
 # ARC runner scale set for amerenda/llm-manager
-# DinD mode — Docker-in-Docker on murderbot (x86, plenty of resources)
+# Host Docker socket — native x86 builds on murderbot with layer cache
 githubConfigUrl: "https://github.com/amerenda/llm-manager"
 runnerScaleSetName: arc-runner-set
 githubConfigSecret: controller-manager
@@ -8,17 +8,19 @@ controllerServiceAccount:
   namespace: arc-systems
 minRunners: 0
 maxRunners: 3
-containerMode:
-  type: dind
 template:
   spec:
     nodeSelector:
       kubernetes.io/hostname: murderbot
+    securityContext:
+      runAsGroup: 989
     containers:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest
         command: ["/home/runner/run.sh"]
         env:
+          - name: DOCKER_HOST
+            value: "unix:///var/run/docker.sock"
           - name: DOCKERHUB_USERNAME
             value: "amerenda"
           - name: DOCKERHUB_TOKEN
@@ -31,4 +33,16 @@ template:
               secretKeyRef:
                 name: runner-ci-credentials
                 key: GITOPS_PAT
+        volumeMounts:
+          - name: docker-sock
+            mountPath: /var/run/docker.sock
+          - name: work
+            mountPath: /home/runner/_work
+    volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+      - name: work
+        emptyDir: {}
 namespaceOverride: arc-runners-llm-manager

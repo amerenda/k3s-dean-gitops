@@ -1,59 +1,122 @@
 # ARC Runners
 
-This directory contains the configuration for the GitHub Actions Runner Scale Set using the official Helm chart.
+GitHub Actions self-hosted runners managed by ARC (Actions Runner Controller) on the k3s cluster.
 
-## Purpose
+## Runner Types
 
-The runner scale set deploys self-hosted runners that scale based on workflow demand using the official [gha-runner-scale-set Helm chart](https://docs.github.com/en/actions/tutorials/use-actions-runner-controller/quickstart).
+| Type | Label (`runs-on`) | Docker Access | Use Case |
+|------|-------------------|---------------|----------|
+| **build** | `arc-runner-set` | Yes (host socket) | Docker image builds, anything needing Docker |
+| **ci** | `arc-runner-set` | No | Tests, linting, deploy PRs, API calls |
 
-## Files
+All build runners are pinned to **murderbot** (x86/amd64) via `nodeSelector`.
 
-- `values.yaml` - Helm values for the `gha-runner-scale-set` chart
-- `externalsecret.yaml` - ExternalSecret for GitHub App credentials in `arc-runners` namespace
+Build runners mount the host Docker socket (`/var/run/docker.sock`) — no DinD. This gives native build speed with persistent layer cache across all jobs.
 
-## Configuration
+## Secrets
 
-- **Namespace**: `arc-runners`
-- **Sync Wave**: 5 (installs after controller and external-secrets)
-- **Runner Labels**: `self-hosted`, `linux`, `arc-runner-set` (matches `runs-on` in workflows)
-- **Scaling**: 1-3 runners based on demand (managed by autoscalingRunnerSet in Helm chart)
-- **Installation Name**: `arc-runner-set` (used in workflow `runs-on` field)
+All secrets come from Bitwarden Secrets Manager via ExternalSecrets:
 
-## Dependencies
+| Secret | K8s Secret | Keys |
+|--------|-----------|------|
+| GitHub App (ARC auth) | `controller-manager` | `github_app_id`, `github_app_installation_id`, `github_app_private_key` |
+| CI credentials | `runner-ci-credentials` | `DOCKERHUB_TOKEN`, `GITOPS_PAT` |
 
-- **ARC Controller** (must be synced and healthy first - see `arc-controller` application)
-- **ExternalSecret** in `arc-runners` namespace (sync wave 0, creates `controller-manager` secret)
-- GitHub App credentials (via ExternalSecret `controller-manager` in `arc-runners` namespace)
+**No secrets in GitHub.** Workflows use `$DOCKERHUB_TOKEN` (shell env var), not `${{ secrets.DOCKERHUB_TOKEN }}`.
 
-## Helm Chart
+## Adding a New Repo
 
-This application uses the official Helm chart:
-- **Chart**: `oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set`
-- **Chart Version**: `latest` (pinned to latest stable)
+1. **Create the runner directory:**
+   ```bash
+   cp -r infra/arc-runners-ecdysis infra/arc-runners-<repo>
+   ```
 
-## Sync Order
+2. **Update `values.yaml`:**
+   - `githubConfigUrl` → `https://github.com/amerenda/<repo>`
+   - `runnerScaleSetName` → `arc-runner-set` (keep consistent for now)
+   - `namespaceOverride` → `arc-runners-<repo>`
+   - For CI-only: remove `securityContext`, `DOCKER_HOST`, docker-sock volume/mount
 
-1. **ARC Controller** (wave 1) - Must be synced first
-2. **ExternalSecret** (wave 0) - Creates GitHub App credentials secret in `arc-runners` namespace
-3. **Runner Scale Set** (wave 5) - Helm chart installs after dependencies are ready
+3. **Update `externalsecret.yaml`:**
+   - No changes needed if using same BWS secrets (controller-manager + runner-ci-credentials)
+   - For repos with unique secrets (like tailscale-acl), add the extra keys
 
-## GitHub App Authentication
+4. **Add ArgoCD Application to `root-app.yaml`:**
+   ```yaml
+   ---
+   # Infrastructure: ARC Runner Scale Set — <repo>
+   apiVersion: argoproj.io/v1alpha1
+   kind: Application
+   metadata:
+     name: infra-arc-runners-<repo>
+     namespace: default
+     annotations:
+       argocd.argoproj.io/sync-wave: "5"
+     finalizers:
+       - resources-finalizer.argocd.argoproj.io/background
+   spec:
+     project: infra
+     sources:
+       - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
+         path: .
+         targetRevision: 0.13.0
+         helm:
+           valueFiles:
+             - $values/infra/arc-runners-<repo>/values.yaml
+       - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+         targetRevision: main
+         ref: values
+       - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+         targetRevision: main
+         path: infra/arc-runners-<repo>
+     destination:
+       server: https://kubernetes.default.svc
+       namespace: arc-runners-<repo>
+     syncPolicy:
+       automated:
+         prune: true
+         selfHeal: true
+       syncOptions:
+         - CreateNamespace=true
+         - PrunePropagationPolicy=foreground
+         - ServerSideApply=true
+       retry:
+         limit: 5
+         backoff:
+           duration: 5s
+           factor: 2
+           maxDuration: 3m
+     ignoreDifferences:
+     - group: "actions.github.com"
+       kind: AutoscalingRunnerSet
+       jsonPointers:
+       - /status/pendingEphemeralRunners
+       - /status/currentRunners
+   ```
 
-The Helm chart authenticates using GitHub App credentials stored in the `controller-manager` secret in the `arc-runners` namespace. The secret is created by the ExternalSecret and contains:
-- `github_app_id`
-- `github_app_installation_id`
-- `github_app_private_key`
+5. **In the app repo workflow**, use:
+   ```yaml
+   runs-on: arc-runner-set
+   ```
 
-These credentials are fetched from Bitwarden via the External Secrets Operator.
+6. **Push to k3s-dean-gitops main** — ArgoCD auto-syncs.
 
-## Usage in Workflows
+## Architecture
 
-Use the runner in your GitHub Actions workflows:
-
-```yaml
-jobs:
-  my-job:
-    runs-on: arc-runner-set
-    steps:
-      - run: echo "Running on self-hosted runner"
+```
+Mac Mini (arm64)                    murderbot / k3s (x86)
+┌──────────────────────┐            ┌─────────────────────────────┐
+│ myoung34/github-runner│            │ ARC Controller (arc-systems) │
+│ Labels: mac-mini,arm64│            │                             │
+│ Docker: host socket   │            │ x86-build runners:          │
+│ Repos: all app repos  │            │   - ecdysis                 │
+│                       │            │   - llm-manager             │
+│ Handles: arm64 builds │            │   - k3s-runners             │
+│                       │            │ Docker: host socket          │
+│                       │            │                             │
+│                       │            │ x86-ci runners:             │
+│                       │            │   - k3s-dean-gitops         │
+│                       │            │   - tailscale-acl           │
+│                       │            │ Docker: none                │
+└──────────────────────┘            └─────────────────────────────┘
 ```
