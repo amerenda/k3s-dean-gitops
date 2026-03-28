@@ -25,6 +25,13 @@ data:
             proxy_set_header X-Real-IP $remote_addr;
         }
 
+        # GPU info -> ecdysis-backend (filters to allowed runners)
+        location /api/gpu {
+            proxy_pass http://ecdysis-backend.ecdysis.svc.cluster.local:8082/api/gpu;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+
         # LLM endpoints -> llm-manager (GPU, models, runners, vram, apps)
         location /api/ {
             proxy_pass http://llm-manager-backend.llm-manager.svc.cluster.local:8081/api/;

@@ -23,7 +23,7 @@ spec:
         prometheus.io/path: "/metrics"
     spec:
       nodeSelector:
-        kubernetes.io/hostname: murderbot
+        kubernetes.io/arch: arm64
       tolerations:
         - key: node.kubernetes.io/disk-pressure
           operator: Exists
