@@ -117,8 +117,8 @@ kubelet:
     cAdvisor: true
     # Probes metrics
     probes: true
-    # Resource metrics
-    resource: true
+    # Resource metrics — disabled; K3s doesn't serve /metrics/resource/v1alpha1
+    resource: false
 defaultRules:
   rules:
     kubelet: true
