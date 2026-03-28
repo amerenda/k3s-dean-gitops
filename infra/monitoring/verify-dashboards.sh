@@ -26,19 +26,32 @@ trap cleanup EXIT
 echo "=== Prometheus Dashboard Metric Verifier ==="
 echo ""
 
+# Kill any leftover port-forwards on our port
+fuser -k "${PROM_PORT}/tcp" 2>/dev/null || true
+sleep 1
+
 # Start port-forward
 echo "Starting port-forward to Prometheus..."
 kubectl port-forward -n "$PROM_NS" "$PROM_SVC" "${PROM_PORT}:9090" &>/dev/null &
 PF_PID=$!
-sleep 3
 
-# Check port-forward is alive
-if ! kill -0 "$PF_PID" 2>/dev/null; then
-  echo "ERROR: Port-forward failed. Is the cluster reachable?"
+# Wait for port-forward to be ready (retry up to 15 seconds)
+PROM_URL="http://localhost:${PROM_PORT}"
+for i in $(seq 1 15); do
+  if curl -sf "${PROM_URL}/api/v1/status/runtimeinfo" &>/dev/null; then
+    break
+  fi
+  if ! kill -0 "$PF_PID" 2>/dev/null; then
+    echo "ERROR: Port-forward failed. Is the cluster reachable?"
+    exit 1
+  fi
+  sleep 1
+done
+
+if ! curl -sf "${PROM_URL}/api/v1/status/runtimeinfo" &>/dev/null; then
+  echo "ERROR: Prometheus not responding after 15s"
   exit 1
 fi
-
-PROM_URL="http://localhost:${PROM_PORT}"
 
 # Helper: check if a metric exists in Prometheus
 check_metric() {
@@ -63,32 +76,37 @@ check_dashboard() {
 
   if [[ ${#missing[@]} -eq 0 ]]; then
     echo "  ✅ ${name} — all ${#metrics[@]} metrics present"
-    ((PASS++))
+    PASS=$((PASS + 1))
   else
     echo "  ❌ ${name} — ${#missing[@]}/${#metrics[@]} metrics MISSING:"
     for m in "${missing[@]}"; do
       echo "       - $m"
     done
-    ((FAIL++))
+    FAIL=$((FAIL + 1))
   fi
 }
 
-# Fetch all metric names once (faster than per-metric queries)
-echo "Fetching metric inventory from Prometheus..."
-ALL_METRICS=$(curl -sf "${PROM_URL}/api/v1/label/__name__/values" | python3 -c "import sys,json; print('\n'.join(json.load(sys.stdin)['data']))" 2>/dev/null)
+# Fetch all metric names once to a temp file (avoids bash variable truncation)
+METRICS_FILE=$(mktemp)
+trap 'cleanup; rm -f "$METRICS_FILE"' EXIT
 
-if [[ -z "$ALL_METRICS" ]]; then
-  echo "ERROR: Could not fetch metrics from Prometheus at ${PROM_URL}"
+echo "Fetching metric inventory from Prometheus..."
+curl -sf --max-time 30 "${PROM_URL}/api/v1/label/__name__/values" \
+  | python3 -c "import sys,json; print('\n'.join(json.load(sys.stdin)['data']))" \
+  > "$METRICS_FILE" 2>/dev/null
+
+METRIC_COUNT=$(wc -l < "$METRICS_FILE")
+if [[ "$METRIC_COUNT" -lt 10 ]]; then
+  echo "ERROR: Could not fetch metrics from Prometheus at ${PROM_URL} (got ${METRIC_COUNT} metrics)"
   exit 1
 fi
 
-METRIC_COUNT=$(echo "$ALL_METRICS" | wc -l)
 echo "Found ${METRIC_COUNT} unique metrics in Prometheus."
 echo ""
 
-# Override check_metric to use cached list
+# Override check_metric to use the temp file
 check_metric() {
-  echo "$ALL_METRICS" | grep -qx "$1"
+  grep -qx "$1" "$METRICS_FILE"
 }
 
 echo "--- INFRASTRUCTURE DASHBOARDS ---"
@@ -117,7 +135,7 @@ check_dashboard "Infra: Monitoring (Prometheus)" \
   process_start_time_seconds up prometheus_tsdb_head_series \
   prometheus_tsdb_storage_blocks_bytes prometheus_target_scrape_pools_failed_total \
   prometheus_tsdb_head_samples_appended_total prometheus_target_interval_length_seconds \
-  prometheus_engine_query_duration_seconds_bucket prometheus_tsdb_compactions_total \
+  prometheus_engine_query_duration_histogram_seconds_bucket prometheus_tsdb_compactions_total \
   prometheus_tsdb_compactions_failed_total prometheus_tsdb_wal_storage_size_bytes \
   prometheus_tsdb_checkpoint_creations_total container_cpu_usage_seconds_total \
   container_memory_working_set_bytes kube_pod_container_resource_limits
@@ -127,18 +145,18 @@ check_dashboard "Infra: Longhorn" \
   longhorn_volume_actual_size_bytes longhorn_volume_state \
   longhorn_node_count_total longhorn_node_status \
   longhorn_node_storage_usage_bytes longhorn_node_storage_capacity_bytes \
-  longhorn_volume_count_total longhorn_disk_usage_bytes longhorn_disk_capacity_bytes
+  longhorn_disk_usage_bytes longhorn_disk_capacity_bytes
 
 check_dashboard "Infra: Traefik" \
   traefik_config_reloads_total traefik_entrypoint_requests_total \
   traefik_entrypoint_request_duration_seconds_bucket \
   traefik_service_requests_total traefik_service_request_duration_seconds_sum \
   traefik_service_request_duration_seconds_count traefik_service_requests_bytes_total \
-  traefik_service_open_connections traefik_entrypoint_open_connections
+  traefik_open_connections
 
 check_dashboard "Infra: MetalLB" \
   metallb_allocator_addresses_total metallb_allocator_addresses_in_use_total \
-  kube_service_spec_type metallb_layer2_requests_received metallb_layer2_requests_sent
+  kube_service_spec_type metallb_layer2_requests_received metallb_layer2_responses_sent
 
 check_dashboard "Infra: cert-manager" \
   certmanager_certificate_ready_status certmanager_certificate_expiration_timestamp_seconds \
@@ -162,8 +180,7 @@ check_dashboard "Infra: CoreDNS" \
 
 check_dashboard "Infra: External DNS" \
   external_dns_source_endpoints_total external_dns_registry_endpoints_total \
-  external_dns_registry_errors_total external_dns_controller_verified_a_records \
-  external_dns_controller_verified_aaaa_records
+  external_dns_registry_errors_total external_dns_controller_verified_records
 
 check_dashboard "Infra: DNS (BIND9) — pod health only" \
   kube_pod_status_phase kube_pod_container_status_restarts_total \
@@ -195,7 +212,7 @@ check_dashboard "Infra: ARC Runners" \
 
 check_dashboard "Infra: Reloader" \
   kube_pod_status_phase kube_pod_container_status_restarts_total \
-  reloader_reload_executed_total reloader_watched_resources_total \
+  reloader_reloads_total reloader_watches \
   container_cpu_usage_seconds_total container_memory_working_set_bytes
 
 echo ""
