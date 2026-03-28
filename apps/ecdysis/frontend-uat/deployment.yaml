@@ -14,7 +14,7 @@ spec:
         app: moltbook-frontend-uat
     spec:
       nodeSelector:
-        kubernetes.io/hostname: murderbot
+        kubernetes.io/arch: arm64
       containers:
         - name: frontend
           image: amerenda/ecdysis-frontend:sha-39637c9
