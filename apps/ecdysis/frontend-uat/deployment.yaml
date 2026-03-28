@@ -17,7 +17,7 @@ spec:
         kubernetes.io/arch: arm64
       containers:
         - name: frontend
-          image: amerenda/ecdysis-frontend:sha-00eb01b
+          image: amerenda/ecdysis-frontend:sha-4bac4f6
           imagePullPolicy: Always
           ports:
             - containerPort: 80
