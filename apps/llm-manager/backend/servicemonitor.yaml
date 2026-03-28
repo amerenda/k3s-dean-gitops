@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: llm-manager-backend
+  namespace: llm-manager
+  labels:
+    app: llm-manager-backend
+spec:
+  selector:
+    matchLabels:
+      app: llm-manager-backend
+  namespaceSelector:
+    matchNames:
+      - llm-manager
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
