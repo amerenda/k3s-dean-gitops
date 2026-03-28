@@ -4,11 +4,12 @@ metadata:
   name: arc-controller-metrics
   namespace: arc-systems
   labels:
-    app.kubernetes.io/name: gha-runner-scale-set-controller
+    app.kubernetes.io/name: gha-rs-controller
     app.kubernetes.io/component: controller-manager
 spec:
   selector:
-    app.kubernetes.io/name: gha-runner-scale-set-controller
+    app.kubernetes.io/name: gha-rs-controller
+    app.kubernetes.io/component: controller-manager
   ports:
     - name: metrics
       port: 8080
@@ -25,7 +26,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: gha-runner-scale-set-controller
+      app.kubernetes.io/name: gha-rs-controller
       app.kubernetes.io/component: controller-manager
   namespaceSelector:
     matchNames:
