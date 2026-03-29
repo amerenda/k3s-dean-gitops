@@ -29,8 +29,8 @@ prometheus:
     startupProbe:
       failureThreshold: 60
       periodSeconds: 15
-    # Scrape external targets (outside k8s) via secret
-    additionalScrapeConfigs:
+    # Scrape external targets (outside k8s) via secret reference
+    additionalScrapeConfigsSecret:
       name: additional-scrape-configs
       key: scrape-configs.yaml
     # ServiceMonitor selector: watch all namespaces, match release label
