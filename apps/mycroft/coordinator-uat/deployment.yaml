@@ -48,6 +48,8 @@ spec:
                 secretKeyRef:
                   name: mycroft-credentials
                   key: telegram-chat-id
+            - name: INTENT_MODEL
+              value: "qwen2.5:7b"
             - name: AGENT_IMAGE_TAG
               value: "sha-980fb7b"
             - name: AGENT_IMAGE_REPO
