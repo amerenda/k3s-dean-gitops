@@ -110,7 +110,7 @@ kube-state-metrics:
 kubeProxy:
   enabled: false
 kubeEtcd:
-  enabled: false
+  enabled: true
 kubeScheduler:
   enabled: false
 kubeControllerManager:
