@@ -33,15 +33,15 @@ spec:
             key: kb-dsn
       - name: LLM_MANAGER_URL
         value: "http://llm-manager-backend.llm-manager.svc:8081"
-      - name: LLM_MANAGER_API_KEY
+      - name: LLM_REGISTRATION_SECRET
         valueFrom:
           secretKeyRef:
-            name: mycroft-agent-coder-credentials
-            key: llm-api-key
+            name: mycroft-credentials
+            key: llm-registration-secret
       - name: GITHUB_TOKEN
         valueFrom:
           secretKeyRef:
-            name: mycroft-agent-coder-credentials
+            name: mycroft-credentials
             key: github-token
       resources:
         limits:
@@ -58,27 +58,3 @@ spec:
     - name: scratch
       emptyDir:
         sizeLimit: 5Gi
----
-# ExternalSecret for coder agent credentials
-apiVersion: external-secrets.io/v1
-kind: ExternalSecret
-metadata:
-  name: mycroft-agent-coder-credentials
-  namespace: mycroft
-spec:
-  refreshInterval: 1h
-  secretStoreRef:
-    name: bitwarden-secretstore
-    kind: ClusterSecretStore
-  target:
-    name: mycroft-agent-coder-credentials
-    creationPolicy: Owner
-  data:
-    - secretKey: llm-api-key
-      remoteRef:
-        key: mycroft-dean-coder-llm-api-key
-        property: password
-    - secretKey: github-token
-      remoteRef:
-        key: mycroft-dean-github-token
-        property: password
