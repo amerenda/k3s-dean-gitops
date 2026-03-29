@@ -20,6 +20,7 @@ spec:
     activeDeadlineSeconds: 3600
     container:
       image: amerenda/mycroft:agent-coder-latest
+      imagePullPolicy: Always
       env:
       - name: TASK_ID
         value: "{{workflow.parameters.task-id}}"
