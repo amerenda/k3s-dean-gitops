@@ -1,0 +1,62 @@
+controller:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  env:
+    - name: LEADER_ELECTION_DISABLE
+      value: "true"
+  workflowDefaults:
+    spec:
+      serviceAccountName: argo-workflow
+      podGC:
+        strategy: OnPodSuccess
+        deleteDelayDuration: "900s"
+      ttlStrategy:
+        secondsAfterSuccess: 3600
+        secondsAfterFailure: 86400
+
+server:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  extraArgs:
+    - --auth-mode=server
+    - --secure=false
+  ingress:
+    enabled: true
+    hosts:
+      - argo.amer.dev
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    tls:
+      - secretName: argo-tls
+        hosts:
+          - argo.amer.dev
+
+# Executor sidecar — keep light
+executor:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 32Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+# Skip persistence/archive for now — add later when stable
+# persistence:
+#   archive: true
+#   postgresql:
+#     host: agent-kb.amer.dev
+#     port: 5433
+#     database: argo_workflows

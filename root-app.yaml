@@ -1304,6 +1304,47 @@ spec:
         maxDuration: 3m
 
 ---
+# Infrastructure: Argo Workflows
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-argo-workflows
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: https://argoproj.github.io/argo-helm
+      chart: argo-workflows
+      targetRevision: 0.45.3
+      helm:
+        valueFiles:
+          - $values/infra/argo-workflows/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
 # Infrastructure: ARC Runner Scale Set — mycroft repo
 apiVersion: argoproj.io/v1alpha1
 kind: Application
