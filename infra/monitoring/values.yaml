@@ -111,6 +111,16 @@ kubeProxy:
   enabled: false
 kubeEtcd:
   enabled: true
+  # K3s etcd metrics are plain HTTP on port 2381, no TLS/auth
+  service:
+    enabled: true
+    port: 2381
+    targetPort: 2381
+  serviceMonitor:
+    enabled: true
+    scheme: http
+    # Disable default bearerTokenFile auth
+    bearerTokenFile: ""
 kubeScheduler:
   enabled: false
 kubeControllerManager:

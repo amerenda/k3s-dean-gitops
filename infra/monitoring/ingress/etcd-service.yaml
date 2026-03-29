@@ -1,0 +1,51 @@
+---
+# Headless service + endpoints for k3s etcd metrics
+# K3s embeds etcd and doesn't create a service for it.
+# The kube-prometheus-stack etcd ServiceMonitor expects a service
+# in kube-system with specific labels.
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-etcd
+  namespace: kube-system
+  labels:
+    app: kube-prometheus-stack-kube-etcd
+    release: infra-monitoring
+spec:
+  clusterIP: None
+  ports:
+    - name: http-metrics
+      port: 2381
+      targetPort: 2381
+  type: ClusterIP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: kube-etcd
+  namespace: kube-system
+  labels:
+    kubernetes.io/service-name: kube-etcd
+    app: kube-prometheus-stack-kube-etcd
+    release: infra-monitoring
+addressType: IPv4
+ports:
+  - name: http-metrics
+    port: 2381
+    protocol: TCP
+endpoints:
+  - addresses:
+      - "10.100.20.10"
+    conditions:
+      ready: true
+    nodeName: rpi5-0
+  - addresses:
+      - "10.100.20.11"
+    conditions:
+      ready: true
+    nodeName: rpi5-1
+  - addresses:
+      - "10.100.20.12"
+    conditions:
+      ready: true
+    nodeName: rpi4-0
