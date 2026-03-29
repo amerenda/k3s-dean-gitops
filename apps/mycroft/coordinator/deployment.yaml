@@ -33,11 +33,11 @@ spec:
                   key: kb-dsn
             - name: LLM_MANAGER_URL
               value: "http://llm-manager-backend.llm-manager.svc:8081"
-            - name: LLM_MANAGER_API_KEY
+            - name: LLM_REGISTRATION_SECRET
               valueFrom:
                 secretKeyRef:
                   name: mycroft-credentials
-                  key: llm-api-key
+                  key: llm-registration-secret
             - name: TELEGRAM_BOT_TOKEN
               valueFrom:
                 secretKeyRef:
