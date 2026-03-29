@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mycroft-coordinator-uat
+  namespace: mycroft
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+    - hosts:
+        - mycroft-uat.amer.dev
+      secretName: mycroft-uat-tls
+  rules:
+    - host: mycroft-uat.amer.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mycroft-coordinator
+                port:
+                  number: 8080

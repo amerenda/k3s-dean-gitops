@@ -1,0 +1,83 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: agent-coder
+  namespace: mycroft
+spec:
+  entrypoint: run-coder
+  arguments:
+    parameters:
+    - name: task-id
+    - name: config
+      value: "{}"
+  templates:
+  - name: run-coder
+    retryStrategy:
+      limit: 3
+      backoff:
+        duration: "30s"
+        factor: 2
+    activeDeadlineSeconds: 3600
+    container:
+      image: amerenda/mycroft:agent-coder-latest
+      env:
+      - name: TASK_ID
+        value: "{{workflow.parameters.task-id}}"
+      - name: MYCROFT_AGENT_TYPE
+        value: "coder"
+      - name: KB_DSN
+        valueFrom:
+          secretKeyRef:
+            name: mycroft-credentials
+            key: kb-dsn
+      - name: LLM_MANAGER_URL
+        value: "http://llm-manager-backend.llm-manager.svc:8081"
+      - name: LLM_MANAGER_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: mycroft-agent-coder-credentials
+            key: llm-api-key
+      - name: GITHUB_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: mycroft-agent-coder-credentials
+            key: github-token
+      resources:
+        limits:
+          memory: "512Mi"
+          cpu: "1"
+          ephemeral-storage: "5Gi"
+        requests:
+          memory: "256Mi"
+          cpu: "500m"
+      volumeMounts:
+      - name: scratch
+        mountPath: /workspace
+    volumes:
+    - name: scratch
+      emptyDir:
+        sizeLimit: 5Gi
+---
+# ExternalSecret for coder agent credentials
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: mycroft-agent-coder-credentials
+  namespace: mycroft
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-secretstore
+    kind: ClusterSecretStore
+  target:
+    name: mycroft-agent-coder-credentials
+    creationPolicy: Owner
+  data:
+    - secretKey: llm-api-key
+      remoteRef:
+        key: mycroft-dean-coder-llm-api-key
+        property: password
+    - secretKey: github-token
+      remoteRef:
+        key: mycroft-dean-github-token
+        property: password

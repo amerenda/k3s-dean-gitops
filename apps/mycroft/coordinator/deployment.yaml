@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mycroft-coordinator
+  namespace: mycroft
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mycroft-coordinator
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: mycroft-coordinator
+    spec:
+      serviceAccountName: mycroft-coordinator
+      containers:
+        - name: coordinator
+          image: amerenda/mycroft:coordinator-sha-0000000
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: KB_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: mycroft-credentials
+                  key: kb-dsn
+            - name: LLM_MANAGER_URL
+              value: "http://llm-manager-backend.llm-manager.svc:8081"
+            - name: LLM_MANAGER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mycroft-credentials
+                  key: llm-api-key
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: mycroft-credentials
+                  key: telegram-bot-token
+            - name: TELEGRAM_CHAT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: mycroft-credentials
+                  key: telegram-chat-id
+            - name: AGENT_IMAGE_TAG
+              value: "sha-0000000"
+            - name: AGENT_IMAGE_REPO
+              value: "amerenda/mycroft"
+            - name: ARGO_NAMESPACE
+              value: "mycroft"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 384Mi

@@ -61,6 +61,23 @@ spec:
             path: apps/llm-manager/frontend-uat
             namespace: llm-manager
 
+  # --- mycroft ---
+  - matrix:
+      generators:
+      - pullRequest:
+          github:
+            owner: amerenda
+            repo: k3s-dean-gitops
+            appSecretName: argocd-deploy-bot
+            labels:
+            - deploy:mycroft
+          requeueAfterSeconds: 30
+      - list:
+          elements:
+          - app: mycroft-coordinator
+            path: apps/mycroft/coordinator-uat
+            namespace: mycroft
+
   template:
     metadata:
       name: 'uat-{{.app}}-pr{{.number}}'
