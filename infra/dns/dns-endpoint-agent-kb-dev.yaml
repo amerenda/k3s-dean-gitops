@@ -1,0 +1,16 @@
+---
+# Static DNS record for agent-kb in public amer.dev zone.
+# Creates agent-kb.amer.dev → 10.100.20.18 (Mac Mini) in DigitalOcean DNS via external-dns-do.
+# Used by k3s pods (coordinator, agent pods) which can't resolve amer.home via CoreDNS.
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: agent-kb-dev-static
+  namespace: default
+spec:
+  endpoints:
+    - dnsName: agent-kb.amer.dev
+      recordType: A
+      targets:
+        - "10.100.20.18"
+      recordTTL: 300
