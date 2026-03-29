@@ -13,7 +13,7 @@ template:
     nodeSelector:
       kubernetes.io/hostname: murderbot
     securityContext:
-      runAsGroup: 989
+      supplementalGroups: [989]
     containers:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest
