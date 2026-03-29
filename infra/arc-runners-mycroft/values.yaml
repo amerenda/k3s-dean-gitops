@@ -12,6 +12,10 @@ template:
   spec:
     nodeSelector:
       kubernetes.io/hostname: murderbot
+    tolerations:
+      - key: node.kubernetes.io/disk-pressure
+        operator: Exists
+        effect: NoSchedule
     securityContext:
       supplementalGroups: [989]
     containers:
