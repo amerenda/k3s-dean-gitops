@@ -43,15 +43,15 @@ server:
         hosts:
           - argo.amer.dev
 
-# Executor sidecar — keep light
+# Executor sidecar (argoexec — runs in every workflow pod)
 executor:
   resources:
     requests:
       cpu: 50m
-      memory: 32Mi
+      memory: 64Mi
     limits:
       cpu: 200m
-      memory: 128Mi
+      memory: 256Mi
 
 # Skip persistence/archive for now — add later when stable
 # persistence:
