@@ -10,6 +10,8 @@ spec:
     - name: task-id
     - name: config
       value: "{}"
+    - name: model-override
+      value: ""
   templates:
   - name: run-coder
     retryStrategy:
@@ -43,6 +45,8 @@ spec:
           secretKeyRef:
             name: mycroft-credentials
             key: github-token
+      - name: MODEL_OVERRIDE
+        value: "{{workflow.parameters.model-override}}"
       resources:
         limits:
           memory: "512Mi"
