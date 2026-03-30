@@ -1,6 +1,7 @@
-singleNamespace: false
-
 controller:
+  workflowNamespaces:
+    - argo
+    - mycroft
   replicas: 1
   resources:
     requests:
