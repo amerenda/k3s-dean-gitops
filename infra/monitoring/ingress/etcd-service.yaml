@@ -1,19 +1,29 @@
 ---
-# Manual Endpoints for the Helm-managed kube-etcd service.
-# K3s embeds etcd — no pods with matching labels exist, so
-# the headless service has empty endpoints. We manually point
-# it at the 3 controller nodes' etcd metrics port (2381).
-#
-# Must be v1 Endpoints (not EndpointSlice) because the Prometheus
-# Operator uses `role: endpoints` for service discovery.
+# Standalone etcd monitoring — NOT managed by Helm.
+# The Helm kubeEtcd service has no selector, so k8s endpoint controller
+# keeps wiping the endpoints. We manage our own service+endpoints+ServiceMonitor.
+apiVersion: v1
+kind: Service
+metadata:
+  name: k3s-etcd-metrics
+  namespace: kube-system
+  labels:
+    app: k3s-etcd
+spec:
+  clusterIP: None
+  ports:
+    - name: http-metrics
+      port: 2381
+      targetPort: 2381
+  type: ClusterIP
+---
 apiVersion: v1
 kind: Endpoints
 metadata:
-  name: infra-monitoring-kube-prom-kube-etcd
+  name: k3s-etcd-metrics
   namespace: kube-system
   labels:
-    app: kube-prometheus-stack-kube-etcd
-    release: infra-monitoring
+    app: k3s-etcd
 subsets:
   - addresses:
       - ip: "10.100.20.10"
@@ -26,3 +36,21 @@ subsets:
       - name: http-metrics
         port: 2381
         protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: k3s-etcd
+  namespace: kube-system
+  labels:
+    app: k3s-etcd
+spec:
+  selector:
+    matchLabels:
+      app: k3s-etcd
+  namespaceSelector:
+    matchNames:
+      - kube-system
+  endpoints:
+    - port: http-metrics
+      interval: 30s

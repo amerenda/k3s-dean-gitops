@@ -119,17 +119,10 @@ kube-state-metrics:
 kubeProxy:
   enabled: false
 kubeEtcd:
-  enabled: true
-  # K3s etcd metrics are plain HTTP on port 2381, no TLS/auth
-  service:
-    enabled: true
-    port: 2381
-    targetPort: 2381
-  serviceMonitor:
-    enabled: true
-    scheme: http
-    # Disable default bearerTokenFile auth
-    bearerTokenFile: ""
+  # Disabled — Helm's headless service has no selector so endpoints keep
+  # getting wiped. We manage our own service+endpoints+ServiceMonitor in
+  # infra/monitoring/ingress/etcd-service.yaml instead.
+  enabled: false
 kubeScheduler:
   enabled: false
 kubeControllerManager:
