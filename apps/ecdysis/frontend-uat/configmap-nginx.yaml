@@ -15,7 +15,7 @@ data:
             proxy_pass http://ecdysis-backend-uat.ecdysis.svc.cluster.local:8082/api/agents;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
-            proxy_read_timeout 120s;
+            proxy_read_timeout 300s;
         }
 
         # System logs -> ecdysis-backend-uat
