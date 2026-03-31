@@ -8,7 +8,8 @@ alertmanager:
 # --- Prometheus ---
 prometheus:
   prometheusSpec:
-    retention: 14d
+    retention: 7d
+    retentionSize: 25GB
     resources:
       requests:
         cpu: 200m
@@ -23,7 +24,7 @@ prometheus:
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
-              storage: 20Gi
+              storage: 30Gi
     # Generous startup probe: 1448 WAL segments caused CrashLoopBackOff
     # with the default probe. Allow up to 15 minutes for WAL replay.
     startupProbe:
