@@ -73,7 +73,7 @@ preUpgradeChecker:
 defaultBackupStore:
   backupTarget: s3://amerenda-backups@us/k3s/dean
   backupTargetCredentialSecret: gcs-backup-credentials
-  pollInterval: 300
+  pollInterval: 3600
 
 metrics:
   serviceMonitor:
