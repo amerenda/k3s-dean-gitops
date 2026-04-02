@@ -4,58 +4,67 @@
 installCRDs: true
 
 # Global tolerations and node selector for Longhorn components
-tolerations:
-  - key: "longhorn"
-    operator: "Exists"
-    effect: "NoSchedule"
+global:
+  tolerations:
+    - key: "longhorn"
+      operator: "Exists"
+      effect: "NoSchedule"
+  nodeSelector:
+    longhorn-storage: "true"
 
-nodeSelector:
-  longhorn-storage: "true"
+# Longhorn Manager (DaemonSet) — runs on all storage nodes
+longhornManager:
+  tolerations:
+    - key: "longhorn"
+      operator: "Exists"
+      effect: "NoSchedule"
+  nodeSelector:
+    longhorn-storage: "true"
 
-# Longhorn configuration
-longhorn:
-  # Enable Longhorn manager
-  manager:
-    enabled: true
-    replicas: 1
-    
-  # Storage class configuration
-  storageClass:
-    name: longhorn
-    defaultClass: true
-    reclaimPolicy: Delete
-    allowVolumeExpansion: true
-    volumeBindingMode: Immediate
-    
-  # Resource limits for Pi hardware
-  resources:
-    manager:
-      requests:
-        cpu: 100m
-        memory: 128Mi
-      limits:
-        cpu: 500m
-        memory: 512Mi
-    ui:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 200m
-        memory: 256Mi
-        
-  settings:
-    default-replica-count: "3"
-    system-managed-components-node-selector: "longhorn-storage=true"
-    replica-auto-balance: "disabled"
-    concurrent-replica-rebuild-per-node-limit: "2"
-    concurrent-automatic-engine-upgrade-per-node-limit: "1"
-    disable-scheduling-on-cordoned-node: "true"
-    node-drain-policy: "block-if-contains-last-replica"
-    create-default-disk-labeled-nodes: "true"
-    replica-soft-anti-affinity: "false"
-    replica-hard-anti-affinity: "false"
-    kubelet-root-dir: "/var/lib/rancher/k3s/agent/kubelet"
+# Longhorn UI — push away from memory-constrained rpi5-0
+longhornUI:
+  replicas: 2
+  tolerations:
+    - key: "longhorn"
+      operator: "Exists"
+      effect: "NoSchedule"
+  nodeSelector:
+    longhorn-storage: "true"
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                  - rpi5-0
+
+# CSI sidecars — reduce replicas and keep off rpi5-0
+# These are leader-elected; only 1 active at a time anyway
+csi:
+  attacherReplicaCount: 2
+  provisionerReplicaCount: 2
+  resizerReplicaCount: 2
+  snapshotterReplicaCount: 2
+  kubeletRootDir: /var/lib/rancher/k3s/agent/kubelet
+
+# Longhorn settings
+defaultSettings:
+  defaultReplicaCount: 3
+  systemManagedComponentsNodeSelector: "longhorn-storage:true"
+  replicaAutoBalance: disabled
+  concurrentReplicaRebuildPerNodeLimit: 1
+  concurrentAutomaticEngineUpgradePerNodeLimit: 1
+  disableSchedulingOnCordonedNode: true
+  nodeDrainPolicy: block-if-contains-last-replica
+  createDefaultDiskLabeledNodes: true
+  replicaSoftAntiAffinity: false
+  replicaZoneSoftAntiAffinity: true
+  # Reduce instance manager CPU reservation (default 12% per node)
+  guaranteedInstanceManagerCPU: 6
+  kubernetesClusterAutoscalerEnabled: false
 
 # Disable pre-upgrade hook to avoid service account dependency issues
 preUpgradeChecker:
