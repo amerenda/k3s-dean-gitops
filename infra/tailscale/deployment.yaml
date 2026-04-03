@@ -60,12 +60,12 @@ spec:
         app: tailscale
     spec:
       serviceAccountName: tailscale
-      # Use Pi-hole for DNS so .amer.home names resolve correctly through the exit node.
-      # Pi-hole forwards .amer.home to BIND9 (10.100.20.241) internally.
+      # Use Technitium for DNS so .amer.home names resolve correctly through the exit node.
+      # Technitium is the primary DNS server on the Mac Mini at 10.100.20.240.
       dnsPolicy: None
       dnsConfig:
         nameservers:
-          - 10.100.20.240  # Pi-hole
+          - 10.100.20.240  # Technitium (Mac Mini)
         searches:
           - default.svc.cluster.local
           - svc.cluster.local
