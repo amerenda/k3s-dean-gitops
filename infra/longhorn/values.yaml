@@ -52,7 +52,7 @@ csi:
 
 # Longhorn settings
 defaultSettings:
-  defaultReplicaCount: 3
+  defaultReplicaCount: 1
   systemManagedComponentsNodeSelector: "longhorn-storage:true"
   replicaAutoBalance: disabled
   concurrentReplicaRebuildPerNodeLimit: 1
