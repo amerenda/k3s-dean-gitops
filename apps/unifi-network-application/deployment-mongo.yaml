@@ -22,6 +22,8 @@ spec:
       labels:
         app: unifi-db
     spec:
+      nodeSelector:
+        longhorn-storage: "true"
       securityContext:
         fsGroup: 999
       initContainers:
