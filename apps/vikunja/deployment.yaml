@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vikunja
+  namespace: vikunja
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vikunja
+  template:
+    metadata:
+      labels:
+        app: vikunja
+    spec:
+      containers:
+        - name: vikunja
+          image: vikunja/vikunja:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3456
+          env:
+            - name: VIKUNJA_DATABASE_TYPE
+              value: postgres
+            - name: VIKUNJA_DATABASE_HOST
+              value: "10.100.20.18"
+            - name: VIKUNJA_DATABASE_PORT
+              value: "5432"
+            - name: VIKUNJA_DATABASE_DATABASE
+              value: todo
+            - name: VIKUNJA_DATABASE_USER
+              value: todo
+            - name: VIKUNJA_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vikunja-db-credentials
+                  key: password
+            - name: VIKUNJA_SERVICE_JWTSECRET
+              valueFrom:
+                secretKeyRef:
+                  name: vikunja-jwt-secret
+                  key: secret
+            - name: VIKUNJA_SERVICE_FRONTENDURL
+              value: "https://todo.amer.dev/"
+          readinessProbe:
+            httpGet:
+              path: /api/v1/info
+              port: 3456
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /api/v1/info
+              port: 3456
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi

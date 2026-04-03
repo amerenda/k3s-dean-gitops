@@ -1429,6 +1429,40 @@ spec:
         maxDuration: 3m
 
 ---
+# Application: Vikunja — self-hosted todo
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-vikunja
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/vikunja
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vikunja
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
 # Infrastructure: ARC Runner Scale Set — wikimedia repo
 apiVersion: argoproj.io/v1alpha1
 kind: Application
