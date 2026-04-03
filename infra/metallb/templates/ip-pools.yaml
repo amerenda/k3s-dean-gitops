@@ -20,7 +20,7 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-  - 10.100.20.241-10.100.20.251
+  - 10.100.20.240-10.100.20.250
   autoAssign: false  # Manual assignment for DNS services
 
 ---
