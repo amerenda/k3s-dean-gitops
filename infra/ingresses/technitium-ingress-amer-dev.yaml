@@ -1,0 +1,59 @@
+---
+# Service + EndpointSlice for Technitium DNS web UI running on Mac Mini (external to k3s)
+apiVersion: v1
+kind: Service
+metadata:
+  name: technitium-external
+  namespace: default
+spec:
+  ports:
+    - port: 5380
+      targetPort: 5380
+      protocol: TCP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: technitium-external-1
+  namespace: default
+  labels:
+    kubernetes.io/service-name: technitium-external
+addressType: IPv4
+endpoints:
+  - addresses:
+      - 10.100.20.18  # Mac Mini LAN IP
+    conditions:
+      ready: true
+ports:
+  - name: ""
+    port: 5380
+    protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: technitium-ingress-amer-dev
+  namespace: default
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: dns.amer.dev
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  ingressClassName: infra-traefik
+  tls:
+    - hosts:
+        - dns.amer.dev
+      secretName: technitium-amer-dev-tls
+  rules:
+    - host: dns.amer.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: technitium-external
+                port:
+                  number: 5380
