@@ -40,6 +40,8 @@ spec:
                 secretKeyRef:
                   name: vikunja-jwt-secret
                   key: secret
+            - name: VIKUNJA_SERVICE_PUBLICURL
+              value: "https://todo.amer.dev/"
             - name: VIKUNJA_SERVICE_FRONTENDURL
               value: "https://todo.amer.dev/"
           readinessProbe:
