@@ -64,11 +64,6 @@ doh:
     limits:
       memory: 256Mi
 
-# Pin to rpi5-1 — rpi5-0 was wiped during etcd tmpfs migration (2026-03-29),
-# Longhorn volumes can't attach there until node is fully reprovisioned.
-nodeSelector:
-  kubernetes.io/hostname: rpi5-1
-
 # Pi-hole resources — bumped from 384Mi limit to handle real-world load on rpi5-1.
 resources:
   requests:
