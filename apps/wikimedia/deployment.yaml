@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wikimedia
+  namespace: wikimedia
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wikimedia
+  template:
+    metadata:
+      labels:
+        app: wikimedia
+    spec:
+      containers:
+        - name: wikimedia
+          image: amerenda/wikimedia:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
