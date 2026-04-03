@@ -56,6 +56,9 @@ spec:
               port: 3456
             initialDelaySeconds: 20
             periodSeconds: 30
+          volumeMounts:
+            - name: files
+              mountPath: /app/vikunja/files
           resources:
             requests:
               cpu: 50m
@@ -63,3 +66,6 @@ spec:
             limits:
               cpu: 500m
               memory: 256Mi
+      volumes:
+        - name: files
+          emptyDir: {}
