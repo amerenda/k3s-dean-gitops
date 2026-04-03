@@ -1,0 +1,17 @@
+---
+# Static DNS record for unifi in public amer.dev zone.
+# Creates unifi.amer.dev → 10.100.20.203 (Traefik LB) in DigitalOcean DNS via external-dns-do.
+# Needed because the unifi ingress uses a Traefik IngressRoute CRD (not standard Ingress),
+# which external-dns-do does not watch — so the hostname annotation is ignored.
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: unifi-dev-static
+  namespace: default
+spec:
+  endpoints:
+    - dnsName: unifi.amer.dev
+      recordType: A
+      targets:
+        - "10.100.20.203"
+      recordTTL: 300
