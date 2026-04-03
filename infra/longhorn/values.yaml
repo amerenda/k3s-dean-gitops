@@ -54,6 +54,11 @@ csi:
 defaultSettings:
   defaultReplicaCount: 1
   systemManagedComponentsNodeSelector: "longhorn-storage:true"
+  # Replicas only land on disks tagged "storage".
+  # rpi5-1's nvme-longhorn disk has this tag (set via Longhorn UI / kubectl patch).
+  # To add a second storage node: label the node longhorn-storage=true,
+  # enable Longhorn scheduling on it, and tag its disk "storage".
+  defaultDiskSelector: "storage"
   replicaAutoBalance: disabled
   concurrentReplicaRebuildPerNodeLimit: 1
   concurrentAutomaticEngineUpgradePerNodeLimit: 1

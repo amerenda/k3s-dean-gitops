@@ -8,6 +8,10 @@ alertmanager:
 # --- Prometheus ---
 prometheus:
   prometheusSpec:
+    # Pin to storage nodes — add longhorn-storage=true to any future storage node
+    # and Prometheus will be eligible to schedule there too.
+    nodeSelector:
+      longhorn-storage: "true"
     retention: 7d
     retentionSize: 25GB
     resources:
@@ -49,6 +53,9 @@ prometheus:
 
 # --- Grafana (ClusterIP; exposed via Ingress with TLS below) ---
 grafana:
+  # Pin to storage nodes alongside Prometheus (shares a Longhorn PVC)
+  nodeSelector:
+    longhorn-storage: "true"
   # Required for browser login when accessed via Ingress (cookies/redirects)
   grafana.ini:
     server:
