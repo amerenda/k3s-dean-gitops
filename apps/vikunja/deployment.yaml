@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: vikunja
-          image: vikunja/vikunja:2.2.2
+          image: vikunja/vikunja:unstable
           imagePullPolicy: Always
           ports:
             - containerPort: 3456
