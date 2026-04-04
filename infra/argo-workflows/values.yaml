@@ -60,6 +60,6 @@ executor:
 # persistence:
 #   archive: true
 #   postgresql:
-#     host: agent-kb.amer.dev
-#     port: 5433
+#     host: 10.100.20.18
+#     port: 5432
 #     database: argo_workflows
