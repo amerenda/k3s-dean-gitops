@@ -17,6 +17,8 @@ spec:
     metadata:
       labels:
         app: mycroft-coordinator
+      annotations:
+        reloader.stakater.com/auto: "true"
     spec:
       serviceAccountName: mycroft-coordinator
       containers:

@@ -12,6 +12,8 @@ spec:
     metadata:
       labels:
         app: vikunja
+      annotations:
+        reloader.stakater.com/auto: "true"
     spec:
       containers:
         - name: vikunja
