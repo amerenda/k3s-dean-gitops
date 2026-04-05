@@ -45,7 +45,7 @@ spec:
                   name: unifi-mongo-credentials
                   key: password
             - name: MONGO_HOST
-              value: "unifi-db.unifi-network-application.svc.cluster.local"
+              value: "10.100.20.18"
             - name: MONGO_PORT
               value: "27017"
             - name: MONGO_DBNAME
