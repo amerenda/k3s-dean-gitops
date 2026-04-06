@@ -968,6 +968,56 @@ spec:
     - /status/currentRunners
 
 ---
+# Infrastructure: ARC Runner Scale Set — photos repo
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-arc-runners-photos
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
+      path: .
+      targetRevision: 0.13.0
+      helm:
+        valueFiles:
+          - $values/infra/arc-runners-photos/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      path: infra/arc-runners-photos
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arc-runners-photos
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+  - group: "actions.github.com"
+    kind: AutoscalingRunnerSet
+    jsonPointers:
+    - /status/pendingEphemeralRunners
+    - /status/currentRunners
+
+---
 # Infrastructure: ARC Runner Scale Set — llm-manager repo
 apiVersion: argoproj.io/v1alpha1
 kind: Application
