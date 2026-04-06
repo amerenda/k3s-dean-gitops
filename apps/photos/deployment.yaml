@@ -44,11 +44,6 @@ spec:
                 secretKeyRef:
                   name: photos-secrets
                   key: secret-album-password
-            - name: PUZZLE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: photos-secrets
-                  key: puzzle-password
           readinessProbe:
             httpGet:
               path: /health
