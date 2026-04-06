@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: photos
+  namespace: photos
+spec:
+  selector:
+    app: photos
+  ports:
+    - port: 80
+      targetPort: 8080

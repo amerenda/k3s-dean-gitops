@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: photos
+  namespace: photos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: photos
+  template:
+    metadata:
+      labels:
+        app: photos
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      containers:
+        - name: photos
+          image: amerenda/photos:sha-0000000
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: photos-secrets
+                  key: github-client-id
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: photos-secrets
+                  key: github-client-secret
+            - name: GITHUB_ALLOWED_USERS
+              value: "amerenda"
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: photos-secrets
+                  key: session-secret
+            - name: SECRET_ALBUM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: photos-secrets
+                  key: secret-album-password
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          volumeMounts:
+            - name: photos
+              mountPath: /photos
+      volumes:
+        - name: photos
+          persistentVolumeClaim:
+            claimName: photos-data
