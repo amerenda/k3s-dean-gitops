@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: photos
-          image: amerenda/photos:sha-c39fda9
+          image: amerenda/photos:sha-5aa6da1
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
