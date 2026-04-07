@@ -44,6 +44,8 @@ globalArguments:
   - "--providers.kubernetesingress=true"
   - "--providers.kubernetescrd=true"
   - "--entrypoints.web.address=:80"
+  - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+  - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
   - "--entrypoints.websecure.address=:443"
 
 # Additional arguments for k3s optimization

@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unifi-poller
+  namespace: unifi-poller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: unifi-poller
+  template:
+    metadata:
+      labels:
+        app: unifi-poller
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      containers:
+        - name: unifi-poller
+          image: ghcr.io/unpoller/unpoller:latest
+          imagePullPolicy: Always
+          ports:
+            - name: metrics
+              containerPort: 9130
+          env:
+            - name: UP_UNIFI_DEFAULT_URL
+              value: "https://unifi-controller.unifi-network-application:8443"
+            - name: UP_UNIFI_DEFAULT_VERIFY_SSL
+              value: "false"
+            - name: UP_UNIFI_DEFAULT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: unifi-poller-credentials
+                  key: username
+            - name: UP_UNIFI_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: unifi-poller-credentials
+                  key: password
+            - name: UP_INFLUXDB_DISABLE
+              value: "true"
+            - name: UP_PROMETHEUS_HTTP_LISTEN
+              value: "0.0.0.0:9130"
+            - name: UP_PROMETHEUS_NAMESPACE
+              value: "unifipoller"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi

@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: speedtest-exporter
+  namespace: speedtest-exporter
+  labels:
+    app: speedtest-exporter
+spec:
+  selector:
+    matchLabels:
+      app: speedtest-exporter
+  namespaceSelector:
+    matchNames:
+      - speedtest-exporter
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 1h
+      # Exporter runs a live speedtest on each scrape — needs a long timeout
+      scrapeTimeout: 90s

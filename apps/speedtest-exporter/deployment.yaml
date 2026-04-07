@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: speedtest-exporter
+  namespace: speedtest-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: speedtest-exporter
+  template:
+    metadata:
+      labels:
+        app: speedtest-exporter
+    spec:
+      containers:
+        - name: speedtest-exporter
+          image: ghcr.io/miguelndecarvalho/speedtest-exporter:latest
+          imagePullPolicy: Always
+          ports:
+            - name: metrics
+              containerPort: 9798
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 128Mi

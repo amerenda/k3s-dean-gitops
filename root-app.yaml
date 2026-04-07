@@ -1547,6 +1547,74 @@ spec:
         maxDuration: 3m
 
 ---
+# App: speedtest-exporter
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-speedtest-exporter
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/speedtest-exporter
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: speedtest-exporter
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# App: unifi-poller
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-unifi-poller
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/unifi-poller
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: unifi-poller
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
 # Infrastructure: ARC Runner Scale Set — wikimedia repo
 apiVersion: argoproj.io/v1alpha1
 kind: Application

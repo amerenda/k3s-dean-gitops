@@ -12,8 +12,8 @@ prometheus:
     # and Prometheus will be eligible to schedule there too.
     nodeSelector:
       longhorn-storage: "true"
-    retention: 7d
-    retentionSize: 25GB
+    retention: 90d
+    retentionSize: 80GB
     resources:
       requests:
         cpu: 200m
@@ -28,7 +28,7 @@ prometheus:
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
-              storage: 30Gi
+              storage: 120Gi
     # Generous startup probe: 1448 WAL segments caused CrashLoopBackOff
     # with the default probe. Allow up to 15 minutes for WAL replay.
     startupProbe:
