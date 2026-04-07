@@ -35,8 +35,8 @@ data:
                 "mode": "absolute",
                 "steps": [
                   { "color": "red", "value": null },
-                  { "color": "yellow", "value": 200 },
-                  { "color": "green", "value": 500 }
+                  { "color": "yellow", "value": 700 },
+                  { "color": "green", "value": 900 }
                 ]
               }
             }
@@ -67,8 +67,8 @@ data:
                 "mode": "absolute",
                 "steps": [
                   { "color": "red", "value": null },
-                  { "color": "yellow", "value": 50 },
-                  { "color": "green", "value": 100 }
+                  { "color": "yellow", "value": 28 },
+                  { "color": "green", "value": 35 }
                 ]
               }
             }
