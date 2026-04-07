@@ -166,7 +166,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "speedtest_download_bits_per_second / 1e6",
+              "expr": "last_over_time(speedtest_download_bits_per_second[75m]) / 1e6",
               "legendFormat": "Download (Mbps)",
               "refId": "A"
             }
@@ -190,7 +190,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "speedtest_upload_bits_per_second / 1e6",
+              "expr": "last_over_time(speedtest_upload_bits_per_second[75m]) / 1e6",
               "legendFormat": "Upload (Mbps)",
               "refId": "A"
             }
@@ -219,13 +219,13 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "speedtest_ping_latency_milliseconds",
+              "expr": "last_over_time(speedtest_ping_latency_milliseconds[75m])",
               "legendFormat": "Ping (ms)",
               "refId": "A"
             },
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "speedtest_jitter_latency_milliseconds",
+              "expr": "last_over_time(speedtest_jitter_latency_milliseconds[75m])",
               "legendFormat": "Jitter (ms)",
               "refId": "B"
             }
