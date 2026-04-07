@@ -17,7 +17,7 @@ data:
       "tags": ["network", "speedtest"],
       "timezone": "browser",
       "graphTooltip": 1,
-      "time": { "from": "now-7d", "to": "now" },
+      "time": { "from": "now-24h", "to": "now" },
       "refresh": "1h",
       "panels": [
         {
@@ -150,7 +150,7 @@ data:
               "unit": "Mbits",
               "decimals": 1,
               "color": { "mode": "fixed", "fixedColor": "blue" },
-              "custom": { "lineWidth": 2, "fillOpacity": 10, "spanNulls": false }
+              "custom": { "lineWidth": 2, "fillOpacity": 10, "spanNulls": true }
             }
           },
           "options": { "tooltip": { "mode": "single" }, "legend": { "displayMode": "hidden" } },
@@ -172,7 +172,7 @@ data:
               "unit": "Mbits",
               "decimals": 1,
               "color": { "mode": "fixed", "fixedColor": "green" },
-              "custom": { "lineWidth": 2, "fillOpacity": 10, "spanNulls": false }
+              "custom": { "lineWidth": 2, "fillOpacity": 10, "spanNulls": true }
             }
           },
           "options": { "tooltip": { "mode": "single" }, "legend": { "displayMode": "hidden" } },
@@ -193,7 +193,7 @@ data:
             "defaults": {
               "unit": "ms",
               "decimals": 1,
-              "custom": { "lineWidth": 2, "fillOpacity": 5, "spanNulls": false }
+              "custom": { "lineWidth": 2, "fillOpacity": 5, "spanNulls": true }
             },
             "overrides": [
               {
