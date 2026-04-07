@@ -25,6 +25,7 @@ data:
           "type": "stat",
           "title": "Latest Download",
           "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "fieldConfig": {
             "defaults": {
               "unit": "Mbits",
@@ -43,6 +44,7 @@ data:
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background" },
           "targets": [
             {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
               "expr": "last_over_time(speedtest_download_bits_per_second[2h]) / 1e6",
               "legendFormat": "Download",
               "refId": "A",
@@ -55,6 +57,7 @@ data:
           "type": "stat",
           "title": "Latest Upload",
           "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "fieldConfig": {
             "defaults": {
               "unit": "Mbits",
@@ -73,6 +76,7 @@ data:
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background" },
           "targets": [
             {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
               "expr": "last_over_time(speedtest_upload_bits_per_second[2h]) / 1e6",
               "legendFormat": "Upload",
               "refId": "A",
@@ -85,6 +89,7 @@ data:
           "type": "stat",
           "title": "Latest Ping",
           "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "fieldConfig": {
             "defaults": {
               "unit": "ms",
@@ -103,6 +108,7 @@ data:
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background" },
           "targets": [
             {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
               "expr": "last_over_time(speedtest_ping_latency_milliseconds[2h])",
               "legendFormat": "Ping",
               "refId": "A",
@@ -115,6 +121,7 @@ data:
           "type": "stat",
           "title": "Latest Jitter",
           "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "fieldConfig": {
             "defaults": {
               "unit": "ms",
@@ -133,6 +140,7 @@ data:
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background" },
           "targets": [
             {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
               "expr": "last_over_time(speedtest_jitter_latency_milliseconds[2h])",
               "legendFormat": "Jitter",
               "refId": "A",
@@ -145,17 +153,19 @@ data:
           "type": "timeseries",
           "title": "Download Speed",
           "gridPos": { "h": 9, "w": 12, "x": 0, "y": 4 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "fieldConfig": {
             "defaults": {
               "unit": "Mbits",
               "decimals": 1,
               "color": { "mode": "fixed", "fixedColor": "blue" },
-              "custom": { "lineWidth": 2, "fillOpacity": 10, "spanNulls": true }
+              "custom": { "lineWidth": 2, "fillOpacity": 10, "spanNulls": true, "showPoints": "always", "pointSize": 6 }
             }
           },
           "options": { "tooltip": { "mode": "single" }, "legend": { "displayMode": "hidden" } },
           "targets": [
             {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
               "expr": "speedtest_download_bits_per_second / 1e6",
               "legendFormat": "Download (Mbps)",
               "refId": "A"
@@ -167,17 +177,19 @@ data:
           "type": "timeseries",
           "title": "Upload Speed",
           "gridPos": { "h": 9, "w": 12, "x": 12, "y": 4 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "fieldConfig": {
             "defaults": {
               "unit": "Mbits",
               "decimals": 1,
               "color": { "mode": "fixed", "fixedColor": "green" },
-              "custom": { "lineWidth": 2, "fillOpacity": 10, "spanNulls": true }
+              "custom": { "lineWidth": 2, "fillOpacity": 10, "spanNulls": true, "showPoints": "always", "pointSize": 6 }
             }
           },
           "options": { "tooltip": { "mode": "single" }, "legend": { "displayMode": "hidden" } },
           "targets": [
             {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
               "expr": "speedtest_upload_bits_per_second / 1e6",
               "legendFormat": "Upload (Mbps)",
               "refId": "A"
@@ -189,11 +201,12 @@ data:
           "type": "timeseries",
           "title": "Latency & Jitter",
           "gridPos": { "h": 8, "w": 24, "x": 0, "y": 13 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "fieldConfig": {
             "defaults": {
               "unit": "ms",
               "decimals": 1,
-              "custom": { "lineWidth": 2, "fillOpacity": 5, "spanNulls": true }
+              "custom": { "lineWidth": 2, "fillOpacity": 5, "spanNulls": true, "showPoints": "always", "pointSize": 6 }
             },
             "overrides": [
               {
@@ -205,11 +218,13 @@ data:
           "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
           "targets": [
             {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
               "expr": "speedtest_ping_latency_milliseconds",
               "legendFormat": "Ping (ms)",
               "refId": "A"
             },
             {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
               "expr": "speedtest_jitter_latency_milliseconds",
               "legendFormat": "Jitter (ms)",
               "refId": "B"
