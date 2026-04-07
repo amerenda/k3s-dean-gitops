@@ -133,7 +133,7 @@ data:
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background" },
           "targets": [
             {
-              "expr": "last_over_time(speedtest_ping_jitter_milliseconds[2h])",
+              "expr": "last_over_time(speedtest_jitter_latency_milliseconds[2h])",
               "legendFormat": "Jitter",
               "refId": "A",
               "instant": true
@@ -210,7 +210,7 @@ data:
               "refId": "A"
             },
             {
-              "expr": "speedtest_ping_jitter_milliseconds",
+              "expr": "speedtest_jitter_latency_milliseconds",
               "legendFormat": "Jitter (ms)",
               "refId": "B"
             }
