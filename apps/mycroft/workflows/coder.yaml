@@ -45,6 +45,21 @@ spec:
           secretKeyRef:
             name: mycroft-credentials
             key: github-token
+      - name: GITHUB_APP_ID
+        valueFrom:
+          secretKeyRef:
+            name: mycroft-credentials
+            key: github-app-id
+      - name: GITHUB_APP_INSTALLATION_ID
+        valueFrom:
+          secretKeyRef:
+            name: mycroft-credentials
+            key: github-app-installation-id
+      - name: GITHUB_APP_PRIVATE_KEY
+        valueFrom:
+          secretKeyRef:
+            name: mycroft-credentials
+            key: github-app-private-key
       - name: VIKUNJA_URL
         value: "https://todo.amer.dev"
       - name: VIKUNJA_TOKEN
