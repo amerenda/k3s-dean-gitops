@@ -61,6 +61,26 @@ spec:
             path: apps/llm-manager/frontend-uat
             namespace: llm-manager
 
+  # --- quiz ---
+  - matrix:
+      generators:
+      - pullRequest:
+          github:
+            owner: amerenda
+            repo: k3s-dean-gitops
+            appSecretName: argocd-deploy-bot
+            labels:
+            - deploy:quiz
+          requeueAfterSeconds: 30
+      - list:
+          elements:
+          - app: quiz-backend
+            path: apps/quiz/backend-uat
+            namespace: quiz
+          - app: quiz-frontend
+            path: apps/quiz/frontend-uat
+            namespace: quiz
+
   # --- mycroft ---
   - matrix:
       generators:
