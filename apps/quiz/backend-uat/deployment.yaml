@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: amerenda/quiz:backend-sha-770831b
+          image: amerenda/quiz:backend-sha-94d0375
           imagePullPolicy: Always
           ports:
             - containerPort: 8081
