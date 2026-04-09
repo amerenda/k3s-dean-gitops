@@ -1087,8 +1087,8 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "1 - avg by (node) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) / on(node) group_left sum by (node) (machine_cpu_cores)",
-              "legendFormat": "{{node}}",
+              "expr": "1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))",
+              "legendFormat": "{{instance}}",
               "refId": "A"
             }
           ]
