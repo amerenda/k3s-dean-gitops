@@ -31,7 +31,7 @@ spec:
                   name: postgres-credentials
                   key: password
             - name: DATABASE_URL
-              value: "postgres://quiz:$(DB_PASSWORD)@mac-mini.amer.dev:5432/quiz"
+              value: "postgres://quiz:$(DB_PASSWORD)@agent-kb.amer.dev:5432/quiz"
             - name: GITHUB_CLIENT_ID
               valueFrom:
                 secretKeyRef:
