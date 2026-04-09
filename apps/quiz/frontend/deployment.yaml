@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: amerenda/quiz:frontend-sha-ff24606
+          image: amerenda/quiz:frontend-sha-a68a629
           imagePullPolicy: Always
           ports:
             - containerPort: 80
