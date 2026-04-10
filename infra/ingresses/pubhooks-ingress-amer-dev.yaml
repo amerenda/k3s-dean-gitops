@@ -3,35 +3,43 @@
 # Routes only /listener/github/* paths to Komodo Core on Mac Mini.
 # Used by GitHub webhooks to trigger push-based deploys.
 # Reuses the komodo-external Service + EndpointSlice from komodo-ingress-amer-dev.yaml.
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+#
+# Uses IngressRoute (not Ingress) so external-dns doesn't pick up the host
+# and override DNS with the LB private IP. DNS is managed by the DNSEndpoint
+# below + the DDNS CronJob which keeps it pointed at the public IP.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
 metadata:
   name: pubhooks-ingress-amer-dev
   namespace: default
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    # DNS managed by DNSEndpoint + DDNS CronJob (public IP, not LB IP)
-    # Do NOT add external-dns annotations here — they would override with the LB private IP
 spec:
-  ingressClassName: infra-traefik
+  entryPoints:
+    - websecure
   tls:
-    - hosts:
-        - pubhooks.amer.dev
-      secretName: pubhooks-amer-dev-tls
-  rules:
-    - host: pubhooks.amer.dev
-      http:
-        paths:
-          - path: /listener/github/
-            pathType: Prefix
-            backend:
-              service:
-                name: komodo-external
-                port:
-                  number: 9120
+    secretName: pubhooks-amer-dev-tls
+  routes:
+    - match: Host(`pubhooks.amer.dev`) && PathPrefix(`/listener/github/`)
+      kind: Rule
+      services:
+        - name: komodo-external
+          port: 9120
 ---
+# TLS cert — auto-created by cert-manager annotation on the old Ingress won't
+# work for IngressRoute, so we need an explicit Certificate resource.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pubhooks-amer-dev
+  namespace: default
+spec:
+  secretName: pubhooks-amer-dev-tls
+  dnsNames:
+    - pubhooks.amer.dev
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+---
+# DNS record — managed by DDNS CronJob (keeps target = current public IP)
 apiVersion: externaldns.k8s.io/v1alpha1
 kind: DNSEndpoint
 metadata:
