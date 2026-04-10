@@ -12,8 +12,8 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    external-dns.alpha.kubernetes.io/hostname: pubhooks.amer.dev
-    external-dns.alpha.kubernetes.io/ttl: "300"
+    # DNS managed by DNSEndpoint + DDNS CronJob (public IP, not LB IP)
+    # Do NOT add external-dns annotations here — they would override with the LB private IP
 spec:
   ingressClassName: infra-traefik
   tls:
