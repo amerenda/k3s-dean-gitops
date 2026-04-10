@@ -37,7 +37,7 @@ data:
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "scheme",
-                "lineInterpolation": "linear",
+                "lineInterpolation": "smooth",
                 "lineWidth": 2,
                 "pointSize": 4,
                 "showPoints": "auto",
@@ -75,13 +75,13 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "max(last_over_time(speedtest_download_bits_per_second[75m]))",
+              "expr": "max(last_over_time(speedtest_download_bits_per_second[20m]))",
               "legendFormat": "Download",
               "refId": "A"
             },
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "max(last_over_time(speedtest_upload_bits_per_second[75m]))",
+              "expr": "max(last_over_time(speedtest_upload_bits_per_second[20m]))",
               "legendFormat": "Upload",
               "refId": "B"
             }
@@ -247,7 +247,7 @@ data:
                 "drawStyle": "line",
                 "fillOpacity": 15,
                 "gradientMode": "scheme",
-                "lineInterpolation": "linear",
+                "lineInterpolation": "smooth",
                 "lineWidth": 2,
                 "pointSize": 4,
                 "showPoints": "auto",
@@ -284,13 +284,13 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "max(last_over_time(speedtest_ping_latency_milliseconds[75m]))",
+              "expr": "max(last_over_time(speedtest_ping_latency_milliseconds[20m]))",
               "legendFormat": "Ping",
               "refId": "A"
             },
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "max(last_over_time(speedtest_jitter_latency_milliseconds[75m]))",
+              "expr": "max(last_over_time(speedtest_jitter_latency_milliseconds[20m]))",
               "legendFormat": "Jitter",
               "refId": "B"
             }
@@ -313,7 +313,7 @@ data:
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "scheme",
-                "lineInterpolation": "linear",
+                "lineInterpolation": "smooth",
                 "lineWidth": 2,
                 "pointSize": 4,
                 "showPoints": "auto",
@@ -336,7 +336,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "max(last_over_time(speedtest_jitter_latency_milliseconds[75m]))",
+              "expr": "max(last_over_time(speedtest_jitter_latency_milliseconds[20m]))",
               "legendFormat": "Jitter",
               "refId": "A"
             }

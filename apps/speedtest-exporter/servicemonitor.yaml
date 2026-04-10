@@ -15,6 +15,6 @@ spec:
   endpoints:
     - port: metrics
       path: /metrics
-      interval: 1h
+      interval: 15m
       # Exporter runs a live speedtest on each scrape — needs a long timeout
       scrapeTimeout: 90s

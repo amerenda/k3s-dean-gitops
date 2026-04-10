@@ -47,7 +47,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "last_over_time(speedtest_download_bits_per_second[2h]) / 1e6",
+              "expr": "last_over_time(speedtest_download_bits_per_second[20m]) / 1e6",
               "refId": "A",
               "instant": true
             }
@@ -80,7 +80,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "last_over_time(speedtest_upload_bits_per_second[2h]) / 1e6",
+              "expr": "last_over_time(speedtest_upload_bits_per_second[20m]) / 1e6",
               "refId": "A",
               "instant": true
             }
@@ -113,7 +113,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "last_over_time(speedtest_ping_latency_milliseconds[2h])",
+              "expr": "last_over_time(speedtest_ping_latency_milliseconds[20m])",
               "refId": "A",
               "instant": true
             }
@@ -146,7 +146,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "last_over_time(speedtest_jitter_latency_milliseconds[2h])",
+              "expr": "last_over_time(speedtest_jitter_latency_milliseconds[20m])",
               "refId": "A",
               "instant": true
             }
@@ -198,7 +198,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "last_over_time(speedtest_download_bits_per_second[75m]) / 1e6",
+              "expr": "last_over_time(speedtest_download_bits_per_second[20m]) / 1e6",
               "legendFormat": "Download (Mbps)",
               "range": true,
               "refId": "A"
@@ -251,7 +251,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "last_over_time(speedtest_upload_bits_per_second[75m]) / 1e6",
+              "expr": "last_over_time(speedtest_upload_bits_per_second[20m]) / 1e6",
               "legendFormat": "Upload (Mbps)",
               "range": true,
               "refId": "A"
@@ -304,7 +304,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "last_over_time(speedtest_ping_latency_milliseconds[75m])",
+              "expr": "last_over_time(speedtest_ping_latency_milliseconds[20m])",
               "legendFormat": "Ping (ms)",
               "range": true,
               "refId": "A"
@@ -312,7 +312,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "last_over_time(speedtest_jitter_latency_milliseconds[75m])",
+              "expr": "last_over_time(speedtest_jitter_latency_milliseconds[20m])",
               "legendFormat": "Jitter (ms)",
               "range": true,
               "refId": "B"
