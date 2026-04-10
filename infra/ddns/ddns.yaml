@@ -1,0 +1,97 @@
+---
+# DDNS updater — keeps public-facing DNSEndpoint targets in sync with
+# the current public IP. Runs every 5 minutes. External-dns-do picks up
+# changes and updates DigitalOcean DNS.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ddns-updater
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ddns-updater
+  namespace: default
+rules:
+  - apiGroups: ["externaldns.k8s.io"]
+    resources: ["dnsendpoints"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ddns-updater
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: ddns-updater
+    namespace: default
+roleRef:
+  kind: Role
+  name: ddns-updater
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ddns-updater-script
+  namespace: default
+data:
+  update.sh: |
+    #!/bin/sh
+    set -e
+
+    # DNSEndpoint resources to keep pointed at the public IP
+    ENDPOINTS="pubhooks-amer-dev"
+
+    PUBLIC_IP=$(wget -qO- https://ifconfig.me)
+    if [ -z "$PUBLIC_IP" ]; then
+      echo "ERROR: failed to fetch public IP"
+      exit 1
+    fi
+    echo "Public IP: $PUBLIC_IP"
+
+    for EP in $ENDPOINTS; do
+      CURRENT=$(kubectl get dnsendpoint "$EP" -n default -o jsonpath='{.spec.endpoints[0].targets[0]}')
+      DNS_NAME=$(kubectl get dnsendpoint "$EP" -n default -o jsonpath='{.spec.endpoints[0].dnsName}')
+
+      if [ "$CURRENT" = "$PUBLIC_IP" ]; then
+        echo "$EP ($DNS_NAME): already $PUBLIC_IP — no update needed"
+      else
+        echo "$EP ($DNS_NAME): $CURRENT -> $PUBLIC_IP — updating"
+        kubectl patch dnsendpoint "$EP" -n default --type=merge \
+          -p "{\"spec\":{\"endpoints\":[{\"dnsName\":\"$DNS_NAME\",\"recordTTL\":300,\"recordType\":\"A\",\"targets\":[\"$PUBLIC_IP\"]}]}}"
+        echo "$EP: updated to $PUBLIC_IP"
+      fi
+    done
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ddns-updater
+  namespace: default
+spec:
+  schedule: "*/5 * * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 60
+      template:
+        spec:
+          serviceAccountName: ddns-updater
+          containers:
+            - name: ddns
+              image: bitnami/kubectl:1.31
+              command: ["sh", "/scripts/update.sh"]
+              volumeMounts:
+                - name: script
+                  mountPath: /scripts
+          volumes:
+            - name: script
+              configMap:
+                name: ddns-updater-script
+                defaultMode: 0755
+          restartPolicy: OnFailure
