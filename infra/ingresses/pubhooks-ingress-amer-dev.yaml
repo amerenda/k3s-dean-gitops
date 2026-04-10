@@ -1,0 +1,59 @@
+---
+# Public webhook ingress for Komodo (mac-mini-compose GitOps)
+# Routes only /listener/github/* paths to Komodo Core on Mac Mini.
+# Used by GitHub webhooks to trigger push-based deploys.
+# Reuses the komodo-external Service + EndpointSlice from komodo-ingress-amer-dev.yaml.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pubhooks-ingress-amer-dev
+  namespace: default
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: pubhooks.amer.dev
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  ingressClassName: infra-traefik
+  tls:
+    - hosts:
+        - pubhooks.amer.dev
+      secretName: pubhooks-amer-dev-tls
+  rules:
+    - host: pubhooks.amer.dev
+      http:
+        paths:
+          - path: /listener/github/
+            pathType: Prefix
+            backend:
+              service:
+                name: komodo-external
+                port:
+                  number: 9120
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pubhooks-amer-dev
+  namespace: default
+spec:
+  secretName: pubhooks-amer-dev-tls
+  dnsNames:
+    - pubhooks.amer.dev
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: pubhooks-amer-dev
+  namespace: default
+spec:
+  endpoints:
+    - dnsName: pubhooks.amer.dev
+      recordTTL: 300
+      recordType: A
+      targets:
+        - 10.100.20.203
