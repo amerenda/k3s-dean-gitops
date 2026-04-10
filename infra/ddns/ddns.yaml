@@ -84,7 +84,7 @@ spec:
           serviceAccountName: ddns-updater
           containers:
             - name: ddns
-              image: bitnami/kubectl:1.31
+              image: bitnami/kubectl:latest
               command: ["sh", "/scripts/update.sh"]
               volumeMounts:
                 - name: script
