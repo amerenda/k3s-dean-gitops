@@ -45,7 +45,7 @@ data:
     # DNSEndpoint resources to keep pointed at the public IP
     ENDPOINTS="pubhooks-amer-dev"
 
-    PUBLIC_IP=$(wget -qO- https://ifconfig.me)
+    PUBLIC_IP=$(curl -sf https://ifconfig.me)
     if [ -z "$PUBLIC_IP" ]; then
       echo "ERROR: failed to fetch public IP"
       exit 1
