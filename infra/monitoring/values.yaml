@@ -50,6 +50,7 @@ prometheus:
     # ServiceMonitor selector: watch all namespaces, match release label
     serviceMonitorSelectorNilUsesHelmValues: false
     podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
 
 # --- Grafana (ClusterIP; exposed via Ingress with TLS below) ---
 grafana:

@@ -1,0 +1,175 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: speedtest-seasonality
+  namespace: monitoring
+spec:
+  groups:
+    # ------------------------------------------------------------------
+    # Layer 1: Short-term aggregates (1h window)
+    # These smooth out the 15m scrape interval into usable hourly values.
+    # ------------------------------------------------------------------
+    - name: speedtest.recording.1h
+      interval: 5m
+      rules:
+        # Download
+        - record: speedtest:download_bps:avg_1h
+          expr: avg_over_time(speedtest_download_bits_per_second[1h])
+        - record: speedtest:download_bps:stddev_1h
+          expr: stddev_over_time(speedtest_download_bits_per_second[1h])
+
+        # Upload
+        - record: speedtest:upload_bps:avg_1h
+          expr: avg_over_time(speedtest_upload_bits_per_second[1h])
+        - record: speedtest:upload_bps:stddev_1h
+          expr: stddev_over_time(speedtest_upload_bits_per_second[1h])
+
+        # Ping
+        - record: speedtest:ping_ms:avg_1h
+          expr: avg_over_time(speedtest_ping_latency_milliseconds[1h])
+        - record: speedtest:ping_ms:stddev_1h
+          expr: stddev_over_time(speedtest_ping_latency_milliseconds[1h])
+
+        # Jitter
+        - record: speedtest:jitter_ms:avg_1h
+          expr: avg_over_time(speedtest_jitter_latency_milliseconds[1h])
+        - record: speedtest:jitter_ms:stddev_1h
+          expr: stddev_over_time(speedtest_jitter_latency_milliseconds[1h])
+
+    # ------------------------------------------------------------------
+    # Layer 2: Smoothed standard deviation (26h window over 1h stddevs)
+    # Stabilizes the stddev so a single spike doesn't inflate the bands.
+    # The 26h window captures a full day cycle plus 2h buffer.
+    # ------------------------------------------------------------------
+    - name: speedtest.recording.stddev_smooth
+      interval: 15m
+      rules:
+        - record: speedtest:download_bps:stddev_smooth
+          expr: avg_over_time(speedtest:download_bps:stddev_1h[26h:1h])
+        - record: speedtest:upload_bps:stddev_smooth
+          expr: avg_over_time(speedtest:upload_bps:stddev_1h[26h:1h])
+        - record: speedtest:ping_ms:stddev_smooth
+          expr: avg_over_time(speedtest:ping_ms:stddev_1h[26h:1h])
+        - record: speedtest:jitter_ms:stddev_smooth
+          expr: avg_over_time(speedtest:jitter_ms:stddev_1h[26h:1h])
+
+    # ------------------------------------------------------------------
+    # Layer 3: 3-week seasonal baseline
+    # Averages the same hour-of-day across the past 3 weeks to capture
+    # recurring patterns (e.g., peak usage evenings, quiet overnight).
+    # Uses 1h avg from each week at the same relative time.
+    # ------------------------------------------------------------------
+    - name: speedtest.recording.baseline_3w
+      interval: 15m
+      rules:
+        # Download
+        - record: speedtest:download_bps:baseline_3w
+          expr: |
+            (
+              avg_over_time(speedtest_download_bits_per_second[1h] offset 1w)
+              + avg_over_time(speedtest_download_bits_per_second[1h] offset 2w)
+              + avg_over_time(speedtest_download_bits_per_second[1h] offset 3w)
+            ) / 3
+        # Upload
+        - record: speedtest:upload_bps:baseline_3w
+          expr: |
+            (
+              avg_over_time(speedtest_upload_bits_per_second[1h] offset 1w)
+              + avg_over_time(speedtest_upload_bits_per_second[1h] offset 2w)
+              + avg_over_time(speedtest_upload_bits_per_second[1h] offset 3w)
+            ) / 3
+
+        # Ping
+        - record: speedtest:ping_ms:baseline_3w
+          expr: |
+            (
+              avg_over_time(speedtest_ping_latency_milliseconds[1h] offset 1w)
+              + avg_over_time(speedtest_ping_latency_milliseconds[1h] offset 2w)
+              + avg_over_time(speedtest_ping_latency_milliseconds[1h] offset 3w)
+            ) / 3
+
+        # Jitter
+        - record: speedtest:jitter_ms:baseline_3w
+          expr: |
+            (
+              avg_over_time(speedtest_jitter_latency_milliseconds[1h] offset 1w)
+              + avg_over_time(speedtest_jitter_latency_milliseconds[1h] offset 2w)
+              + avg_over_time(speedtest_jitter_latency_milliseconds[1h] offset 3w)
+            ) / 3
+
+    # ------------------------------------------------------------------
+    # Layer 4: Z-scores (current vs seasonal baseline)
+    # Measures how many standard deviations the current value is from
+    # the 3-week baseline. Positive = above baseline, negative = below.
+    # Uses smoothed stddev to avoid threshold drift from single spikes.
+    # The +1 in the denominator prevents division by zero when stddev
+    # is 0 (e.g., during the first hours of data collection).
+    # ------------------------------------------------------------------
+    - name: speedtest.recording.zscore
+      interval: 5m
+      rules:
+        - record: speedtest:download_bps:zscore_3w
+          expr: |
+            (speedtest:download_bps:avg_1h - speedtest:download_bps:baseline_3w)
+            / (speedtest:download_bps:stddev_smooth + 1)
+        - record: speedtest:upload_bps:zscore_3w
+          expr: |
+            (speedtest:upload_bps:avg_1h - speedtest:upload_bps:baseline_3w)
+            / (speedtest:upload_bps:stddev_smooth + 1)
+        - record: speedtest:ping_ms:zscore_3w
+          expr: |
+            (speedtest:ping_ms:avg_1h - speedtest:ping_ms:baseline_3w)
+            / (speedtest:ping_ms:stddev_smooth + 1)
+        - record: speedtest:jitter_ms:zscore_3w
+          expr: |
+            (speedtest:jitter_ms:avg_1h - speedtest:jitter_ms:baseline_3w)
+            / (speedtest:jitter_ms:stddev_smooth + 1)
+
+    # ------------------------------------------------------------------
+    # Layer 5: Upper and lower bounds
+    # Pre-computed anomaly bands at 3 sigma. When alerts are wired up
+    # later, they compare current values against these bounds.
+    # Includes a 10% minimum margin so bands never collapse to zero.
+    # ------------------------------------------------------------------
+    - name: speedtest.recording.bounds
+      interval: 15m
+      rules:
+        # Download upper/lower
+        - record: speedtest:download_bps:upper_3s
+          expr: |
+            speedtest:download_bps:baseline_3w
+            + clamp_min(speedtest:download_bps:stddev_smooth * 3, speedtest:download_bps:baseline_3w * 0.1)
+        - record: speedtest:download_bps:lower_3s
+          expr: |
+            speedtest:download_bps:baseline_3w
+            - clamp_min(speedtest:download_bps:stddev_smooth * 3, speedtest:download_bps:baseline_3w * 0.1)
+
+        # Upload upper/lower
+        - record: speedtest:upload_bps:upper_3s
+          expr: |
+            speedtest:upload_bps:baseline_3w
+            + clamp_min(speedtest:upload_bps:stddev_smooth * 3, speedtest:upload_bps:baseline_3w * 0.1)
+        - record: speedtest:upload_bps:lower_3s
+          expr: |
+            speedtest:upload_bps:baseline_3w
+            - clamp_min(speedtest:upload_bps:stddev_smooth * 3, speedtest:upload_bps:baseline_3w * 0.1)
+
+        # Ping upper/lower
+        - record: speedtest:ping_ms:upper_3s
+          expr: |
+            speedtest:ping_ms:baseline_3w
+            + clamp_min(speedtest:ping_ms:stddev_smooth * 3, speedtest:ping_ms:baseline_3w * 0.1)
+        - record: speedtest:ping_ms:lower_3s
+          expr: |
+            speedtest:ping_ms:baseline_3w
+            - clamp_min(speedtest:ping_ms:stddev_smooth * 3, speedtest:ping_ms:baseline_3w * 0.1)
+
+        # Jitter upper/lower
+        - record: speedtest:jitter_ms:upper_3s
+          expr: |
+            speedtest:jitter_ms:baseline_3w
+            + clamp_min(speedtest:jitter_ms:stddev_smooth * 3, speedtest:jitter_ms:baseline_3w * 0.1)
+        - record: speedtest:jitter_ms:lower_3s
+          expr: |
+            speedtest:jitter_ms:baseline_3w
+            - clamp_min(speedtest:jitter_ms:stddev_smooth * 3, speedtest:jitter_ms:baseline_3w * 0.1)
