@@ -60,6 +60,26 @@ data:
               {
                 "matcher": { "id": "byName", "options": "Upload" },
                 "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }]
+              },
+              {
+                "matcher": { "id": "byName", "options": "Download Baseline" },
+                "properties": [
+                  { "id": "color", "value": { "fixedColor": "#ff7eb3", "mode": "fixed" } },
+                  { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+                  { "id": "custom.fillOpacity", "value": 0 },
+                  { "id": "custom.lineWidth", "value": 1 },
+                  { "id": "custom.showPoints", "value": "never" }
+                ]
+              },
+              {
+                "matcher": { "id": "byName", "options": "Upload Baseline" },
+                "properties": [
+                  { "id": "color", "value": { "fixedColor": "#8ab8ff", "mode": "fixed" } },
+                  { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+                  { "id": "custom.fillOpacity", "value": 0 },
+                  { "id": "custom.lineWidth", "value": 1 },
+                  { "id": "custom.showPoints", "value": "never" }
+                ]
               }
             ]
           },
@@ -84,6 +104,18 @@ data:
               "expr": "max(last_over_time(speedtest_upload_bits_per_second[20m]))",
               "legendFormat": "Upload",
               "refId": "B"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "speedtest:download_bps:baseline_3w",
+              "legendFormat": "Download Baseline",
+              "refId": "C"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "speedtest:upload_bps:baseline_3w",
+              "legendFormat": "Upload Baseline",
+              "refId": "D"
             }
           ]
         },
@@ -269,6 +301,26 @@ data:
               {
                 "matcher": { "id": "byName", "options": "Jitter" },
                 "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+              },
+              {
+                "matcher": { "id": "byName", "options": "Ping Baseline" },
+                "properties": [
+                  { "id": "color", "value": { "fixedColor": "#ffb357", "mode": "fixed" } },
+                  { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+                  { "id": "custom.fillOpacity", "value": 0 },
+                  { "id": "custom.lineWidth", "value": 1 },
+                  { "id": "custom.showPoints", "value": "never" }
+                ]
+              },
+              {
+                "matcher": { "id": "byName", "options": "Jitter Baseline" },
+                "properties": [
+                  { "id": "color", "value": { "fixedColor": "#8ab8ff", "mode": "fixed" } },
+                  { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+                  { "id": "custom.fillOpacity", "value": 0 },
+                  { "id": "custom.lineWidth", "value": 1 },
+                  { "id": "custom.showPoints", "value": "never" }
+                ]
               }
             ]
           },
@@ -293,6 +345,18 @@ data:
               "expr": "max(last_over_time(speedtest_jitter_latency_milliseconds[20m]))",
               "legendFormat": "Jitter",
               "refId": "B"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "speedtest:ping_ms:baseline_3w",
+              "legendFormat": "Ping Baseline",
+              "refId": "C"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "speedtest:jitter_ms:baseline_3w",
+              "legendFormat": "Jitter Baseline",
+              "refId": "D"
             }
           ]
         },
@@ -327,7 +391,18 @@ data:
                 "steps": [{ "color": "green", "value": null }]
               }
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "Jitter Baseline" },
+                "properties": [
+                  { "id": "color", "value": { "fixedColor": "#8ab8ff", "mode": "fixed" } },
+                  { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+                  { "id": "custom.fillOpacity", "value": 0 },
+                  { "id": "custom.lineWidth", "value": 1 },
+                  { "id": "custom.showPoints", "value": "never" }
+                ]
+              }
+            ]
           },
           "options": {
             "legend": { "displayMode": "hidden", "showLegend": false },
@@ -339,6 +414,12 @@ data:
               "expr": "max(last_over_time(speedtest_jitter_latency_milliseconds[20m]))",
               "legendFormat": "Jitter",
               "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "speedtest:jitter_ms:baseline_3w",
+              "legendFormat": "Jitter Baseline",
+              "refId": "B"
             }
           ]
         }
