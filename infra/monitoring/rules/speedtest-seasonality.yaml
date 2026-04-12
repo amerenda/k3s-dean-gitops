@@ -131,45 +131,76 @@ spec:
     # later, they compare current values against these bounds.
     # Includes a 10% minimum margin so bands never collapse to zero.
     # ------------------------------------------------------------------
+    # ------------------------------------------------------------------
+    # Layer 5a: Margin (10% of baseline floor)
+    # Pre-compute the minimum band width so bounds never collapse.
+    # ------------------------------------------------------------------
+    - name: speedtest.recording.margin
+      interval: 15m
+      rules:
+        - record: speedtest:download_bps:margin
+          expr: speedtest:download_bps:baseline_3w * 0.1
+        - record: speedtest:upload_bps:margin
+          expr: speedtest:upload_bps:baseline_3w * 0.1
+        - record: speedtest:ping_ms:margin
+          expr: speedtest:ping_ms:baseline_3w * 0.1
+        - record: speedtest:jitter_ms:margin
+          expr: speedtest:jitter_ms:baseline_3w * 0.1
+
+    # ------------------------------------------------------------------
+    # Layer 5b: Band width (max of 3*sigma or 10% margin)
+    # Uses boolean arithmetic: if 3*sigma >= margin, use 3*sigma;
+    # otherwise use margin.
+    # ------------------------------------------------------------------
+    - name: speedtest.recording.band
+      interval: 15m
+      rules:
+        - record: speedtest:download_bps:band_3s
+          expr: |
+            (speedtest:download_bps:stddev_smooth * 3 >= bool speedtest:download_bps:margin)
+            * speedtest:download_bps:stddev_smooth * 3
+            + (speedtest:download_bps:stddev_smooth * 3 < bool speedtest:download_bps:margin)
+            * speedtest:download_bps:margin
+        - record: speedtest:upload_bps:band_3s
+          expr: |
+            (speedtest:upload_bps:stddev_smooth * 3 >= bool speedtest:upload_bps:margin)
+            * speedtest:upload_bps:stddev_smooth * 3
+            + (speedtest:upload_bps:stddev_smooth * 3 < bool speedtest:upload_bps:margin)
+            * speedtest:upload_bps:margin
+        - record: speedtest:ping_ms:band_3s
+          expr: |
+            (speedtest:ping_ms:stddev_smooth * 3 >= bool speedtest:ping_ms:margin)
+            * speedtest:ping_ms:stddev_smooth * 3
+            + (speedtest:ping_ms:stddev_smooth * 3 < bool speedtest:ping_ms:margin)
+            * speedtest:ping_ms:margin
+        - record: speedtest:jitter_ms:band_3s
+          expr: |
+            (speedtest:jitter_ms:stddev_smooth * 3 >= bool speedtest:jitter_ms:margin)
+            * speedtest:jitter_ms:stddev_smooth * 3
+            + (speedtest:jitter_ms:stddev_smooth * 3 < bool speedtest:jitter_ms:margin)
+            * speedtest:jitter_ms:margin
+
+    # ------------------------------------------------------------------
+    # Layer 5c: Upper and lower bounds
+    # baseline +/- band width. When alerts are wired up later, compare
+    # current values against these bounds.
+    # ------------------------------------------------------------------
     - name: speedtest.recording.bounds
       interval: 15m
       rules:
-        # Download upper/lower
         - record: speedtest:download_bps:upper_3s
-          expr: |
-            speedtest:download_bps:baseline_3w
-            + clamp_min(speedtest:download_bps:stddev_smooth * 3, speedtest:download_bps:baseline_3w * 0.1)
+          expr: speedtest:download_bps:baseline_3w + speedtest:download_bps:band_3s
         - record: speedtest:download_bps:lower_3s
-          expr: |
-            speedtest:download_bps:baseline_3w
-            - clamp_min(speedtest:download_bps:stddev_smooth * 3, speedtest:download_bps:baseline_3w * 0.1)
-
-        # Upload upper/lower
+          expr: speedtest:download_bps:baseline_3w - speedtest:download_bps:band_3s
         - record: speedtest:upload_bps:upper_3s
-          expr: |
-            speedtest:upload_bps:baseline_3w
-            + clamp_min(speedtest:upload_bps:stddev_smooth * 3, speedtest:upload_bps:baseline_3w * 0.1)
+          expr: speedtest:upload_bps:baseline_3w + speedtest:upload_bps:band_3s
         - record: speedtest:upload_bps:lower_3s
-          expr: |
-            speedtest:upload_bps:baseline_3w
-            - clamp_min(speedtest:upload_bps:stddev_smooth * 3, speedtest:upload_bps:baseline_3w * 0.1)
-
-        # Ping upper/lower
+          expr: speedtest:upload_bps:baseline_3w - speedtest:upload_bps:band_3s
         - record: speedtest:ping_ms:upper_3s
-          expr: |
-            speedtest:ping_ms:baseline_3w
-            + clamp_min(speedtest:ping_ms:stddev_smooth * 3, speedtest:ping_ms:baseline_3w * 0.1)
+          expr: speedtest:ping_ms:baseline_3w + speedtest:ping_ms:band_3s
         - record: speedtest:ping_ms:lower_3s
-          expr: |
-            speedtest:ping_ms:baseline_3w
-            - clamp_min(speedtest:ping_ms:stddev_smooth * 3, speedtest:ping_ms:baseline_3w * 0.1)
-
-        # Jitter upper/lower
+          expr: speedtest:ping_ms:baseline_3w - speedtest:ping_ms:band_3s
         - record: speedtest:jitter_ms:upper_3s
-          expr: |
-            speedtest:jitter_ms:baseline_3w
-            + clamp_min(speedtest:jitter_ms:stddev_smooth * 3, speedtest:jitter_ms:baseline_3w * 0.1)
+          expr: speedtest:jitter_ms:baseline_3w + speedtest:jitter_ms:band_3s
         - record: speedtest:jitter_ms:lower_3s
-          expr: |
-            speedtest:jitter_ms:baseline_3w
-            - clamp_min(speedtest:jitter_ms:stddev_smooth * 3, speedtest:jitter_ms:baseline_3w * 0.1)
+          expr: speedtest:jitter_ms:baseline_3w - speedtest:jitter_ms:band_3s
