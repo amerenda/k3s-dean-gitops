@@ -25,7 +25,7 @@ data:
           "gridPos": {"h": 4, "w": 4, "x": 0, "y": 1},
           "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}}},
           "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none"},
-          "targets": [{"expr": "llm_backend_active_runners", "legendFormat": "runners", "refId": "A"}]
+          "targets": [{"expr": "max(llm_backend_active_runners)", "legendFormat": "runners", "refId": "A"}]
         },
         {
           "type": "stat", "title": "Queue Depth", "id": 3,
@@ -33,7 +33,7 @@ data:
           "gridPos": {"h": 4, "w": 4, "x": 4, "y": 1},
           "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 3}, {"color": "red", "value": 10}]}}},
           "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
-          "targets": [{"expr": "llm_queue_depth", "legendFormat": "queued", "refId": "A"}]
+          "targets": [{"expr": "max(llm_queue_depth)", "legendFormat": "queued", "refId": "A"}]
         },
         {
           "type": "stat", "title": "Active Jobs", "id": 4,
@@ -41,7 +41,7 @@ data:
           "gridPos": {"h": 4, "w": 4, "x": 8, "y": 1},
           "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]}}},
           "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
-          "targets": [{"expr": "llm_queue_active_jobs", "legendFormat": "running", "refId": "A"}]
+          "targets": [{"expr": "max(llm_queue_active_jobs)", "legendFormat": "running", "refId": "A"}]
         },
         {
           "type": "stat", "title": "Models Loaded", "id": 5,
@@ -49,7 +49,7 @@ data:
           "gridPos": {"h": 4, "w": 4, "x": 12, "y": 1},
           "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "purple", "value": null}]}}},
           "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none"},
-          "targets": [{"expr": "llm_scheduler_loaded_models", "legendFormat": "models", "refId": "A"}]
+          "targets": [{"expr": "max(llm_scheduler_loaded_models)", "legendFormat": "models", "refId": "A"}]
         },
         {
           "type": "stat", "title": "VRAM Used by Models", "id": 6,
@@ -57,7 +57,7 @@ data:
           "gridPos": {"h": 4, "w": 4, "x": 16, "y": 1},
           "fieldConfig": {"defaults": {"unit": "decgbytes", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 12}, {"color": "red", "value": 16}]}}},
           "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
-          "targets": [{"expr": "llm_scheduler_loaded_vram_gb", "legendFormat": "VRAM", "refId": "A"}]
+          "targets": [{"expr": "max(llm_scheduler_loaded_vram_gb)", "legendFormat": "VRAM", "refId": "A"}]
         },
         {
           "type": "stat", "title": "Registered Apps", "id": 7,
@@ -65,7 +65,7 @@ data:
           "gridPos": {"h": 4, "w": 4, "x": 20, "y": 1},
           "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "purple", "value": null}]}}},
           "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none"},
-          "targets": [{"expr": "llm_backend_registered_apps", "legendFormat": "apps", "refId": "A"}]
+          "targets": [{"expr": "max(llm_backend_registered_apps)", "legendFormat": "apps", "refId": "A"}]
         },
 
         {"type": "row", "title": "Queue & Inference", "collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 5}, "id": 10},
@@ -76,9 +76,9 @@ data:
           "fieldConfig": {"defaults": {"unit": "short", "decimals": 0, "custom": {"lineWidth": 2, "fillOpacity": 20, "showPoints": "never", "spanNulls": true, "stacking": {"mode": "normal"}}}},
           "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
           "targets": [
-            {"expr": "llm_queue_depth", "legendFormat": "queued", "refId": "A"},
-            {"expr": "llm_queue_active_jobs", "legendFormat": "running", "refId": "B"},
-            {"expr": "llm_queue_loading_jobs", "legendFormat": "loading model", "refId": "C"}
+            {"expr": "max(llm_queue_depth)", "legendFormat": "queued", "refId": "A"},
+            {"expr": "max(llm_queue_active_jobs)", "legendFormat": "running", "refId": "B"},
+            {"expr": "max(llm_queue_loading_jobs)", "legendFormat": "loading model", "refId": "C"}
           ]
         },
         {
@@ -136,7 +136,7 @@ data:
           "fieldConfig": {"defaults": {"unit": "s", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 60}, {"color": "red", "value": 90}]}, "custom": {"lineWidth": 2, "fillOpacity": 5, "showPoints": "never", "spanNulls": true, "thresholdsStyle": {"mode": "line"}}}},
           "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
           "targets": [
-            {"expr": "llm_backend_runner_last_seen_seconds", "legendFormat": "{{runner}}", "refId": "A"}
+            {"expr": "max(llm_backend_runner_last_seen_seconds) by (runner)", "legendFormat": "{{runner}}", "refId": "A"}
           ]
         },
         {
@@ -201,7 +201,7 @@ data:
           "gridPos": {"h": 4, "w": 4, "x": 0, "y": 38},
           "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "orange", "value": null}]}}},
           "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
-          "targets": [{"expr": "moltbook_backend_agents_running", "legendFormat": "agents", "refId": "A"}]
+          "targets": [{"expr": "max(moltbook_backend_agents_running)", "legendFormat": "agents", "refId": "A"}]
         },
         {
           "type": "timeseries", "title": "Heartbeat Duration by Slot", "id": 52,
