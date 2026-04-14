@@ -4,7 +4,7 @@ metadata:
   name: block-page
   namespace: block-page
   annotations:
-    metallb.universe.tf/address-pool: default-pool
+    metallb.universe.tf/address-pool: loadbalancer-pool
 spec:
   type: LoadBalancer
   selector:
