@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: block-page
+  namespace: block-page
+  annotations:
+    metallb.universe.tf/address-pool: default-pool
+spec:
+  type: LoadBalancer
+  selector:
+    app: block-page
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
