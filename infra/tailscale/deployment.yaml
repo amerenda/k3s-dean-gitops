@@ -133,6 +133,11 @@ spec:
             kill $PID
             exit 1
           fi
+          # Skip MASQUERADE for traffic to Mac Mini (has its own tailscale client)
+          # so Technitium sees the real Tailscale source IP for per-client DNS blocking
+          sleep 2
+          iptables -t nat -I ts-postrouting 1 -d 10.100.20.18 -j RETURN
+          iptables -t nat -I ts-postrouting 1 -d 10.100.20.240 -j RETURN
           wait $PID
         livenessProbe:
           exec:
