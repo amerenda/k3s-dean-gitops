@@ -58,6 +58,21 @@ spec:
               value: "amerenda/mycroft"
             - name: ARGO_NAMESPACE
               value: "mycroft"
+            - name: GITHUB_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: mycroft-credentials
+                  key: github-app-id
+            - name: GITHUB_APP_INSTALLATION_ID
+              valueFrom:
+                secretKeyRef:
+                  name: mycroft-credentials
+                  key: github-app-installation-id
+            - name: GITHUB_APP_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mycroft-credentials
+                  key: github-app-private-key
           readinessProbe:
             httpGet:
               path: /health
