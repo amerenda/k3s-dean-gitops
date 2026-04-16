@@ -1,13 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mycroft-coordinator
+  name: mycroft-backend
   namespace: mycroft
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mycroft-coordinator
+      app: mycroft-backend
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -16,11 +16,11 @@ spec:
   template:
     metadata:
       labels:
-        app: mycroft-coordinator
+        app: mycroft-backend
       annotations:
         reloader.stakater.com/auto: "true"
     spec:
-      serviceAccountName: mycroft-coordinator
+      serviceAccountName: mycroft-backend
       containers:
         - name: coordinator
           image: amerenda/mycroft:coordinator-sha-c433627

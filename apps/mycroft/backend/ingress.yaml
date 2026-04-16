@@ -1,23 +1,24 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: mycroft-coordinator-uat
+  name: mycroft-backend
   namespace: mycroft
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: default-tailscale-only@kubernetescrd
 spec:
   tls:
     - hosts:
-        - mycroft-uat.amer.dev
-      secretName: mycroft-uat-tls
+        - mycroft-api.amer.dev
+      secretName: mycroft-api-tls
   rules:
-    - host: mycroft-uat.amer.dev
+    - host: mycroft-api.amer.dev
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: mycroft-coordinator
+                name: mycroft-backend
                 port:
                   number: 8080

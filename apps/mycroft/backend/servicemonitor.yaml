@@ -1,14 +1,14 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: mycroft-coordinator
+  name: mycroft-backend
   namespace: mycroft
   labels:
-    app: mycroft-coordinator
+    app: mycroft-backend
 spec:
   selector:
     matchLabels:
-      app: mycroft-coordinator
+      app: mycroft-backend
   namespaceSelector:
     matchNames:
       - mycroft

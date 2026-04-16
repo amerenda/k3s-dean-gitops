@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mycroft-frontend
+  namespace: mycroft
+  labels:
+    app: mycroft-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mycroft-frontend
+  template:
+    metadata:
+      labels:
+        app: mycroft-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: amerenda/mycroft:frontend-latest
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: mycroft-frontend-nginx
