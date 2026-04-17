@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schoolmode
+  namespace: schoolmode
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: schoolmode
+  template:
+    metadata:
+      labels:
+        app: schoolmode
+    spec:
+      containers:
+        - name: schoolmode
+          image: amerenda/schoolmode:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: TECHNITIUM_URL
+              value: "http://10.100.20.240:5380"
+            - name: TECHNITIUM_USER
+              value: "blocklist"
+            - name: TECHNITIUM_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: schoolmode-credentials
+                  key: technitium-password
+            - name: BLOCK_PAGE_IP
+              value: "10.100.20.205"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
