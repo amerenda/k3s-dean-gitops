@@ -1,0 +1,48 @@
+# ARC runner scale set for amerenda/schoolmode
+# Host Docker socket — native x86 builds on murderbot with layer cache
+githubConfigUrl: "https://github.com/amerenda/schoolmode"
+runnerScaleSetName: arc-runner-set
+githubConfigSecret: controller-manager
+controllerServiceAccount:
+  name: infra-arc-controller
+  namespace: arc-systems
+minRunners: 0
+maxRunners: 3
+template:
+  spec:
+    nodeSelector:
+      kubernetes.io/hostname: murderbot
+    securityContext:
+      supplementalGroups: [989]
+    containers:
+      - name: runner
+        image: ghcr.io/actions/actions-runner:latest
+        command: ["/home/runner/run.sh"]
+        env:
+          - name: DOCKER_HOST
+            value: "unix:///var/run/docker.sock"
+          - name: DOCKERHUB_USERNAME
+            value: "amerenda"
+          - name: DOCKERHUB_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: runner-ci-credentials
+                key: DOCKERHUB_TOKEN
+          - name: GITOPS_PAT
+            valueFrom:
+              secretKeyRef:
+                name: runner-ci-credentials
+                key: GITOPS_PAT
+        volumeMounts:
+          - name: docker-sock
+            mountPath: /var/run/docker.sock
+          - name: work
+            mountPath: /home/runner/_work
+    volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+      - name: work
+        emptyDir: {}
+namespaceOverride: arc-runners-schoolmode
