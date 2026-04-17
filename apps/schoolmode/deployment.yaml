@@ -13,6 +13,8 @@ spec:
       labels:
         app: schoolmode
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: murderbot
       containers:
         - name: schoolmode
           image: amerenda/schoolmode:latest
