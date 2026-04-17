@@ -17,7 +17,7 @@ spec:
         kubernetes.io/hostname: murderbot
       containers:
         - name: schoolmode
-          image: amerenda/schoolmode:latest
+          image: amerenda/schoolmode:sha-110ddb3
           ports:
             - containerPort: 8080
           env:
