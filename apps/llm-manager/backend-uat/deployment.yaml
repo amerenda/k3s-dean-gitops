@@ -78,6 +78,8 @@ spec:
               value: "true"
             - name: DISABLE_AUTH
               value: "true"
+            - name: SIMPLIFIED_SCHEDULER
+              value: "1"  # one-model-per-GPU scheduler (plans/queue-one-model-per-gpu.md)
             - name: ENVIRONMENT
               value: "uat"
             - name: UAT_TEST_RUNNER
