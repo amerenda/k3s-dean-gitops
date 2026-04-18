@@ -1,0 +1,106 @@
+---
+# Public Jellyfin ingress — proxies media.amer.dev to Jellyfin on 10.100.20.25:8096.
+#
+# Uses IngressRoute (not Ingress) so external-dns doesn't pick up the host and
+# override DNS with the internal Traefik LB IP. DNS is managed by the DNSEndpoint
+# below + the DDNS CronJob (infra/ddns/ddns.yaml) which keeps it pointed at the
+# current public IP.
+#
+# Access is restricted by the media-allowlist middleware:
+#   - LAN (10.100.20.0/24), pod CIDR (10.42.0.0/16), Tailscale (100.64.0.0/10),
+#     localhost (127.0.0.1/32) — full internal access
+#   - 73.238.31.98/32 — the only external public IP permitted
+# Traefik sees the real client IP because the LB uses externalTrafficPolicy: Local.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jellyfin-external
+  namespace: default
+spec:
+  ports:
+    - port: 8096
+      targetPort: 8096
+      protocol: TCP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: jellyfin-external-1
+  namespace: default
+  labels:
+    kubernetes.io/service-name: jellyfin-external
+addressType: IPv4
+endpoints:
+  - addresses:
+      - 10.100.20.25
+    conditions:
+      ready: true
+ports:
+  - name: ""
+    port: 8096
+    protocol: TCP
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: media-allowlist
+  namespace: default
+spec:
+  ipAllowList:
+    sourceRange:
+      - 10.100.20.0/24      # LAN
+      - 10.42.0.0/16        # Flannel pod CIDR
+      - 100.64.0.0/10       # Tailscale CGNAT
+      - 127.0.0.1/32        # localhost / kube-probe
+      - 73.238.31.98/32     # permitted external public IP
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: jellyfin-ingress-amer-dev
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  tls:
+    secretName: media-amer-dev-tls
+  routes:
+    - match: Host(`media.amer.dev`)
+      kind: Rule
+      middlewares:
+        - name: media-allowlist
+          namespace: default
+      services:
+        - name: jellyfin-external
+          port: 8096
+---
+# TLS cert — cert-manager annotations don't work on IngressRoute, so we need
+# an explicit Certificate resource.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: media-amer-dev
+  namespace: default
+spec:
+  secretName: media-amer-dev-tls
+  dnsNames:
+    - media.amer.dev
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+---
+# DNS record — managed by DDNS CronJob (keeps target = current public IP).
+# Initial target is a placeholder; the cron reconciles within 5 minutes.
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: media-amer-dev
+  namespace: default
+spec:
+  endpoints:
+    - dnsName: media.amer.dev
+      recordTTL: 300
+      recordType: A
+      targets:
+        - 67.250.71.110

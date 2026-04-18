@@ -43,7 +43,7 @@ data:
     set -e
 
     # DNSEndpoint resources to keep pointed at the public IP
-    ENDPOINTS="pubhooks-amer-dev"
+    ENDPOINTS="pubhooks-amer-dev media-amer-dev"
 
     PUBLIC_IP=$(curl -sf https://ifconfig.me)
     if [ -z "$PUBLIC_IP" ]; then
