@@ -30,7 +30,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: ecdysis-backend
-          image: amerenda/ecdysis-backend:sha-497896d
+          image: amerenda/ecdysis-backend:sha-75e521f
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
