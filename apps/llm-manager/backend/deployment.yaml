@@ -68,6 +68,8 @@ spec:
                 secretKeyRef:
                   name: api-key-encryption-key
                   key: key
+            - name: SIMPLIFIED_SCHEDULER
+              value: "1"  # one-model-per-GPU scheduler (plans/queue-one-model-per-gpu.md)
           readinessProbe:
             httpGet:
               path: /health
