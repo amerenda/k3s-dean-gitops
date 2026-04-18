@@ -33,26 +33,32 @@ metrics:
     serviceMonitor:
       enabled: true
 
-# Global configuration
+# Chart v37 manages entrypoints via its own `ports` block and ignores most
+# `--entrypoints.*` CLI flags. Configure redirection and access logs via
+# chart-native values below, not globalArguments.
 globalArguments:
   - "--global.checkNewVersion=false"
   - "--global.sendAnonymousUsage=false"
-  - "--log.level=INFO"
-  - "--accesslog=true"
-  - "--api.dashboard=true"
-  - "--api.insecure=true"
-  - "--providers.kubernetesingress=true"
-  - "--providers.kubernetescrd=true"
-  - "--entrypoints.web.address=:80"
-  - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
-  - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
-  - "--entrypoints.websecure.address=:443"
 
-# Additional arguments for k3s optimization
 additionalArguments:
   - "--serversTransport.insecureSkipVerify=true"
 
-# Provider configuration via Helm values (takes precedence over globalArguments flags)
+logs:
+  general:
+    level: INFO
+  # Access log to stdout so `kubectl logs` shows request-level data for
+  # debugging (403s from ipAllowList, route matches, etc).
+  access:
+    enabled: true
+
+# `redirectTo` on the web entrypoint applies a global HTTP→HTTPS redirect
+# so individual IngressRoutes don't need their own redirect middleware.
+# (Chart v37 drops equivalent --entrypoints.web.http.redirections.* CLI flags.)
+ports:
+  web:
+    redirectTo:
+      port: websecure
+
 providers:
   kubernetesIngress:
     ingressClass: "infra-traefik"
