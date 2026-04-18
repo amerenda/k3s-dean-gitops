@@ -51,13 +51,17 @@ logs:
   access:
     enabled: true
 
-# `redirectTo` on the web entrypoint applies a global HTTP→HTTPS redirect
-# so individual IngressRoutes don't need their own redirect middleware.
-# (Chart v37 drops equivalent --entrypoints.web.http.redirections.* CLI flags.)
+# Global HTTP→HTTPS redirect on the web entrypoint so individual
+# IngressRoutes don't need their own redirect middleware.
+# (Chart v34+ replaced the old `redirectTo` shorthand with this nested form.)
 ports:
   web:
-    redirectTo:
-      port: websecure
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
 
 providers:
   kubernetesIngress:
