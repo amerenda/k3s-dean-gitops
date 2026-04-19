@@ -13,6 +13,8 @@ prometheus:
     nodeSelector:
       longhorn-storage: "true"
     retention: 30d
+    # Use EndpointSlice for target discovery (Endpoints v1 deprecated in k8s 1.33+).
+    serviceDiscoveryRole: EndpointSlice
     resources:
       requests:
         cpu: 200m
