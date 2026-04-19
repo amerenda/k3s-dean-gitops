@@ -22,11 +22,19 @@ spec:
               command: ["sh", "-c"]
               args:
                 - |
+                  set -euo pipefail
                   echo "Refreshing Ollama library cache..."
-                  RESULT=$(curl -sf -X POST \
+                  http_code=$(curl -sS -o /tmp/resp -w "%{http_code}" \
+                    -X POST \
                     http://llm-manager-backend.llm-manager.svc.cluster.local:8081/api/library/refresh \
-                    -H "Content-Type: application/json" 2>&1)
-                  echo "Result: $RESULT"
+                    -H "Content-Type: application/json")
+                  echo "HTTP $http_code"
+                  cat /tmp/resp || true
+                  echo
+                  # Fail the Job on non-200 so Kubernetes shows the failure
+                  # instead of silently marking it successful (see
+                  # plans/library-refresh-broken.md).
+                  test "$http_code" = "200"
               resources:
                 requests:
                   cpu: 10m
