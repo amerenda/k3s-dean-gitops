@@ -12,8 +12,7 @@ prometheus:
     # and Prometheus will be eligible to schedule there too.
     nodeSelector:
       longhorn-storage: "true"
-    retention: 90d
-    retentionSize: 80GB
+    retention: 30d
     resources:
       requests:
         cpu: 200m
