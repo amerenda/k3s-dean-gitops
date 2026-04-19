@@ -70,6 +70,12 @@ spec:
                   key: key
             - name: SIMPLIFIED_SCHEDULER
               value: "1"  # one-model-per-GPU scheduler (plans/queue-one-model-per-gpu.md)
+            - name: QUEUE_STRATEGY
+              value: "priority_batching"  # batch up to N same-model jobs at the head of the queue
+            - name: QUEUE_BATCH_SIZE
+              value: "5"
+            - name: HIGH_PRIORITY_APPS
+              value: "mycroft-coordinator,mycroft-coder"  # these apps get priority=1
           readinessProbe:
             httpGet:
               path: /health
