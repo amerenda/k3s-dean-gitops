@@ -44,12 +44,12 @@ spec:
         value: "{{workflow.parameters.model-override}}"
       resources:
         limits:
-          memory: "256Mi"
-          cpu: "500m"
+          memory: "512Mi"
+          cpu: "1"
           ephemeral-storage: "1Gi"
         requests:
-          memory: "128Mi"
-          cpu: "250m"
+          memory: "256Mi"
+          cpu: "500m"
       volumeMounts:
       - name: scratch
         mountPath: /workspace
