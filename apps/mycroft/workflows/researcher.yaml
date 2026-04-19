@@ -21,7 +21,7 @@ spec:
         factor: 2
     activeDeadlineSeconds: 1800
     container:
-      image: amerenda/mycroft:agent-coder-latest
+      image: amerenda/mycroft:agent-researcher-latest
       imagePullPolicy: Always
       env:
       - name: TASK_ID
