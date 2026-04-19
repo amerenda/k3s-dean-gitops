@@ -1,7 +1,7 @@
 ---
 # Standalone etcd monitoring — NOT managed by Helm.
 # The Helm kubeEtcd service has no selector, so k8s endpoint controller
-# keeps wiping the endpoints. We manage our own service+endpoints+ServiceMonitor.
+# keeps wiping the endpoints. We manage our own service+endpointslice+ServiceMonitor.
 apiVersion: v1
 kind: Service
 metadata:
@@ -17,25 +17,32 @@ spec:
       targetPort: 2381
   type: ClusterIP
 ---
-apiVersion: v1
-kind: Endpoints
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
 metadata:
   name: k3s-etcd-metrics
   namespace: kube-system
   labels:
     app: k3s-etcd
-subsets:
-  - addresses:
-      - ip: "10.100.20.10"
-        nodeName: rpi5-0
-      - ip: "10.100.20.11"
-        nodeName: rpi5-1
-      - ip: "10.100.20.12"
-        nodeName: rpi4-0
-    ports:
-      - name: http-metrics
-        port: 2381
-        protocol: TCP
+    kubernetes.io/service-name: k3s-etcd-metrics
+addressType: IPv4
+ports:
+  - name: http-metrics
+    port: 2381
+    protocol: TCP
+endpoints:
+  - addresses: ["10.100.20.10"]
+    nodeName: rpi5-0
+    conditions:
+      ready: true
+  - addresses: ["10.100.20.11"]
+    nodeName: rpi5-1
+    conditions:
+      ready: true
+  - addresses: ["10.100.20.12"]
+    nodeName: rpi4-0
+    conditions:
+      ready: true
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
