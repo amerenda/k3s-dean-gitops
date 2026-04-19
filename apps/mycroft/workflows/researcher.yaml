@@ -1,0 +1,59 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: agent-researcher
+  namespace: mycroft
+spec:
+  entrypoint: run-researcher
+  arguments:
+    parameters:
+    - name: task-id
+    - name: config
+      value: "{}"
+    - name: model-override
+      value: ""
+  templates:
+  - name: run-researcher
+    retryStrategy:
+      limit: 3
+      backoff:
+        duration: "30s"
+        factor: 2
+    activeDeadlineSeconds: 1800
+    container:
+      image: amerenda/mycroft:agent-coder-latest
+      imagePullPolicy: Always
+      env:
+      - name: TASK_ID
+        value: "{{workflow.parameters.task-id}}"
+      - name: MYCROFT_AGENT_TYPE
+        value: "researcher"
+      - name: KB_DSN
+        valueFrom:
+          secretKeyRef:
+            name: mycroft-credentials
+            key: kb-dsn
+      - name: LLM_MANAGER_URL
+        value: "http://llm-manager-backend.llm-manager.svc:8081"
+      - name: LLM_REGISTRATION_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: mycroft-credentials
+            key: llm-registration-secret
+      - name: MODEL_OVERRIDE
+        value: "{{workflow.parameters.model-override}}"
+      resources:
+        limits:
+          memory: "256Mi"
+          cpu: "500m"
+          ephemeral-storage: "1Gi"
+        requests:
+          memory: "128Mi"
+          cpu: "250m"
+      volumeMounts:
+      - name: scratch
+        mountPath: /workspace
+    volumes:
+    - name: scratch
+      emptyDir:
+        sizeLimit: 1Gi
