@@ -15,6 +15,15 @@ spec:
       labels:
         app: searxng
     spec:
+      initContainers:
+        - name: copy-config
+          image: busybox
+          command: ["sh", "-c", "cp /cfg/settings.yml /etc/searxng/settings.yml && chown 977:977 /etc/searxng/settings.yml"]
+          volumeMounts:
+            - name: searxng-data
+              mountPath: /etc/searxng
+            - name: config-source
+              mountPath: /cfg
       containers:
         - name: searxng
           image: searxng/searxng:latest
@@ -22,11 +31,13 @@ spec:
             - containerPort: 8080
           env:
             - name: SEARXNG_BASE_URL
-              value: "http://searxng.mycroft.svc:8080"
+              value: "http://mycroft-search.mycroft.svc:8080"
+            # Override k8s-injected SEARXNG_PORT that breaks granian
+            - name: SEARXNG_PORT
+              value: ""
           volumeMounts:
-            - name: config
-              mountPath: /etc/searxng/settings.yml
-              subPath: settings.yml
+            - name: searxng-data
+              mountPath: /etc/searxng
           resources:
             requests:
               cpu: 50m
@@ -38,13 +49,15 @@ spec:
             httpGet:
               path: /healthz
               port: 8080
-            initialDelaySeconds: 10
+            initialDelaySeconds: 15
           readinessProbe:
             httpGet:
               path: /healthz
               port: 8080
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
       volumes:
-        - name: config
+        - name: searxng-data
+          emptyDir: {}
+        - name: config-source
           configMap:
             name: searxng-config
