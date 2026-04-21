@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: llm-remote-digest-refresh
+  namespace: llm-manager
+spec:
+  # Every 6h. Each pass only hits registry.ollama.ai for downloaded tags
+  # whose cache entry is older than 1h (or missing/errored), so the typical
+  # run is cheap. Drives the "update available" indicator in the UI without
+  # requiring the user to press the button.
+  schedule: "17 */6 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      ttlSecondsAfterFinished: 3600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: refresh
+              image: curlimages/curl:latest
+              command: ["sh", "-c"]
+              args:
+                - |
+                  set -euo pipefail
+                  echo "Refreshing Ollama remote manifest digests..."
+                  # Omit ?force=true — let the 1h min_age cache filter skip
+                  # recently-successful tags. Cron run is idempotent and cheap.
+                  http_code=$(curl -sS -o /tmp/resp -w "%{http_code}" \
+                    -X POST \
+                    http://llm-manager-backend.llm-manager.svc.cluster.local:8081/api/library/refresh-remote-digests \
+                    -H "Content-Type: application/json")
+                  echo "HTTP $http_code"
+                  cat /tmp/resp || true
+                  echo
+                  test "$http_code" = "200"
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 16Mi
+                limits:
+                  cpu: 100m
+                  memory: 64Mi
