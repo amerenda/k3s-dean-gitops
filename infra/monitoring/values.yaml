@@ -1,5 +1,9 @@
 # kube-prometheus-stack Helm Values
 # Monitoring stack for K3s on Raspberry Pi
+#
+# This Prometheus is a lightweight scraper — it collects k8s metrics and
+# remote_writes them to the Mac Mini Prometheus (10.100.20.18:9090) which
+# handles long-term storage and serves Grafana queries.
 
 # --- AlertManager: disabled ---
 alertmanager:
@@ -12,7 +16,8 @@ prometheus:
     # and Prometheus will be eligible to schedule there too.
     nodeSelector:
       longhorn-storage: "true"
-    retention: 30d
+    # Minimal local retention — just a WAL buffer. Mac Mini stores 30d.
+    retention: 2h
     # Use EndpointSlice for target discovery (Endpoints v1 deprecated in k8s 1.33+).
     serviceDiscoveryRole: EndpointSlice
     resources:
@@ -35,7 +40,10 @@ prometheus:
     startupProbe:
       failureThreshold: 60
       periodSeconds: 15
-    # Scrape external targets (outside k8s)
+    # Push all scraped metrics to Mac Mini Prometheus for long-term storage
+    remoteWrite:
+      - url: http://10.100.20.18:9090/api/v1/write
+    # Scrape external targets (outside k8s) that aren't on the Mac Mini
     additionalScrapeConfigs:
       - job_name: llm-agent
         scheme: https
@@ -66,10 +74,10 @@ grafana:
     users:
       # Redirect to home dashboard on login
       home_page: /d/home/home
-  # Explicit Prometheus URL so Grafana can reach Prometheus (chart default can be wrong)
+  # Point Grafana at Mac Mini Prometheus (central store) instead of local
   sidecar:
     datasources:
-      url: "http://infra-monitoring-kube-prom-prometheus:9090"
+      url: "http://10.100.20.18:9090"
   # Recreate strategy so only one pod uses the RWO PVC at a time (avoids Multi-Attach)
   deploymentStrategy:
     type: Recreate
