@@ -22,7 +22,8 @@ remoteRef:
 bitwarden-sdk-server:
   enabled: true
   # Reloader: restart SDK server when bitwarden-tls-certs secret changes (e.g. cert renewal)
-  deploymentAnnotations:
+  # Chart uses podAnnotations (not deploymentAnnotations) — pod template annotations work for Reloader
+  podAnnotations:
     secret.reloader.stakater.com/reload: "bitwarden-tls-certs"
   # Enable TLS for secure communication
   tls:
