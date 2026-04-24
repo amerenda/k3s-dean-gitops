@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mycroft-bridge-worker
+  namespace: mycroft
+  labels:
+    app: mycroft-bridge-worker
+spec:
+  type: ClusterIP
+  selector:
+    app: mycroft-bridge-worker
+  ports:
+    - name: http
+      port: 8082
+      targetPort: 8082

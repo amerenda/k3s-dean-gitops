@@ -58,6 +58,8 @@ spec:
               value: "amerenda/mycroft"
             - name: ARGO_NAMESPACE
               value: "mycroft"
+            - name: BRIDGE_WORKER_URL
+              value: "http://mycroft-bridge-worker.mycroft.svc:8082"
             - name: GITHUB_APP_ID
               valueFrom:
                 secretKeyRef:
