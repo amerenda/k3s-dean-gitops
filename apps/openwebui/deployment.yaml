@@ -40,17 +40,22 @@ spec:
               value: "false"
             - name: WEBUI_AUTH
               value: "true"
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /health
               port: 8080
-            initialDelaySeconds: 15
+            initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /health
               port: 8080
-            initialDelaySeconds: 30
             periodSeconds: 30
             failureThreshold: 5
           resources:
