@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: amerenda/mycroft:frontend-sha-0d0c421
+          image: amerenda/mycroft:frontend-sha-7bf8f2e
           ports:
             - containerPort: 80
           volumeMounts:
