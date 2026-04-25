@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openhands
+  namespace: openhands
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openhands
+  template:
+    metadata:
+      labels:
+        app: openhands
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      # Pin to murderbot — needs the host Docker socket to spawn sandbox containers.
+      # Same pattern as arc-runners-llm-manager. GID 989 = docker group on murderbot.
+      nodeSelector:
+        kubernetes.io/hostname: murderbot
+      securityContext:
+        supplementalGroups: [989]
+      containers:
+        - name: openhands
+          image: ghcr.io/all-hands-ai/openhands:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: openhands-config
+          env:
+            - name: LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openhands-secrets
+                  key: llm-api-key
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openhands-secrets
+                  key: github-token
+            - name: SANDBOX_ENV_GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openhands-secrets
+                  key: github-token
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+      volumes:
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: openhands-workspace
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket
