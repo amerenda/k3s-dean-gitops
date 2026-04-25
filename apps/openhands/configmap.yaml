@@ -4,15 +4,11 @@ metadata:
   name: openhands-config
   namespace: openhands
 data:
-  # ── To switch models: edit this file in k3s-dean-gitops, commit, push. ──
-  # ── ArgoCD syncs it; reloader restarts the pod automatically.          ──
-  LLM_MODEL: "openai/qwen3:14b"
-  # Available on archlinux (17GB VRAM):
-  #   openai/qwen3:14b              ~8GB   tools+thinking  ← default, reliable
-  #   openai/qwen3:30b              ~17GB  tools+thinking  best quality, fills VRAM
-  #   openai/qwen3.6:27b            ~14GB  tools+thinking  good balance
-  #   openai/deepseek-r1:14b        ~8GB   tools+thinking  strong reasoning
-  #   openai/qwen2.5-coder:7b       ~4GB   tools           lighter, code-focused
+  # ── Model is controlled via llm-manager aliases — no git changes needed. ──
+  # ── In the llm-manager UI: Models → any model → Aliases tab             ──
+  # ── Create alias "hands-model" pointing to whichever model you want.    ──
+  # ── Update the alias target to switch models instantly.                  ──
+  LLM_MODEL: "openai/hands-model"
   # ─────────────────────────────────────────────────────────────────────────
   LLM_BASE_URL: "https://llm-manager.amer.dev"
   WORKSPACE_BASE: "/workspace"
