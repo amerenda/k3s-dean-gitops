@@ -15,12 +15,62 @@ spec:
       annotations:
         reloader.stakater.com/auto: "true"
     spec:
+      serviceAccountName: openhands
       # Pin to murderbot — needs the host Docker socket to spawn sandbox containers.
       # Same pattern as arc-runners-llm-manager. GID 989 = docker group on murderbot.
       nodeSelector:
         kubernetes.io/hostname: murderbot
       securityContext:
         supplementalGroups: [989]
+
+      initContainers:
+        - name: register
+          image: curlimages/curl:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+              KUBE_NS=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+              KUBE_API=https://kubernetes.default.svc
+              KUBE_CA=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+              while true; do
+                RESP=$(curl -sf -X POST "${LLM_BASE_URL}/api/apps/discover" \
+                  -H "Content-Type: application/json" \
+                  -d "{\"name\":\"openhands\",\"base_url\":\"https://hands.amer.dev\",\"registration_secret\":\"${LLM_REGISTRATION_SECRET}\",\"capabilities\":[\"chat\"]}" \
+                  ) || { echo "llm-manager unreachable, retrying in 10s..."; sleep 10; continue; }
+
+                STATUS=$(echo "$RESP" | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+
+                if [ "$STATUS" = "approved" ]; then
+                  API_KEY=$(echo "$RESP" | grep -o '"api_key":"[^"]*"' | cut -d'"' -f4)
+                  ENCODED=$(printf '%s' "$API_KEY" | base64 | tr -d '\n')
+                  curl -sf -X PATCH \
+                    --cacert "$KUBE_CA" \
+                    -H "Authorization: Bearer $KUBE_TOKEN" \
+                    -H "Content-Type: application/strategic-merge-patch+json" \
+                    "${KUBE_API}/api/v1/namespaces/${KUBE_NS}/secrets/openhands-api-key" \
+                    -d "{\"data\":{\"api-key\":\"${ENCODED}\"}}"
+                  echo "Registered — API key stored."
+                  exit 0
+                fi
+
+                echo "Status: ${STATUS}. Approve 'openhands' in the llm-manager UI, then this will proceed."
+                sleep 10
+              done
+          env:
+            - name: LLM_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: openhands-config
+                  key: LLM_BASE_URL
+            - name: LLM_REGISTRATION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: openhands-secrets
+                  key: llm-registration-secret
+
       containers:
         - name: openhands
           image: ghcr.io/all-hands-ai/openhands:latest
@@ -31,11 +81,13 @@ spec:
             - configMapRef:
                 name: openhands-config
           env:
+            - name: SANDBOX_USER_ID
+              value: "1000"
             - name: LLM_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: openhands-secrets
-                  key: llm-api-key
+                  name: openhands-api-key
+                  key: api-key
             - name: GITHUB_APP_ID
               valueFrom:
                 secretKeyRef:
@@ -63,6 +115,7 @@ spec:
             limits:
               cpu: 2000m
               memory: 2Gi
+
       volumes:
         - name: workspace
           persistentVolumeClaim:
