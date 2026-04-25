@@ -36,16 +36,21 @@ spec:
                 secretKeyRef:
                   name: openhands-secrets
                   key: llm-api-key
-            - name: GITHUB_TOKEN
+            - name: GITHUB_APP_ID
               valueFrom:
                 secretKeyRef:
                   name: openhands-secrets
-                  key: github-token
-            - name: SANDBOX_ENV_GITHUB_TOKEN
+                  key: github-app-id
+            - name: GITHUB_APP_INSTALLATION_ID
               valueFrom:
                 secretKeyRef:
                   name: openhands-secrets
-                  key: github-token
+                  key: github-app-installation-id
+            - name: GITHUB_APP_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openhands-secrets
+                  key: github-app-private-key
           volumeMounts:
             - name: workspace
               mountPath: /workspace

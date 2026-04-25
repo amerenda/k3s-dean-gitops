@@ -4,7 +4,8 @@ metadata:
   name: openhands-config
   namespace: openhands
 data:
-  # ── Switch models by editing LLM_MODEL — pod auto-restarts via reloader ───
+  # ── To switch models: edit this file in k3s-dean-gitops, commit, push. ──
+  # ── ArgoCD syncs it; reloader restarts the pod automatically.          ──
   LLM_MODEL: "openai/qwen3:14b"
   # Available on archlinux (17GB VRAM):
   #   openai/qwen3:14b              ~8GB   tools+thinking  ← default, reliable
