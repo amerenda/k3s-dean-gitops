@@ -23,7 +23,7 @@ spec:
       serviceAccountName: mycroft-backend
       containers:
         - name: coordinator
-          image: amerenda/mycroft:coordinator-sha-c2edbab
+          image: amerenda/mycroft:coordinator-sha-78fda72
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
