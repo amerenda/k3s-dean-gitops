@@ -24,6 +24,14 @@ spec:
         supplementalGroups: [989]
 
       initContainers:
+        - name: fix-perms
+          image: busybox:latest
+          command: ["sh", "-c", "chown -R 1000:1000 /.openhands"]
+          volumeMounts:
+            - name: workspace
+              mountPath: /.openhands
+              subPath: .openhands
+
         - name: register
           image: curlimages/curl:latest
           command: ["/bin/sh", "-c"]
