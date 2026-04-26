@@ -105,6 +105,9 @@ spec:
                   key: github-app-private-key
           volumeMounts:
             - name: workspace
+              mountPath: /.openhands
+              subPath: .openhands
+            - name: workspace
               mountPath: /workspace
             - name: docker-sock
               mountPath: /var/run/docker.sock
