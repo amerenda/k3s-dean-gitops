@@ -38,6 +38,8 @@ template:
             mountPath: /var/run/docker.sock
           - name: work
             mountPath: /home/runner/_work
+          - name: docker-build-cache
+            mountPath: /mnt/storage/docker-build-cache
     volumes:
       - name: docker-sock
         hostPath:
@@ -45,4 +47,8 @@ template:
           type: Socket
       - name: work
         emptyDir: {}
+      - name: docker-build-cache
+        hostPath:
+          path: /mnt/storage/docker-build-cache
+          type: Directory
 namespaceOverride: arc-runners-llm-manager

@@ -15,5 +15,5 @@ metadata:
 data:
   # Reference: which nodes run Longhorn storage
   # kubectl label node <node-name> longhorn-storage=true
-  storage-nodes: "rpi5-0,rpi5-1,rpi4-0"
-  excluded-nodes: "murderbot,rpi3-0"
+  storage-nodes: "rpi5-0,rpi5-1,rpi4-0,murderbot"
+  excluded-nodes: "rpi3-0"
