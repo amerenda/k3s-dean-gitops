@@ -212,53 +212,53 @@ spec:
 
 ---
 # Infrastructure: Monitoring Stack (Prometheus + Grafana)
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: infra-monitoring
-  namespace: default
-  annotations:
-    argocd.argoproj.io/sync-wave: "6"  # Install last - depends on all infrastructure
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io/background
-spec:
-  project: infra
-  sources:
-    - repoURL: https://prometheus-community.github.io/helm-charts
-      chart: kube-prometheus-stack
-      targetRevision: "82.1.0"
-      helm:
-        valueFiles:
-          - $values/infra/monitoring/values.yaml
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      ref: values
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      path: infra/monitoring/ingress
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      path: infra/monitoring/dashboards
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      path: infra/monitoring/rules
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: monitoring
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - PrunePropagationPolicy=foreground
-      - ServerSideApply=true
-    retry:
-      limit: 5
-      backoff:
-        duration: 5s
-        factor: 2
-        maxDuration: 3m
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: infra-monitoring
+#   namespace: default
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "6"  # Install last - depends on all infrastructure
+#   finalizers:
+#     - resources-finalizer.argocd.argoproj.io/background
+# spec:
+#   project: infra
+#   sources:
+#     - repoURL: https://prometheus-community.github.io/helm-charts
+#       chart: kube-prometheus-stack
+#       targetRevision: "82.1.0"
+#       helm:
+#         valueFiles:
+#           - $values/infra/monitoring/values.yaml
+#     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+#       targetRevision: main
+#       ref: values
+#     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+#       targetRevision: main
+#       path: infra/monitoring/ingress
+#     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+#       targetRevision: main
+#       path: infra/monitoring/dashboards
+#     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+#       targetRevision: main
+#       path: infra/monitoring/rules
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: monitoring
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#       - CreateNamespace=true
+#       - PrunePropagationPolicy=foreground
+#       - ServerSideApply=true
+#     retry:
+#       limit: 5
+#       backoff:
+#         duration: 5s
+#         factor: 2
+#         maxDuration: 3m
 
 ---
 # Application: Pi-hole DNS
