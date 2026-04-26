@@ -23,7 +23,7 @@ spec:
       serviceAccountName: mycroft-backend
       containers:
         - name: coordinator
-          image: amerenda/mycroft:coordinator-sha-be5d5dd
+          image: amerenda/mycroft:coordinator-sha-bc0f5be
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -53,7 +53,7 @@ spec:
             - name: INTENT_MODEL
               value: "qwen2.5:7b"
             - name: AGENT_IMAGE_TAG
-              value: "sha-6a5b074"
+              value: "sha-bc0f5be"
             - name: AGENT_IMAGE_REPO
               value: "amerenda/mycroft"
             - name: ARGO_NAMESPACE
