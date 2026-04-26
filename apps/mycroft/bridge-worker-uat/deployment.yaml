@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: bridge-worker
-          image: amerenda/mycroft:bridge-worker-sha-6bdbd99
+          image: amerenda/mycroft:bridge-worker-sha-166fd2c
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
