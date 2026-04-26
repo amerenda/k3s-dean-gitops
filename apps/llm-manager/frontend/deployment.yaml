@@ -25,7 +25,7 @@ spec:
                       - murderbot
       containers:
         - name: frontend
-          image: amerenda/llm-manager:frontend-sha-42e98af
+          image: amerenda/llm-manager:frontend-sha-08b4c89
           imagePullPolicy: Always
           ports:
             - containerPort: 80
