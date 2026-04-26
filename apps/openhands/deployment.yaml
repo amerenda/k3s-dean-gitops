@@ -91,6 +91,10 @@ spec:
           env:
             - name: SANDBOX_USER_ID
               value: "1000"
+            - name: DOCKER_HOST_ADDR
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
             - name: LLM_API_KEY
               valueFrom:
                 secretKeyRef:
