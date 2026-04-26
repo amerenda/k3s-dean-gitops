@@ -13,3 +13,4 @@ data:
   LLM_BASE_URL: "https://llm-manager.amer.dev"
   WORKSPACE_BASE: "/workspace"
   DOCKER_HOST: "unix:///var/run/docker.sock"
+  SANDBOX_RUNTIME_CONTAINER_IMAGE: "ghcr.io/all-hands-ai/runtime:0.59-nikolaik"
