@@ -11,6 +11,7 @@ data:
   LLM_MODEL: "openai/hands-model"
   # ─────────────────────────────────────────────────────────────────────────
   LLM_BASE_URL: "https://llm-manager-backend.amer.dev/v1"
+  LLM_MANAGER_API_URL: "https://llm-manager-backend.amer.dev"
   WORKSPACE_BASE: "/workspace"
   DOCKER_HOST: "unix:///var/run/docker.sock"
   SANDBOX_RUNTIME_CONTAINER_IMAGE: "ghcr.io/all-hands-ai/runtime:0.59-nikolaik"

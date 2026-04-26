@@ -44,7 +44,7 @@ spec:
               KUBE_CA=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 
               while true; do
-                RESP=$(curl -sf -X POST "${LLM_BASE_URL}/api/apps/discover" \
+                RESP=$(curl -sf -X POST "${LLM_MANAGER_API_URL}/api/apps/discover" \
                   -H "Content-Type: application/json" \
                   -d "{\"name\":\"openhands\",\"base_url\":\"https://hands.amer.dev\",\"registration_secret\":\"${LLM_REGISTRATION_SECRET}\",\"capabilities\":[\"chat\"]}" \
                   ) || { echo "llm-manager unreachable, retrying in 10s..."; sleep 10; continue; }
@@ -68,11 +68,11 @@ spec:
                 sleep 10
               done
           env:
-            - name: LLM_BASE_URL
+            - name: LLM_MANAGER_API_URL
               valueFrom:
                 configMapKeyRef:
                   name: openhands-config
-                  key: LLM_BASE_URL
+                  key: LLM_MANAGER_API_URL
             - name: LLM_REGISTRATION_SECRET
               valueFrom:
                 secretKeyRef:
