@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: wikimedia
-          image: amerenda/wikimedia:sha-acc6fb1
+          image: amerenda/wikimedia:sha-2d56641
           imagePullPolicy: Always
           ports:
             - containerPort: 80
