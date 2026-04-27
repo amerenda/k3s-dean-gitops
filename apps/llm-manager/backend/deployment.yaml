@@ -32,10 +32,10 @@ spec:
             - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: cloud-sql-postgres-credentials
+                  name: llm-manager-db-credentials
                   key: postgres-password
             - name: DATABASE_URL
-              value: "postgresql://llm:$(PGPASSWORD)@127.0.0.1:5432/llmmanager"
+              value: "postgresql://llmmanager:$(PGPASSWORD)@10.100.20.18:5432/llmmanager"
             - name: LLM_MANAGER_AGENT_PSK
               valueFrom:
                 secretKeyRef:
@@ -95,26 +95,3 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
-        - name: cloud-sql-proxy
-          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
-          args:
-            - "--port=5432"
-            - "amerenda-k3s:us-east1:k3s-dean-postgres"
-          env:
-            - name: GOOGLE_APPLICATION_CREDENTIALS
-              value: /secrets/sa-key.json
-          volumeMounts:
-            - name: gcp-sa-key
-              mountPath: /secrets
-              readOnly: true
-          resources:
-            requests:
-              cpu: 10m
-              memory: 32Mi
-            limits:
-              cpu: 100m
-              memory: 64Mi
-      volumes:
-        - name: gcp-sa-key
-          secret:
-            secretName: cloud-sql-sa-key
