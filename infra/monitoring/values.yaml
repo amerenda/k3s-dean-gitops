@@ -11,9 +11,9 @@ alertmanager:
 # --- Prometheus ---
 prometheus:
   prometheusSpec:
-    # Pin to murderbot — local NVMe, 250 GiB Longhorn allocation.
+    # Pin to rpi5-1 — Longhorn replica on murderbot.
     nodeSelector:
-      kubernetes.io/hostname: murderbot
+      kubernetes.io/hostname: rpi5-1
     retention: 30d
     # Use EndpointSlice for target discovery (Endpoints v1 deprecated in k8s 1.33+).
     serviceDiscoveryRole: EndpointSlice
@@ -23,7 +23,7 @@ prometheus:
         memory: 512Mi
       limits:
         cpu: "2"
-        memory: 6Gi
+        memory: 8Gi
     storageSpec:
       volumeClaimTemplate:
         spec:
