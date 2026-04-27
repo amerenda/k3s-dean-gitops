@@ -354,6 +354,123 @@ data:
               "legendFormat": "{{runner}}"
             }
           ]
+        },
+        {
+          "id": 14,
+          "title": "Alias Config",
+          "type": "table",
+          "description": "Active aliases with base model and string metadata. Refreshed every 30s.",
+          "gridPos": {"h": 6, "w": 12, "x": 0, "y": 40},
+          "options": {
+            "sortBy": [{"displayName": "alias", "desc": false}],
+            "footer": {"show": false}
+          },
+          "fieldConfig": {
+            "defaults": {"custom": {"filterable": true}},
+            "overrides": [
+              {"matcher": {"id": "byName", "options": "Value"}, "properties": [{"id": "custom.hidden", "value": true}]},
+              {"matcher": {"id": "byName", "options": "Time"}, "properties": [{"id": "custom.hidden", "value": true}]},
+              {"matcher": {"id": "byName", "options": "__name__"}, "properties": [{"id": "custom.hidden", "value": true}]}
+            ]
+          },
+          "targets": [
+            {
+              "expr": "llm_alias_info",
+              "legendFormat": "",
+              "instant": true,
+              "format": "table"
+            }
+          ],
+          "transformations": [
+            {"id": "labelsToFields", "options": {"mode": "columns"}},
+            {"id": "organize", "options": {
+              "renameByName": {
+                "alias": "Alias",
+                "base_model": "Base Model",
+                "has_system_prompt": "System Prompt"
+              },
+              "indexByName": {"alias": 0, "base_model": 1, "has_system_prompt": 2}
+            }}
+          ]
+        },
+        {
+          "id": 15,
+          "title": "Alias Parameters",
+          "type": "table",
+          "description": "Numeric parameters configured per alias. Refreshed every 30s.",
+          "gridPos": {"h": 6, "w": 12, "x": 12, "y": 40},
+          "options": {
+            "sortBy": [{"displayName": "alias", "desc": false}],
+            "footer": {"show": false}
+          },
+          "fieldConfig": {
+            "defaults": {"custom": {"filterable": true}, "decimals": 4},
+            "overrides": [
+              {"matcher": {"id": "byName", "options": "Value"}, "properties": [
+                {"id": "displayName", "value": "Value"},
+                {"id": "decimals", "value": 4}
+              ]},
+              {"matcher": {"id": "byName", "options": "Time"}, "properties": [{"id": "custom.hidden", "value": true}]},
+              {"matcher": {"id": "byName", "options": "__name__"}, "properties": [{"id": "custom.hidden", "value": true}]}
+            ]
+          },
+          "targets": [
+            {
+              "expr": "llm_alias_param",
+              "legendFormat": "",
+              "instant": true,
+              "format": "table"
+            }
+          ],
+          "transformations": [
+            {"id": "labelsToFields", "options": {"mode": "columns"}},
+            {"id": "organize", "options": {
+              "renameByName": {
+                "alias": "Alias",
+                "param": "Parameter",
+                "Value": "Value"
+              },
+              "indexByName": {"alias": 0, "param": 1, "Value": 2}
+            }}
+          ]
+        },
+        {
+          "id": 16,
+          "title": "Runner Model Parameter Overrides",
+          "type": "table",
+          "description": "Per-runner model param overrides (model_runner_params table). Refreshed every 30s.",
+          "gridPos": {"h": 6, "w": 24, "x": 0, "y": 46},
+          "options": {
+            "sortBy": [{"displayName": "model", "desc": false}],
+            "footer": {"show": false}
+          },
+          "fieldConfig": {
+            "defaults": {"custom": {"filterable": true}, "decimals": 4},
+            "overrides": [
+              {"matcher": {"id": "byName", "options": "Time"}, "properties": [{"id": "custom.hidden", "value": true}]},
+              {"matcher": {"id": "byName", "options": "__name__"}, "properties": [{"id": "custom.hidden", "value": true}]}
+            ]
+          },
+          "targets": [
+            {
+              "expr": "llm_runner_model_param",
+              "legendFormat": "",
+              "instant": true,
+              "format": "table"
+            }
+          ],
+          "transformations": [
+            {"id": "labelsToFields", "options": {"mode": "columns"}},
+            {"id": "organize", "options": {
+              "renameByName": {
+                "model": "Model",
+                "runner": "Runner",
+                "param": "Parameter",
+                "Value": "Value"
+              },
+              "indexByName": {"model": 0, "runner": 1, "param": 2, "Value": 3}
+            }}
+          ]
         }
       ]
     }
