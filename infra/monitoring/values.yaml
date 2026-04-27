@@ -1,9 +1,8 @@
 # kube-prometheus-stack Helm Values
 # Monitoring stack for K3s on Raspberry Pi
 #
-# This Prometheus is a lightweight scraper — it collects k8s metrics and
-# remote_writes them to the Mac Mini Prometheus (10.100.20.18:9090) which
-# handles long-term storage and serves Grafana queries.
+# Prometheus runs on murderbot (local SSD) with 30d retention.
+# Grafana queries the in-cluster Prometheus directly.
 
 # --- AlertManager: disabled ---
 alertmanager:
@@ -12,10 +11,9 @@ alertmanager:
 # --- Prometheus ---
 prometheus:
   prometheusSpec:
-    # Pin to storage nodes — add longhorn-storage=true to any future storage node
-    # and Prometheus will be eligible to schedule there too.
+    # Pin to murderbot — local NVMe, 250 GiB Longhorn allocation.
     nodeSelector:
-      longhorn-storage: "true"
+      kubernetes.io/hostname: murderbot
     retention: 30d
     # Use EndpointSlice for target discovery (Endpoints v1 deprecated in k8s 1.33+).
     serviceDiscoveryRole: EndpointSlice
@@ -29,7 +27,7 @@ prometheus:
     storageSpec:
       volumeClaimTemplate:
         spec:
-          storageClassName: longhorn
+          storageClassName: longhorn-2rep
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
@@ -39,10 +37,7 @@ prometheus:
     startupProbe:
       failureThreshold: 60
       periodSeconds: 15
-    # Push all scraped metrics to Mac Mini Prometheus for long-term storage
-    # remoteWrite:
-    #   - url: http://10.100.20.18:9090/api/v1/write
-    # Scrape external targets (outside k8s) that aren't on the Mac Mini
+    # Scrape external targets (outside k8s)
     additionalScrapeConfigs:
       - job_name: llm-agent
         scheme: https
