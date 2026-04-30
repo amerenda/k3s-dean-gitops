@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: amerenda/llm-manager:frontend-sha-9b09fb9
+          image: amerenda/llm-manager:frontend-sha-5c4e812
           imagePullPolicy: Always
           ports:
             - containerPort: 80
