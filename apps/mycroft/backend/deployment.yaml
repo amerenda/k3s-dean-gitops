@@ -23,7 +23,7 @@ spec:
       serviceAccountName: mycroft-backend
       containers:
         - name: coordinator
-          image: amerenda/mycroft:coordinator-sha-1b5cc1c
+          image: amerenda/mycroft:coordinator-sha-8cba0a7
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -51,7 +51,7 @@ spec:
                   name: mycroft-credentials
                   key: telegram-chat-id
             - name: AGENT_IMAGE_TAG
-              value: "sha-1b5cc1c"
+              value: "sha-8cba0a7"
             - name: AGENT_IMAGE_REPO
               value: "amerenda/mycroft"
             - name: ARGO_NAMESPACE
