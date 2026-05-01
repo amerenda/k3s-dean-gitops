@@ -12,23 +12,41 @@ spec:
     metadata:
       labels:
         app: wikimedia
+      annotations:
+        reloader.stakater.com/auto: "true"
     spec:
       containers:
         - name: wikimedia
-          image: amerenda/wikimedia:sha-d3a64ef
+          image: amerenda/wikimedia:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 80
+            - containerPort: 8000
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wikimedia-db-credentials
+                  key: password
+            - name: DATABASE_URL
+              value: "postgresql://wikimedia:$(PGPASSWORD)@agent-kb.amer.dev:5432/wikimedia"
+            - name: WIKI_SITE_NAME
+              value: "Homelab Wiki"
           readinessProbe:
             httpGet:
-              path: /
-              port: 80
+              path: /health
+              port: 8000
             initialDelaySeconds: 5
             periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 30
           resources:
             requests:
-              cpu: 10m
-              memory: 16Mi
-            limits:
-              cpu: 100m
+              cpu: 25m
               memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
