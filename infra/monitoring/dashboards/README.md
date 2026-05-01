@@ -1,6 +1,6 @@
 # Grafana dashboards (Infra & Apps)
 
-ConfigMaps in this directory are applied to the `monitoring` namespace and picked up by the Grafana dashboard sidecar (label `grafana_dashboard: "1"`). They appear in Grafana under folders **Infra** and **Apps**.
+ConfigMaps in this directory are applied to the `monitoring` namespace. Grafana on mac-mini (`mac-mini-compose`) mirrors these dashboards via file provisioning using `scripts/extract-grafana-dashboards-from-gitops.py` (same JSON payloads, folders from the `grafana_folder` annotation).
 
 ## Full dashboards (imported from Grafana.com)
 
