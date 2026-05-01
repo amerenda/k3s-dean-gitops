@@ -1,8 +1,7 @@
 # kube-prometheus-stack Helm Values
 # Monitoring stack for K3s on Raspberry Pi
 #
-# Prometheus runs on murderbot (local SSD) with 30d retention.
-# Grafana queries the in-cluster Prometheus directly.
+# Prometheus runs in Agent mode and forwards samples to mac-mini.
 
 # --- AlertManager: disabled ---
 alertmanager:
@@ -10,33 +9,30 @@ alertmanager:
 
 # --- Prometheus ---
 prometheus:
+  agentMode: true
   prometheusSpec:
-    # Pin to rpi5-1 — Longhorn replica on murderbot.
-    nodeSelector:
-      kubernetes.io/hostname: rpi5-1
-    retention: 30d
     # Use EndpointSlice for target discovery (Endpoints v1 deprecated in k8s 1.33+).
     serviceDiscoveryRole: EndpointSlice
+    externalLabels:
+      cluster: k3s-dean
+      role: edge-agent
     resources:
       requests:
         cpu: 200m
-        memory: 512Mi
+        memory: 256Mi
       limits:
-        cpu: "2"
-        memory: 8Gi
-    storageSpec:
-      volumeClaimTemplate:
-        spec:
-          storageClassName: longhorn-2rep
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 120Gi
-    # Generous startup probe: 1448 WAL segments caused CrashLoopBackOff
-    # with the default probe. Allow up to 15 minutes for WAL replay.
-    startupProbe:
-      failureThreshold: 60
-      periodSeconds: 15
+        cpu: "1"
+        memory: 1Gi
+    remoteWrite:
+      - url: "http://10.100.20.18:9090/api/v1/write"
+        queueConfig:
+          capacity: 10000
+          maxShards: 30
+          minShards: 1
+          maxSamplesPerSend: 5000
+          batchSendDeadline: 5s
+          minBackoff: 100ms
+          maxBackoff: 10s
     # Scrape external targets (outside k8s)
     additionalScrapeConfigs:
       - job_name: llm-agent
@@ -55,42 +51,9 @@ prometheus:
     podMonitorSelectorNilUsesHelmValues: false
     ruleSelectorNilUsesHelmValues: false
 
-# --- Grafana (ClusterIP; exposed via Ingress with TLS below) ---
+# --- Grafana ---
 grafana:
-  # Pin to storage nodes alongside Prometheus (shares a Longhorn PVC)
-  nodeSelector:
-    kubernetes.io/hostname: murderbot
-  # Required for browser login when accessed via Ingress (cookies/redirects)
-  grafana.ini:
-    server:
-      root_url: https://grafana.amer.dev
-      domain: grafana.amer.dev
-    users:
-      # Redirect to home dashboard on login
-      home_page: /d/home/home
-  # Point Grafana at Mac Mini Prometheus (central store) instead of local
-  sidecar:
-    datasources:
-      url: "http://prometheus-operated.monitoring.svc:9090"
-  # Recreate strategy so only one pod uses the RWO PVC at a time (avoids Multi-Attach)
-  deploymentStrategy:
-    type: Recreate
-  service:
-    type: ClusterIP
-  persistence:
-    enabled: true
-    storageClassName: longhorn
-    accessModes: ["ReadWriteOnce"]
-    size: 2Gi
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
-  defaultDashboardsEnabled: true
-  defaultDashboardsTimezone: America/New_York
+  enabled: false
 
 # --- Prometheus Operator ---
 prometheusOperator:

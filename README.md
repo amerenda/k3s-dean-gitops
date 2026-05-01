@@ -15,7 +15,7 @@ root-app.yaml (ArgoCD App-of-Apps)
 │   ├── traefik               Ingress controller
 │   ├── external-dns          DNS record management (amer.home + amer.dev)
 │   ├── dns                   BIND9 authoritative DNS
-│   ├── monitoring             Prometheus + Grafana (kube-prometheus-stack)
+│   ├── monitoring             Prometheus Agent (kube-prometheus-stack; forwards to mac-mini)
 │   ├── tailscale             VPN access
 │   ├── reloader              Auto-restart on config changes
 │   ├── arc-controller        GitHub Actions Runner Controller
