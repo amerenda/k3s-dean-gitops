@@ -36,6 +36,8 @@ spec:
                   key: postgres-password
             - name: DATABASE_URL
               value: "postgresql://llmmanager:$(PGPASSWORD)@10.100.20.18:5432/llmmanager"
+            - name: LLM_MANAGER_PROCESS
+              value: "api"
             - name: LLM_MANAGER_AGENT_PSK
               valueFrom:
                 secretKeyRef:

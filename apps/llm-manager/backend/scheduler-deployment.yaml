@@ -1,0 +1,61 @@
+# Queue dispatch worker: same image as llm-manager-backend, different command.
+# At most one replica holds the Lease and runs SimplifiedScheduler at a time.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-manager-scheduler
+  namespace: llm-manager
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: llm-manager-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: llm-manager-scheduler
+    spec:
+      serviceAccountName: llm-manager-scheduler
+      terminationGracePeriodSeconds: 120
+      containers:
+        - name: scheduler
+          image: amerenda/llm-manager:backend-sha-c066de9
+          imagePullPolicy: Always
+          command: ["python", "-m", "scheduler_worker"]
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: llm-manager-db-credentials
+                  key: postgres-password
+            - name: DATABASE_URL
+              value: "postgresql://llmmanager:$(PGPASSWORD)@10.100.20.18:5432/llmmanager"
+            - name: LLM_MANAGER_AGENT_PSK
+              valueFrom:
+                secretKeyRef:
+                  name: agent-psk
+                  key: psk
+            - name: DISABLE_SCHEDULER
+              value: "false"
+            - name: SCHEDULER_LEADER_BACKEND
+              value: "k8s"
+            - name: SCHEDULER_K8S_LEASE_NAME
+              value: "llm-manager-scheduler"
+            - name: QUEUE_STRATEGY
+              value: "priority_batching"
+            - name: QUEUE_BATCH_SIZE
+              value: "5"
+            - name: HIGH_PRIORITY_APPS
+              value: "mycroft-coordinator,mycroft-coder"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1536Mi
