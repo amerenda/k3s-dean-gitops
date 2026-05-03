@@ -27,6 +27,28 @@ spec:
           image: amerenda/llm-manager:backend-sha-6060003
           imagePullPolicy: Always
           command: ["python", "-m", "scheduler_worker"]
+          ports:
+            - containerPort: 8081
+              name: health
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
           env:
             - name: PGPASSWORD
               valueFrom:
