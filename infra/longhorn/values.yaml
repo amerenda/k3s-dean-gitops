@@ -52,7 +52,7 @@ csi:
 
 # Longhorn settings
 defaultSettings:
-  defaultReplicaCount: 1
+  defaultReplicaCount: "1"
   systemManagedComponentsNodeSelector: "longhorn-storage:true"
   # Replicas only land on disks tagged "storage".
   # rpi5-1's nvme-longhorn disk has this tag (set via Longhorn UI / kubectl patch).
@@ -60,15 +60,15 @@ defaultSettings:
   # enable Longhorn scheduling on it, and tag its disk "storage".
   defaultDiskSelector: "storage"
   replicaAutoBalance: disabled
-  concurrentReplicaRebuildPerNodeLimit: 1
-  concurrentAutomaticEngineUpgradePerNodeLimit: 1
+  concurrentReplicaRebuildPerNodeLimit: "1"
+  concurrentAutomaticEngineUpgradePerNodeLimit: "1"
   disableSchedulingOnCordonedNode: true
   nodeDrainPolicy: block-if-contains-last-replica
   createDefaultDiskLabeledNodes: true
   replicaSoftAntiAffinity: false
   replicaZoneSoftAntiAffinity: true
   # Reduce instance manager CPU reservation (default 12% per node)
-  guaranteedInstanceManagerCPU: 6
+  guaranteedInstanceManagerCPU: "6"
   kubernetesClusterAutoscalerEnabled: false
 
 # Disable pre-upgrade hook to avoid service account dependency issues

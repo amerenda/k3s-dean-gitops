@@ -23,7 +23,6 @@ root-app.yaml (ArgoCD App-of-Apps)
 │
 ├── apps/                     Application deployments
 │   ├── home-assistant        Home automation
-│   ├── pihole                DNS ad-blocking
 │   ├── unifi-network-application  UniFi network controller + MongoDB
 │   ├── llm-manager           GPU inference manager (backend + UI + PostgreSQL)
 │   ├── llm-agents            Piper TTS agent
@@ -114,7 +113,7 @@ spec:
         maxDuration: 3m
 ```
 
-3. For Helm-based apps, use `sources` with a chart repo and a `$values` ref (see `app-pihole` or `infra-longhorn` in `root-app.yaml` for examples).
+3. For Helm-based apps, use `sources` with a chart repo and a `$values` ref (see `infra-longhorn` in `root-app.yaml` for an example).
 
 4. If the app needs secrets, add an `ExternalSecret` resource that pulls from Bitwarden via the `bitwarden-secretstore` ClusterSecretStore.
 

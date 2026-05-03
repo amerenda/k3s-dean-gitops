@@ -26,7 +26,7 @@ Kubernetes Secret for ArgoCD to access the gitops repo:
 ### `appprojects.yaml`
 ArgoCD AppProject resources defining project permissions:
 - **infra Project**: For infrastructure components (storage, networking, DNS, etc.)
-- **application Project**: For application deployments (Home Assistant, Pi-hole, etc.)
+- **application Project**: For application deployments (Home Assistant, UniFi, etc.)
 - **Permissions**: Configured to allow all repositories, namespaces, and resources
 - **Required**: Must be applied before applications using these projects can sync
 
