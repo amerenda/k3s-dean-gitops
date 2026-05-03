@@ -24,7 +24,7 @@ spec:
       terminationGracePeriodSeconds: 120
       containers:
         - name: scheduler
-          image: amerenda/llm-manager:backend-sha-213008b
+          image: amerenda/llm-manager:backend-sha-a827fbc
           imagePullPolicy: Always
           command: ["python", "-m", "scheduler_worker"]
           ports:
