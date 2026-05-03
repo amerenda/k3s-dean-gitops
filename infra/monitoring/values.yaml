@@ -40,6 +40,9 @@ prometheus:
         tls_config:
           insecure_skip_verify: true
         static_configs:
+          - targets: ["10.100.20.18:8090"]
+            labels:
+              node: mac-mini-m4
           - targets: ["10.100.20.19:8090"]
             labels:
               node: murderbot
