@@ -13,7 +13,6 @@ ConfigMaps in this directory are applied to the `monitoring` namespace. Grafana 
 | **Infra: CoreDNS** | 12382 (K8S CoreDNS) |
 | **Infra: Node Exporter** | 1860 (Node Exporter Full) |
 | **Infra: Kubernetes Cluster** | 15757 |
-| **App: Pi-hole** | 10176 (Pi-hole Exporter – requires Prometheus + pihole-exporter) |
 
 Datasource variable `DS_PROMETHEUS` is set to the default Prometheus datasource (`prometheus`) for provisioning.
 
