@@ -9,9 +9,13 @@ GitHub Actions self-hosted runners managed by ARC (Actions Runner Controller) on
 | **build** | `arc-runner-set` | Yes (host socket) | Docker image builds, anything needing Docker |
 | **ci** | `arc-runner-set` | No | Tests, linting, deploy PRs, API calls |
 
-All build runners are pinned to **murderbot** (x86/amd64) via `nodeSelector`.
+Build runners use **node affinity** so they can schedule on **murderbot** or **archlinux** (`kubernetes.io/hostname` `In` `[murderbot, archlinux]`). The scheduler picks any node that fits resources and taints; when **murderbot** is healthy it shares load with **archlinux** instead of replacing it.
+
+If **archlinux** still has the legacy `archlinux=true:NoSchedule` taint, run Ansible `post-k3s.yml` (it removes that taint on `archlinux_k3s` hosts) so ARC pods can land there.
 
 Build runners mount the host Docker socket (`/var/run/docker.sock`) — no DinD. This gives native build speed with persistent layer cache across all jobs.
+
+**Docker socket GID:** `supplementalGroups: [989]` matches **murderbot** (Debian) `docker` group. On **archlinux**, run `getent group docker | cut -d: -f3`; if it differs, add that GID to the list (for example `[989, 952]`) in each `infra/arc-runners-*/values.yaml` that mounts the socket so the same pod spec works on both hosts.
 
 ## Secrets
 
@@ -104,17 +108,16 @@ All secrets come from Bitwarden Secrets Manager via ExternalSecrets:
 ## Architecture
 
 ```
-Mac Mini (arm64)                    murderbot / k3s (x86)
+Mac Mini (arm64)          murderbot + archlinux k3s agents (amd64 build pool)
 ┌──────────────────────┐            ┌─────────────────────────────┐
 │ myoung34/github-runner│            │ ARC Controller (arc-systems) │
 │ Labels: mac-mini,arm64│            │                             │
-│ Docker: host socket   │            │ x86-build runners:          │
-│ Repos: all app repos  │            │   - ecdysis                 │
-│                       │            │   - llm-manager             │
-│ Handles: arm64 builds │            │   - k3s-runners             │
-│                       │            │ Docker: host socket          │
+│ Docker: host socket   │            │ amd64 build runners:        │
+│ Repos: all app repos  │            │   node: murderbot | archlinux
+│                       │            │   - ecdysis, llm-manager…   │
+│ Handles: arm64 builds │            │ Docker: host socket          │
 │                       │            │                             │
-│                       │            │ x86-ci runners:             │
+│                       │            │ amd64 CI runners:           │
 │                       │            │   - k3s-dean-gitops         │
 │                       │            │   - tailscale-acl           │
 │                       │            │ Docker: none                │

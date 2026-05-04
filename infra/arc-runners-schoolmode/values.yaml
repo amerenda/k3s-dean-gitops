@@ -1,5 +1,5 @@
 # ARC runner scale set for amerenda/schoolmode
-# Host Docker socket — native x86 builds on murderbot with layer cache
+# Host Docker socket — amd64 builds on murderbot (primary) or archlinux (overflow / when murderbot is down)
 githubConfigUrl: "https://github.com/amerenda/schoolmode"
 runnerScaleSetName: arc-runner-set
 githubConfigSecret: controller-manager
@@ -10,8 +10,16 @@ minRunners: 0
 maxRunners: 3
 template:
   spec:
-    nodeSelector:
-      kubernetes.io/hostname: murderbot
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - murderbot
+                    - archlinux
     securityContext:
       supplementalGroups: [989]
     containers:
