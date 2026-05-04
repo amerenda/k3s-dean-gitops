@@ -9,6 +9,10 @@ global:
     - key: "longhorn"
       operator: "Exists"
       effect: "NoSchedule"
+    - key: "archlinux"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
   nodeSelector:
     longhorn-storage: "true"
 
@@ -17,6 +21,10 @@ longhornManager:
   tolerations:
     - key: "longhorn"
       operator: "Exists"
+      effect: "NoSchedule"
+    - key: "archlinux"
+      operator: "Equal"
+      value: "true"
       effect: "NoSchedule"
   nodeSelector:
     longhorn-storage: "true"
@@ -27,6 +35,10 @@ longhornUI:
   tolerations:
     - key: "longhorn"
       operator: "Exists"
+      effect: "NoSchedule"
+    - key: "archlinux"
+      operator: "Equal"
+      value: "true"
       effect: "NoSchedule"
   nodeSelector:
     longhorn-storage: "true"

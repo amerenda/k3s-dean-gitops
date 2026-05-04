@@ -10,6 +10,14 @@ installCRDs: true
 # Controller configuration
 controller:
   enabled: true
+  tolerations:
+    - key: "longhorn"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "archlinux"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
   resources:
     requests:
       cpu: 100m
@@ -24,6 +32,10 @@ speaker:
   tolerations:
     - key: "longhorn"
       operator: "Exists"
+      effect: "NoSchedule"
+    - key: "archlinux"
+      operator: "Equal"
+      value: "true"
       effect: "NoSchedule"
   resources:
     requests:

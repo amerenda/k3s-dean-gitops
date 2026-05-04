@@ -1,5 +1,5 @@
 # Longhorn Configuration for Raspberry Pi Cluster
-# Storage nodes: rpi5-0 (8GB), rpi5-1 (16GB), rpi4-0 (4GB)
+# Storage nodes: rpi5-0 (8GB), rpi5-1 (16GB), rpi4-0 (4GB), archlinux (disk path /mnt/storage/k3s via Ansible post-k3s)
 # Non-storage: murderbot (no longhorn-storage label), rpi3-0 (scheduling disabled)
 #
 # rpi5-0 is memory-constrained (8GB with control-plane + etcd + longhorn).
@@ -15,5 +15,5 @@ metadata:
 data:
   # Reference: which nodes run Longhorn storage
   # kubectl label node <node-name> longhorn-storage=true
-  storage-nodes: "rpi5-0,rpi5-1,rpi4-0,murderbot"
+  storage-nodes: "rpi5-0,rpi5-1,rpi4-0,murderbot,archlinux"
   excluded-nodes: "rpi3-0"
