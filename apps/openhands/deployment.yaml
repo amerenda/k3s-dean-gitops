@@ -16,10 +16,18 @@ spec:
         reloader.stakater.com/auto: "true"
     spec:
       serviceAccountName: openhands
-      # Pin to murderbot — needs the host Docker socket to spawn sandbox containers.
-      # Same pattern as arc-runners-llm-manager. GID 989 = docker group on murderbot.
-      nodeSelector:
-        kubernetes.io/hostname: murderbot
+      # Host Docker socket — same pattern as ARC: murderbot (primary) or archlinux when murderbot is down.
+      # supplementalGroups 989 = docker GID on Debian (murderbot); add archlinux GID if Docker access fails on Arch.
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - murderbot
+                      - archlinux
       securityContext:
         supplementalGroups: [989]
 

@@ -13,8 +13,17 @@ spec:
       labels:
         app: schoolmode
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: murderbot
+      # Prefer murderbot; allow archlinux when murderbot is offline (no hostPath — generic amd64).
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - murderbot
+                      - archlinux
       containers:
         - name: schoolmode
           image: amerenda/schoolmode:sha-b66ec4b
