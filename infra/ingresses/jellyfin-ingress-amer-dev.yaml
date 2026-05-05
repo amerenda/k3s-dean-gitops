@@ -293,12 +293,6 @@ spec:
   secretName: media-amer-dev-tls
   dnsNames:
     - media.amer.dev
-    - sonarr.media.amer.dev
-    - radarr.media.amer.dev
-    - bazarr.media.amer.dev
-    - prowlarr.media.amer.dev
-    - profilarr.media.amer.dev
-    - sabnzbd.media.amer.dev
     - "*.media.amer.dev"
   issuerRef:
     name: letsencrypt-prod
