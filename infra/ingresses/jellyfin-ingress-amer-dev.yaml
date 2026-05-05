@@ -1,6 +1,6 @@
 ---
-# Media stack ingress for services running on murderbot (external to k3s).
-# All hosts are limited to Tailscale clients via middleware allowlist.
+# Media stack ingress for services running on murderbot (10.100.20.19, external to k3s).
+# All hosts are limited to private/Tailscale ranges via the media-allowlist middleware.
 ---
 apiVersion: v1
 kind: Service
@@ -23,7 +23,7 @@ metadata:
 addressType: IPv4
 endpoints:
   - addresses:
-      - 10.100.20.25
+      - 10.100.20.19
     conditions:
       ready: true
 ports:
@@ -52,7 +52,7 @@ metadata:
 addressType: IPv4
 endpoints:
   - addresses:
-      - 10.100.20.25
+      - 10.100.20.19
     conditions:
       ready: true
 ports:
@@ -81,7 +81,7 @@ metadata:
 addressType: IPv4
 endpoints:
   - addresses:
-      - 10.100.20.25
+      - 10.100.20.19
     conditions:
       ready: true
 ports:
@@ -110,7 +110,7 @@ metadata:
 addressType: IPv4
 endpoints:
   - addresses:
-      - 10.100.20.25
+      - 10.100.20.19
     conditions:
       ready: true
 ports:
@@ -139,7 +139,7 @@ metadata:
 addressType: IPv4
 endpoints:
   - addresses:
-      - 10.100.20.25
+      - 10.100.20.19
     conditions:
       ready: true
 ports:
@@ -168,7 +168,7 @@ metadata:
 addressType: IPv4
 endpoints:
   - addresses:
-      - 10.100.20.25
+      - 10.100.20.19
     conditions:
       ready: true
 ports:
@@ -197,7 +197,7 @@ metadata:
 addressType: IPv4
 endpoints:
   - addresses:
-      - 10.100.20.25
+      - 10.100.20.19
     conditions:
       ready: true
 ports:
@@ -303,3 +303,31 @@ spec:
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
+---
+# DNS records — managed by DDNS CronJob (infra/ddns/ddns.yaml).
+# The cron reconciles the public IP every 5 minutes. Initial placeholder is overwritten on first run.
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: media-amer-dev
+  namespace: default
+spec:
+  endpoints:
+    - dnsName: media.amer.dev
+      recordTTL: 300
+      recordType: A
+      targets:
+        - 67.250.71.110
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: media-wildcard-amer-dev
+  namespace: default
+spec:
+  endpoints:
+    - dnsName: "*.media.amer.dev"
+      recordTTL: 300
+      recordType: A
+      targets:
+        - 67.250.71.110
