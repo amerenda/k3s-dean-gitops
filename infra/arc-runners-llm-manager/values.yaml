@@ -1,5 +1,5 @@
 # ARC runner scale set for amerenda/llm-manager
-# Host Docker socket — amd64 builds on murderbot (primary) or archlinux (overflow / when murderbot is down)
+# Host Docker socket — amd64 builds on murderbot only (archlinux removed: GID/cache mismatch)
 githubConfigUrl: "https://github.com/amerenda/llm-manager"
 runnerScaleSetName: arc-runner-set
 githubConfigSecret: controller-manager
@@ -19,7 +19,6 @@ template:
                   operator: In
                   values:
                     - murderbot
-                    - archlinux
     securityContext:
       supplementalGroups: [989]
     containers:
