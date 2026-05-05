@@ -1,16 +1,6 @@
 ---
-# Public Jellyfin ingress — proxies media.amer.dev to Jellyfin on 10.100.20.25:8096.
-#
-# Uses IngressRoute (not Ingress) so external-dns doesn't pick up the host and
-# override DNS with the internal Traefik LB IP. DNS is managed by the DNSEndpoint
-# below + the DDNS CronJob (infra/ddns/ddns.yaml) which keeps it pointed at the
-# current public IP.
-#
-# Access is restricted by the media-allowlist middleware:
-#   - LAN (10.100.20.0/24), pod CIDR (10.42.0.0/16), Tailscale (100.64.0.0/10),
-#     localhost (127.0.0.1/32) — full internal access
-#   - 73.238.31.98/32 — the only external public IP permitted
-# Traefik sees the real client IP because the LB uses externalTrafficPolicy: Local.
+# Media stack ingress for services running on murderbot (external to k3s).
+# All hosts are limited to Tailscale clients via middleware allowlist.
 ---
 apiVersion: v1
 kind: Service
@@ -41,6 +31,180 @@ ports:
     port: 8096
     protocol: TCP
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarr-external
+  namespace: default
+spec:
+  ports:
+    - port: 8989
+      targetPort: 8989
+      protocol: TCP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: sonarr-external-1
+  namespace: default
+  labels:
+    kubernetes.io/service-name: sonarr-external
+addressType: IPv4
+endpoints:
+  - addresses:
+      - 10.100.20.25
+    conditions:
+      ready: true
+ports:
+  - name: ""
+    port: 8989
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: radarr-external
+  namespace: default
+spec:
+  ports:
+    - port: 7878
+      targetPort: 7878
+      protocol: TCP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: radarr-external-1
+  namespace: default
+  labels:
+    kubernetes.io/service-name: radarr-external
+addressType: IPv4
+endpoints:
+  - addresses:
+      - 10.100.20.25
+    conditions:
+      ready: true
+ports:
+  - name: ""
+    port: 7878
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bazarr-external
+  namespace: default
+spec:
+  ports:
+    - port: 6767
+      targetPort: 6767
+      protocol: TCP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: bazarr-external-1
+  namespace: default
+  labels:
+    kubernetes.io/service-name: bazarr-external
+addressType: IPv4
+endpoints:
+  - addresses:
+      - 10.100.20.25
+    conditions:
+      ready: true
+ports:
+  - name: ""
+    port: 6767
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prowlarr-external
+  namespace: default
+spec:
+  ports:
+    - port: 9696
+      targetPort: 9696
+      protocol: TCP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: prowlarr-external-1
+  namespace: default
+  labels:
+    kubernetes.io/service-name: prowlarr-external
+addressType: IPv4
+endpoints:
+  - addresses:
+      - 10.100.20.25
+    conditions:
+      ready: true
+ports:
+  - name: ""
+    port: 9696
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: profilarr-external
+  namespace: default
+spec:
+  ports:
+    - port: 6868
+      targetPort: 6868
+      protocol: TCP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: profilarr-external-1
+  namespace: default
+  labels:
+    kubernetes.io/service-name: profilarr-external
+addressType: IPv4
+endpoints:
+  - addresses:
+      - 10.100.20.25
+    conditions:
+      ready: true
+ports:
+  - name: ""
+    port: 6868
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sabnzbd-external
+  namespace: default
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: sabnzbd-external-1
+  namespace: default
+  labels:
+    kubernetes.io/service-name: sabnzbd-external
+addressType: IPv4
+endpoints:
+  - addresses:
+      - 10.100.20.25
+    conditions:
+      ready: true
+ports:
+  - name: ""
+    port: 8080
+    protocol: TCP
+---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -49,16 +213,13 @@ metadata:
 spec:
   ipAllowList:
     sourceRange:
-      - 10.100.20.0/24      # LAN
-      - 10.42.0.0/16        # Flannel pod CIDR
-      - 100.64.0.0/10       # Tailscale CGNAT
-      - 127.0.0.1/32        # localhost / kube-probe
-      - 73.238.31.98/32     # permitted external public IP
+      - 100.64.0.0/10       # Tailscale IPv4 CGNAT
+      - fd7a:115c:a1e0::/48 # Tailscale ULA IPv6
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: jellyfin-ingress-amer-dev
+  name: media-ingress-amer-dev
   namespace: default
 spec:
   entryPoints:
@@ -74,9 +235,55 @@ spec:
       services:
         - name: jellyfin-external
           port: 8096
+    - match: Host(`sonarr.media.amer.dev`)
+      kind: Rule
+      middlewares:
+        - name: media-allowlist
+          namespace: default
+      services:
+        - name: sonarr-external
+          port: 8989
+    - match: Host(`radarr.media.amer.dev`)
+      kind: Rule
+      middlewares:
+        - name: media-allowlist
+          namespace: default
+      services:
+        - name: radarr-external
+          port: 7878
+    - match: Host(`bazarr.media.amer.dev`)
+      kind: Rule
+      middlewares:
+        - name: media-allowlist
+          namespace: default
+      services:
+        - name: bazarr-external
+          port: 6767
+    - match: Host(`prowlarr.media.amer.dev`)
+      kind: Rule
+      middlewares:
+        - name: media-allowlist
+          namespace: default
+      services:
+        - name: prowlarr-external
+          port: 9696
+    - match: Host(`profilarr.media.amer.dev`)
+      kind: Rule
+      middlewares:
+        - name: media-allowlist
+          namespace: default
+      services:
+        - name: profilarr-external
+          port: 6868
+    - match: Host(`sabnzbd.media.amer.dev`)
+      kind: Rule
+      middlewares:
+        - name: media-allowlist
+          namespace: default
+      services:
+        - name: sabnzbd-external
+          port: 8080
 ---
-# TLS cert — cert-manager annotations don't work on IngressRoute, so we need
-# an explicit Certificate resource.
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -86,21 +293,13 @@ spec:
   secretName: media-amer-dev-tls
   dnsNames:
     - media.amer.dev
+    - sonarr.media.amer.dev
+    - radarr.media.amer.dev
+    - bazarr.media.amer.dev
+    - prowlarr.media.amer.dev
+    - profilarr.media.amer.dev
+    - sabnzbd.media.amer.dev
+    - "*.media.amer.dev"
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
----
-# DNS record — managed by DDNS CronJob (keeps target = current public IP).
-# Initial target is a placeholder; the cron reconciles within 5 minutes.
-apiVersion: externaldns.k8s.io/v1alpha1
-kind: DNSEndpoint
-metadata:
-  name: media-amer-dev
-  namespace: default
-spec:
-  endpoints:
-    - dnsName: media.amer.dev
-      recordTTL: 300
-      recordType: A
-      targets:
-        - 67.250.71.110
