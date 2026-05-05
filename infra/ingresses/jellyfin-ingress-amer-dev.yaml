@@ -213,7 +213,13 @@ metadata:
 spec:
   ipAllowList:
     sourceRange:
+      - 10.0.0.0/8           # RFC1918 private range
+      - 172.16.0.0/12        # RFC1918 private range
+      - 192.168.0.0/16       # RFC1918 private range
       - 100.64.0.0/10       # Tailscale IPv4 CGNAT
+      - 127.0.0.0/8          # localhost
+      - ::1/128              # localhost IPv6
+      - fc00::/7             # private/ULA IPv6
       - fd7a:115c:a1e0::/48 # Tailscale ULA IPv6
 ---
 apiVersion: traefik.io/v1alpha1
