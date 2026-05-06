@@ -57,5 +57,5 @@ template:
       - name: docker-build-cache
         hostPath:
           path: /mnt/storage/docker-build-cache
-          type: Directory
+          type: DirectoryOrCreate
 namespaceOverride: arc-runners-llm-manager
