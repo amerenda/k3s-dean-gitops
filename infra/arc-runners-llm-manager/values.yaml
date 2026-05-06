@@ -20,7 +20,7 @@ template:
                   values:
                     - murderbot
     securityContext:
-      supplementalGroups: [989]
+      supplementalGroups: [989, 952]
     containers:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest
