@@ -24,10 +24,18 @@ root-app.yaml (ArgoCD App-of-Apps)
 ├── apps/                     Application deployments
 │   ├── home-assistant        Home automation
 │   ├── unifi-network-application  UniFi network controller + MongoDB
+│   ├── unifi-poller          UniFi metrics → Prometheus
 │   ├── llm-manager           GPU inference manager (backend + UI + PostgreSQL)
-│   ├── llm-agents            Piper TTS agent
-│   ├── ecdysis               Moltbook agent management UI
-│   └── moltbook              Proxy to Moltbook on GPU host
+│   ├── ecdysis               Moltbook agent management (frontend + backends, incl. UAT)
+│   ├── mycroft               AI agent platform (coordinator, frontend, workflows)
+│   ├── wikimedia             Homelab wiki (FastAPI + Postgres content)
+│   ├── vikunja               Task management
+│   ├── openwebui             Open WebUI
+│   ├── openhands             OpenHands
+│   ├── schoolmode            School mode app
+│   ├── searxng               Metasearch
+│   ├── speedtest-exporter    Speedtest metrics
+│   └── block-page            Block / placeholder page service
 │
 └── bootstrap/                One-time manual setup
     ├── argocd/values.yaml    ArgoCD Helm values
