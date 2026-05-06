@@ -19,6 +19,7 @@ template:
                   operator: In
                   values:
                     - murderbot
+                    - archlinux
     securityContext:
       supplementalGroups: [989, 952]
     containers:
