@@ -25,7 +25,7 @@ template:
         operator: Exists
         effect: NoSchedule
     securityContext:
-      supplementalGroups: [989, 952]
+      supplementalGroups: [989, 952, 968]
     containers:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest
