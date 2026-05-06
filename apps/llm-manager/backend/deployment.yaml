@@ -82,6 +82,13 @@ spec:
               value: "5"
             - name: HIGH_PRIORITY_APPS
               value: "mycroft-coordinator,mycroft-coder"  # these apps get priority=1
+            # CI (notify-agents) sets global agent image tag; optional until secret exists in cluster
+            - name: LLM_MANAGER_AUTOMATION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: llm-manager-automation-token
+                  key: token
+                  optional: true
           readinessProbe:
             httpGet:
               path: /health

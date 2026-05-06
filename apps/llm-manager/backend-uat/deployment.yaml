@@ -80,6 +80,12 @@ spec:
               value: "true"
             - name: DISABLE_AUTH
               value: "true"
+            - name: LLM_MANAGER_AUTOMATION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: llm-manager-automation-token
+                  key: token
+                  optional: true
             - name: ENVIRONMENT
               value: "uat"
             - name: UAT_TEST_RUNNER
