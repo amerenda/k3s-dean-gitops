@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: scheduler
-          image: amerenda/llm-manager:backend-sha-9725e73
+          image: amerenda/llm-manager:backend-sha-7e16b00
           imagePullPolicy: Always
           command: ["python", "-m", "scheduler_worker"]
           ports:
