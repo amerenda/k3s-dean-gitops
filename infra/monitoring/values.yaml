@@ -49,6 +49,12 @@ prometheus:
           - targets: ["10.100.20.25:8090"]
             labels:
               node: archlinux
+      - job_name: llm-metrics
+        static_configs:
+          - targets: ["10.100.20.19:8088"]
+            labels:
+              node: murderbot
+              source: llamacpp
     # ServiceMonitor selector: watch all namespaces, match release label
     serviceMonitorSelectorNilUsesHelmValues: false
     podMonitorSelectorNilUsesHelmValues: false
