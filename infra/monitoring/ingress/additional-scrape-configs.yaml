@@ -26,3 +26,9 @@ stringData:
           labels:
             node: murderbot
             source: llamacpp
+    - job_name: gpu-metrics
+      static_configs:
+        - targets: ["10.100.20.19:9835"]
+          labels:
+            node: murderbot
+            source: nvidia_exporter
