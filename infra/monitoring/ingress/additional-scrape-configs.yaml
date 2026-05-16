@@ -20,3 +20,15 @@ stringData:
         - targets: ["10.100.20.25:8090"]
           labels:
             node: archlinux
+    - job_name: llm-metrics
+      static_configs:
+        - targets: ["10.100.20.19:8088"]
+          labels:
+            node: murderbot
+            source: llamacpp
+    - job_name: gpu-metrics
+      static_configs:
+        - targets: ["10.100.20.19:9835"]
+          labels:
+            node: murderbot
+            source: nvidia_exporter
