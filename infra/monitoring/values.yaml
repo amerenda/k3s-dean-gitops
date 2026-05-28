@@ -16,13 +16,14 @@ prometheus:
     externalLabels:
       cluster: k3s-dean
       role: edge-agent
+    walCompression: true
     resources:
       requests:
         cpu: 200m
-        memory: 1Gi
+        memory: 2Gi
       limits:
         cpu: "1"
-        memory: 4Gi
+        memory: 8Gi
     remoteWrite:
       - url: "http://10.100.20.18:9090/api/v1/write"
         queueConfig:
