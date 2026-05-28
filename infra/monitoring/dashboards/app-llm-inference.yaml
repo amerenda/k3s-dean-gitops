@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: grafana-dashboard-app-llm-inference
   namespace: monitoring
+  annotations:
+    grafana_folder: "LLM Manager"
   labels:
     grafana_dashboard: "1"
 data:
