@@ -42,6 +42,10 @@ globalArguments:
 
 additionalArguments:
   - "--serversTransport.insecureSkipVerify=true"
+  # Unlimited idle timeout for long-lived WebSocket connections (Jellyfin streaming).
+  # Default 180s caused stream drops on the websecure entrypoint.
+  - "--entrypoints.websecure.transport.respondingTimeouts.idleTimeout=0"
+  - "--entrypoints.web.transport.respondingTimeouts.idleTimeout=0"
 
 logs:
   general:
