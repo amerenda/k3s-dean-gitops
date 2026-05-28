@@ -197,18 +197,14 @@ data:
           },
           "targets": [
             {
-              "expr": "rate(llamacpp:prompt_seconds_total{node=\"murderbot\"}[5m]) * on() group_left(vector()) (vector(1))",
-              "legendFormat": "estimated"
+              "expr": "rate(llamacpp:prompt_tokens_total{node=\"murderbot\"}[5m])",
+              "legendFormat": "{{gpu}}"
             }
-          ],
-          "fieldConfig.defaults.thresholds": {
-            "mode": "absolute",
-            "steps": [{ "color": "blue", "value": null }]
-          }
-        },
-        {
-          "id": 10,
-          "title": "Total Tokens Processed",
+           ]
+         },
+         {
+           "id": 10,
+           "title": "Total Tokens Processed",
           "type": "timeseries",
           "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
           "fieldConfig.defaults": {
