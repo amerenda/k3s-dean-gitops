@@ -74,7 +74,7 @@ prometheus:
       # Cross-stack heartbeat — mac-mini Prometheus health probe
       - job_name: mac-mini-prometheus-heartbeat
         scheme: http
-        metrics_path: /-/healthy
+        metrics_path: /metrics
         scrape_interval: 15s
         static_configs:
           - targets: ["10.100.20.18:9090"]
