@@ -1,0 +1,29 @@
+---
+# MetalLB LoadBalancer for k3s Prometheus health endpoint
+# Exposes port 9090 on the 10.100.20.x subnet so that mac-mini-m4
+# and other LAN machines can reach it directly without going through
+# the ClusterIP (which is only routable from within the cluster).
+#
+# This is used exclusively for heartbeat/health probing by the cross-stack
+# watchdog — NOT a replacement for the internal monitoring service.
+apiVersion: v1
+kind: Service
+metadata:
+  name: k3s-prometheus-heartbeat
+  namespace: monitoring
+  labels:
+    app: kube-prometheus-stack-prometheus
+    app.kubernetes.io/instance: infra-monitoring
+    component: prometheus-health
+  annotations:
+    metallb.universe.tf/address-pool: loadbalancer-pool
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http-web
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: prometheus-agent
+    operator.prometheus.io/name: infra-monitoring-kube-prom-prometheus

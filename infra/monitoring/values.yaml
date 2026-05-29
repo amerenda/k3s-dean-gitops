@@ -3,9 +3,17 @@
 #
 # Prometheus runs in Agent mode and forwards samples to mac-mini.
 
-# --- AlertManager: disabled ---
+# --- AlertManager: watchdog alerts (no notification channels yet) ---
 alertmanager:
-  enabled: false
+  enabled: true
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          resources:
+            requests:
+              storage: 5Gi
 
 # --- Prometheus ---
 prometheus:
@@ -62,6 +70,16 @@ prometheus:
             labels:
               node: murderbot
               source: nvidia_exporter
+
+      # Cross-stack heartbeat — mac-mini Prometheus health probe
+      - job_name: mac-mini-prometheus-heartbeat
+        scheme: http
+        metrics_path: /-/healthy
+        scrape_interval: 15s
+        static_configs:
+          - targets: ["10.100.20.18:9090"]
+            labels:
+              cluster: mac-mini-m4
     # ServiceMonitor selector: watch all namespaces, match release label
     serviceMonitorSelectorNilUsesHelmValues: false
     podMonitorSelectorNilUsesHelmValues: false
