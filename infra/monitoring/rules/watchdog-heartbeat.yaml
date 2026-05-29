@@ -9,7 +9,7 @@ spec:
       rules:
         # Alert when mac-mini-m4 Prometheus health endpoint stops responding
         - alert: MacMiniPrometheusDown
-          expr: probe_success{job="mac-mini-prometheus-heartbeat"} == 0 or up{job="mac-mini-prometheus-heartbeat"} == 0
+          expr: up{job="mac-mini-prometheus-heartbeat"} == 0
           for: 2m
           labels:
             severity: critical
