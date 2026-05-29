@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: watchdog-heartbeat
+  namespace: monitoring
+spec:
+  groups:
+    - name: cross-stack-heartbeat
+      rules:
+        # Alert when mac-mini-m4 Prometheus health endpoint stops responding
+        - alert: MacMiniPrometheusDown
+          expr: probe_success{job="mac-mini-prometheus-heartbeat"} == 0 or up{job="mac-mini-prometheus-heartbeat"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            stack: mac-mini-m4
+            kind: heartbeat
+          annotations:
+            summary: "Mac Mini Prometheus is unreachable"
+            description: >
+              The Mac Mini's primary Prometheus instance has been unreachable
+              for more than 2 minutes. This may indicate the entire monitoring
+              stack on mac-mini-m4 is down or network connectivity is lost.
