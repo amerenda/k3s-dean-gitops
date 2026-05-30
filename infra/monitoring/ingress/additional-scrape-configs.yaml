@@ -4,5 +4,5 @@ metadata:
   name: additional-scrape-configs
   namespace: monitoring
 type: Opaque
- stringData:
-    scrape-configs.yaml: "[]"
+stringData:
+  scrape-configs.yaml: "[]"
