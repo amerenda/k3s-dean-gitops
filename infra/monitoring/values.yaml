@@ -52,33 +52,6 @@ prometheus:
           maxBackoff: 10s
     # Scrape external targets (outside k8s)
     additionalScrapeConfigs:
-      - job_name: llm-agent
-        scheme: https
-        tls_config:
-          insecure_skip_verify: true
-        static_configs:
-          - targets: ["10.100.20.18:8090"]
-            labels:
-              node: mac-mini-m4
-          - targets: ["10.100.20.19:8090"]
-            labels:
-              node: murderbot
-          - targets: ["10.100.20.25:8090"]
-            labels:
-              node: archlinux
-      - job_name: llm-metrics
-        static_configs:
-          - targets: ["10.100.20.19:8088"]
-            labels:
-              node: murderbot
-              source: llamacpp
-      - job_name: gpu-metrics
-        static_configs:
-          - targets: ["10.100.20.19:9835"]
-            labels:
-              node: murderbot
-              source: nvidia_exporter
-
       # Cross-stack heartbeat — mac-mini Prometheus health probe
       - job_name: mac-mini-prometheus-heartbeat
         scheme: http
