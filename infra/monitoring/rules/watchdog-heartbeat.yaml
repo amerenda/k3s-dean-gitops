@@ -3,6 +3,8 @@ kind: PrometheusRule
 metadata:
   name: watchdog-heartbeat
   namespace: monitoring
+  labels:
+    app.kubernetes.io/component: heartbeat
 spec:
   groups:
     - name: cross-stack-heartbeat

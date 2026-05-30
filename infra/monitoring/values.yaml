@@ -88,10 +88,12 @@ prometheus:
           - targets: ["10.100.20.18:9090"]
             labels:
               cluster: mac-mini-m4
-    # ServiceMonitor selector: watch all namespaces, match release label
+    # Only load rules from our heartbeat PrometheusRule (no kube-prometheus default rules)
+    ruleSelector:
+      matchLabels:
+        app.kubernetes.io/component: heartbeat
     serviceMonitorSelectorNilUsesHelmValues: false
     podMonitorSelectorNilUsesHelmValues: false
-    ruleSelectorNilUsesHelmValues: false
 
 # --- Grafana ---
 grafana:
@@ -156,5 +158,4 @@ kubelet:
     # Resource metrics — disabled; K3s doesn't serve /metrics/resource/v1alpha1
     resource: false
 defaultRules:
-  rules:
-    kubelet: true
+  enabled: false
