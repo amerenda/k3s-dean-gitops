@@ -1,7 +1,7 @@
 # kube-prometheus-stack Helm Values
 # Monitoring stack for K3s on Raspberry Pi
 #
-# Prometheus runs in Agent mode and forwards samples to mac-mini.
+# Prometheus runs in full mode with local rule evaluation and forwards samples to mac-mini.
 
 # --- AlertManager: watchdog alerts (no notification channels yet) ---
 alertmanager:
@@ -17,21 +17,29 @@ alertmanager:
 
 # --- Prometheus ---
 prometheus:
-  agentMode: true
   prometheusSpec:
     # Use EndpointSlice for target discovery (Endpoints v1 deprecated in k8s 1.33+).
     serviceDiscoveryRole: EndpointSlice
     externalLabels:
       cluster: k3s-dean
-      role: edge-agent
+      role: edge-prometheus
     walCompression: true
+    retention: 2h
+    # Local TSDB with limited storage — all data is remote-written to mac-mini.
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          resources:
+            requests:
+              storage: 2Gi
     resources:
       requests:
         cpu: 200m
-        memory: 2Gi
+        memory: 512Mi
       limits:
         cpu: "1"
-        memory: 8Gi
+        memory: 1Gi
     remoteWrite:
       - url: "http://10.100.20.18:9090/api/v1/write"
         queueConfig:
