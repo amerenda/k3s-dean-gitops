@@ -97,65 +97,42 @@ prometheus:
 
 # --- Grafana ---
 grafana:
+  # Disabled — we forward all metrics to mac-mini's Grafana for full dashboards.
   enabled: false
 
-# --- Prometheus Operator ---
-prometheusOperator:
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
-
-# --- node-exporter ---
-prometheus-node-exporter:
-  tolerations:
-    - key: "longhorn"
-      operator: "Exists"
-      effect: "NoSchedule"
-  resources:
-    requests:
-      cpu: 50m
-      memory: 32Mi
-    limits:
-      cpu: 100m
-      memory: 64Mi
-
-# --- kube-state-metrics ---
-kube-state-metrics:
-  resources:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      cpu: 100m
-      memory: 128Mi
-
-# --- Disabled K3s-inaccessible components ---
-# K3s binds these to localhost; Prometheus cannot scrape them from the cluster.
-kubeProxy:
-  enabled: false
-kubeEtcd:
-  # Disabled — Helm's headless service has no selector so endpoints keep
-  # getting wiped. We manage our own service+endpoints+ServiceMonitor in
-  # infra/monitoring/ingress/etcd-service.yaml instead.
-  enabled: false
-kubeScheduler:
-  enabled: false
-kubeControllerManager:
-  enabled: false
-# Kubelet metrics (port 10250) — accessible from pods with bearer token auth on K3s.
-kubelet:
-  enabled: true
-  serviceMonitor:
-    enabled: true
-    # cAdvisor metrics for container CPU/memory/network/filesystem
-    cAdvisor: true
-    # Probes metrics
-    probes: true
-    # Resource metrics — disabled; K3s doesn't serve /metrics/resource/v1alpha1
-    resource: false
 defaultRules:
-  enabled: false
+  create: true
+  rules:
+    alertmanager: false
+    etcd: false
+    configReloaders: false
+    general: false
+    k8sContainerCpuUsageSecondsTotal: false
+    k8sContainerMemoryCache: false
+    k8sContainerMemoryRss: false
+    k8sContainerMemorySwap: false
+    k8sContainerResource: false
+    k8sContainerMemoryWorkingSetBytes: false
+    k8sPodOwner: false
+    kubeApiserverAvailability: false
+    kubeApiserverBurnrate: false
+    kubeApiserverHistogram: false
+    kubeApiserverSlos: false
+    kubeControllerManager: false
+    kubelet: false
+    kubeProxy: false
+    kubePrometheusGeneral: false
+    kubePrometheusNodeRecording: false
+    kubernetesApps: false
+    kubernetesResources: false
+    kubernetesStorage: false
+    kubernetesSystem: false
+    kubeSchedulerAlerting: false
+    kubeSchedulerRecording: false
+    kubeStateMetrics: false
+    network: false
+    node: false
+    nodeExporterAlerting: false
+    nodeExporterRecording: false
+    prometheus: false
+    prometheusOperator: false
