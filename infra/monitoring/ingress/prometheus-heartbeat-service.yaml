@@ -24,6 +24,8 @@ spec:
       port: 9090
       targetPort: 9090
       protocol: TCP
+  # Selector updated from "prometheus-agent" → "prometheus" to match the actual
+  # pod labels set by kube-prometheus-stack after switching out of agent mode.
   selector:
-    app.kubernetes.io/name: prometheus-agent
+    app.kubernetes.io/name: prometheus
     operator.prometheus.io/name: infra-monitoring-kube-prom-prometheus
