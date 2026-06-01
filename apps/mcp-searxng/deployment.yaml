@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-searxng
+  namespace: mcp
+  labels:
+    app: mcp-searxng
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-searxng
+  template:
+    metadata:
+      labels:
+        app: mcp-searxng
+    spec:
+      containers:
+        - name: mcp-searxng
+          image: isokoliuk/mcp-searxng:1.0.5@sha256:350448b80ea882fec5e8de43effb24f282fd1eeb4c9f888357b8649a1687510e
+          ports:
+            - containerPort: 3000
+          env:
+            - name: SEARXNG_URL
+              value: "https://searxng.amer.dev"
+            - name: MCP_HTTP_PORT
+              value: "3000"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 3
+            periodSeconds: 10
