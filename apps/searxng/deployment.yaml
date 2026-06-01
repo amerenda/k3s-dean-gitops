@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: searxng
-  namespace: mycroft
+  namespace: searxng
   labels:
     app: searxng
 spec:
@@ -14,10 +14,12 @@ spec:
     metadata:
       labels:
         app: searxng
+      annotations:
+        reloader.stakater.com/auto: "true"
     spec:
       initContainers:
         - name: copy-config
-          image: busybox
+          image: busybox:1.37.0
           command: ["sh", "-c", "cp /cfg/settings.yml /etc/searxng/settings.yml && chown 977:977 /etc/searxng/settings.yml"]
           volumeMounts:
             - name: searxng-data
@@ -26,13 +28,13 @@ spec:
               mountPath: /cfg
       containers:
         - name: searxng
-          image: searxng/searxng:latest
+          image: searxng/searxng:2025.6.1-d3a9ea4b4
           ports:
             - containerPort: 8080
           env:
             - name: SEARXNG_BASE_URL
-              value: "http://mycroft-search.mycroft.svc:8080"
-            # Override k8s-injected SEARXNG_PORT that breaks granian
+              value: "https://searxng.amer.dev"
+            # Override k8s-injected SEARXNG_PORT that conflicts with granian's startup
             - name: SEARXNG_PORT
               value: ""
           volumeMounts:

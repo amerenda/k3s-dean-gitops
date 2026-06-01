@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: searxng-ingress
+  namespace: searxng
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: searxng.amer.dev
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  ingressClassName: infra-traefik
+  tls:
+    - hosts:
+        - searxng.amer.dev
+      secretName: searxng-amer-dev-tls
+  rules:
+    - host: searxng.amer.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: searxng
+                port:
+                  number: 8080
