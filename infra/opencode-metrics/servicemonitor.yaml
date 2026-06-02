@@ -1,0 +1,52 @@
+---
+# Headless Service + Endpoints pointing at murderbot:9110
+# where tool-metrics.py serves Prometheus-format tool call counts.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: opencode-metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opencode-tool-metrics
+  namespace: opencode-metrics
+  labels:
+    app: opencode-tool-metrics
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 9110
+      targetPort: 9110
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: opencode-tool-metrics
+  namespace: opencode-metrics
+subsets:
+  - addresses:
+      - ip: 10.100.20.19  # murderbot
+    ports:
+      - name: metrics
+        port: 9110
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: opencode-tool-metrics
+  namespace: opencode-metrics
+  labels:
+    app: opencode-tool-metrics
+spec:
+  selector:
+    matchLabels:
+      app: opencode-tool-metrics
+  namespaceSelector:
+    matchNames:
+      - opencode-metrics
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 15s
