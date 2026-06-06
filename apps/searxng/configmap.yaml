@@ -12,11 +12,14 @@ data:
       enable_metrics: false
 
     search:
-      safe_search: 0
+      safe_search: 1
       default_lang: "en"
       formats:
         - html
         - json
+
+      # These are the defaults — override per-query via MCP engines param when needed.
+      # Keep google+bing for general, stackoverflow+github for code, reddit for community discussions.
 
     server:
       port: 8080
@@ -35,15 +38,15 @@ data:
       - name: bing
         engine: bing
         shortcut: b
-        disabled: false
+        disabled: true
       - name: duckduckgo
         engine: duckduckgo
         shortcut: ddg
-        disabled: false
+        disabled: true
       - name: wikipedia
         engine: wikipedia
         shortcut: wp
-        disabled: false
+        disabled: true
       - name: github
         engine: github
         shortcut: gh
@@ -51,7 +54,7 @@ data:
       - name: arxiv
         engine: arxiv
         shortcut: ax
-        disabled: false
+        disabled: true
       - name: stackoverflow
         engine: stackoverflow
         shortcut: so
@@ -59,4 +62,4 @@ data:
       - name: reddit
         engine: reddit
         shortcut: r
-        disabled: false
+        disabled: true

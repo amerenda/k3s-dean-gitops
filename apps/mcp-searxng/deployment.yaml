@@ -25,6 +25,14 @@ spec:
               value: "https://searxng.amer.dev"
             - name: MCP_HTTP_PORT
               value: "3000"
+            - name: MAX_RESULTS
+              value: "5"
+            - name: MAX_CONTENT_CHARS
+              value: "300"
+          volumeMounts:
+            - name: search-patch
+              mountPath: /app/dist/search.js
+              subPath: search.js
           resources:
             requests:
               cpu: 10m
@@ -44,3 +52,7 @@ spec:
               port: 3000
             initialDelaySeconds: 3
             periodSeconds: 10
+      volumes:
+        - name: search-patch
+          configMap:
+            name: mcp-searxng-search-patch
