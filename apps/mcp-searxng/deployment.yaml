@@ -29,10 +29,15 @@ spec:
               value: "5"
             - name: MAX_CONTENT_CHARS
               value: "300"
+            - name: MAX_URL_CONTENT_CHARS
+              value: "8000"
           volumeMounts:
             - name: search-patch
               mountPath: /app/dist/search.js
               subPath: search.js
+            - name: search-patch
+              mountPath: /app/dist/url-reader.js
+              subPath: url-reader.js
           resources:
             requests:
               cpu: 10m
