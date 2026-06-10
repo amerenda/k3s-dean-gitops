@@ -1964,11 +1964,11 @@ spec:
         maxDuration: 3m
 
 ---
-# Application: bws-mcp admin
+# Application: bws-mcp server
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app-bws-mcp-admin
+  name: app-bws-mcp-server
   namespace: default
   annotations:
     argocd.argoproj.io/sync-wave: "5"
@@ -1979,75 +1979,7 @@ spec:
   source:
     repoURL: https://github.com/amerenda/k3s-dean-gitops.git
     targetRevision: main
-    path: apps/bws-mcp/admin
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: bws-mcp
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - PrunePropagationPolicy=foreground
-    retry:
-      limit: 5
-      backoff:
-        duration: 5s
-        factor: 2
-        maxDuration: 3m
-
----
-# Application: bws-mcp write
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: app-bws-mcp-write
-  namespace: default
-  annotations:
-    argocd.argoproj.io/sync-wave: "5"
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io/background
-spec:
-  project: application
-  source:
-    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-    targetRevision: main
-    path: apps/bws-mcp/write
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: bws-mcp
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - PrunePropagationPolicy=foreground
-    retry:
-      limit: 5
-      backoff:
-        duration: 5s
-        factor: 2
-        maxDuration: 3m
-
----
-# Application: bws-mcp read
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: app-bws-mcp-read
-  namespace: default
-  annotations:
-    argocd.argoproj.io/sync-wave: "5"
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io/background
-spec:
-  project: application
-  source:
-    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-    targetRevision: main
-    path: apps/bws-mcp/read
+    path: apps/bws-mcp/server
   destination:
     server: https://kubernetes.default.svc
     namespace: bws-mcp

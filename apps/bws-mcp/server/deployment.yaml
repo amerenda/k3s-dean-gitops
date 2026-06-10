@@ -1,13 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: bws-mcp-read
+  name: bws-mcp-server
   namespace: bws-mcp
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: bws-mcp-read
+      app: bws-mcp-server
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -16,17 +16,15 @@ spec:
   template:
     metadata:
       labels:
-        app: bws-mcp-read
+        app: bws-mcp-server
     spec:
       containers:
-        - name: read
+        - name: server
           image: amerenda/bws-mcp:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8002
+            - containerPort: 8000
           env:
-            - name: BWS_TIER
-              value: "read"
             - name: BWS_ACCESS_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -35,13 +33,13 @@ spec:
           readinessProbe:
             httpGet:
               path: /health
-              port: 8002
+              port: 8000
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /health
-              port: 8002
+              port: 8000
             initialDelaySeconds: 10
             periodSeconds: 30
           resources:
