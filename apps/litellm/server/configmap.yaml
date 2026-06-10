@@ -22,6 +22,10 @@ data:
         litellm_params:
           model: ollama/*
           api_base: http://10.100.20.18:11434
+      - model_name: archlinux/ollama/*
+        litellm_params:
+          model: ollama/*
+          api_base: http://10.100.20.25:11434
 
     router_settings:
       routing_strategy: least-busy
