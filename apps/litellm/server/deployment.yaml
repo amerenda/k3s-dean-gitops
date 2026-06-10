@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm-server
+  namespace: litellm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: litellm-server
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: litellm-server
+    spec:
+      containers:
+      - name: server
+        image: ghcr.io/berriai/litellm:main-stable
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 4000
+        env:
+        - name: LITELLM_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: litellm-secrets
+              key: master-key
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        args:
+        - --config
+        - /app/config.yaml
+        - --port
+        - '4000'
+        volumeMounts:
+        - name: litellm-config
+          mountPath: /app/config.yaml
+          subPath: config.yaml
+          readOnly: true
+      volumes:
+      - name: litellm-config
+        configMap:
+          name: litellm-config
