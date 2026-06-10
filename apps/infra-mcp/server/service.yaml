@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: infra-mcp-server
+  namespace: infra-mcp
+spec:
+  selector:
+    app: infra-mcp-server
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
