@@ -45,6 +45,16 @@ spec:
                 secretKeyRef:
                   name: infra-mcp-secrets
                   key: coder-private-key
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: infra-mcp-secrets
+                  key: gcs-access-key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: infra-mcp-secrets
+                  key: gcs-secret-key
             - name: CLONE_REPOS
               value: "true"
           readinessProbe:
