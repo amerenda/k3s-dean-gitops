@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: litellm-server
+  namespace: litellm
+spec:
+  selector:
+    app: litellm-server
+  ports:
+    - name: http
+      port: 4000
+      targetPort: 4000
