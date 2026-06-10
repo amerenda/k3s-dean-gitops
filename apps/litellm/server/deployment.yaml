@@ -17,6 +17,8 @@ spec:
     metadata:
       labels:
         app: litellm-server
+      annotations:
+        configmap.reloader.stakater.com/reload: "litellm-config"
     spec:
       containers:
       - name: server
