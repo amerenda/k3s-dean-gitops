@@ -9,7 +9,7 @@ data:
       - model_name: qwen3-35b
         litellm_params:
           model: openai/qwen3-35b
-          api_base: http://10.100.20.19:8080/v1
+          api_base: http://10.100.20.19:8088/v1
           api_key: none
       - model_name: nomic-embed-text
         litellm_params:
