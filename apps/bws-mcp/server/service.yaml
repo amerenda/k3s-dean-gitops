@@ -1,12 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: bws-mcp-admin
+  name: bws-mcp-server
   namespace: bws-mcp
 spec:
   selector:
-    app: bws-mcp-admin
+    app: bws-mcp-server
   ports:
-    - name: http
-      port: 8000
+    - port: 8000
       targetPort: 8000
