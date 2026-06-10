@@ -32,14 +32,14 @@ spec:
               key: master-key
         readinessProbe:
           httpGet:
-            path: /health
+            path: /health/readiness
             port: 4000
           initialDelaySeconds: 30
           periodSeconds: 10
           failureThreshold: 6
         livenessProbe:
           httpGet:
-            path: /health
+            path: /health/readiness
             port: 4000
           initialDelaySeconds: 60
           periodSeconds: 30
