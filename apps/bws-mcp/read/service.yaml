@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bws-mcp-read
+  namespace: bws-mcp
+spec:
+  selector:
+    app: bws-mcp-read
+  ports:
+    - name: http
+      port: 8002
+      targetPort: 8002

@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infra-mcp-server
+  namespace: infra-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infra-mcp-server
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: infra-mcp-server
+    spec:
+      containers:
+        - name: server
+          image: amerenda/infra-mcp:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: BWS_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: infra-mcp-secrets
+                  key: bws-access-token
+            - name: CODER_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: infra-mcp-secrets
+                  key: coder-app-id
+            - name: CODER_INSTALLATION_ID
+              valueFrom:
+                secretKeyRef:
+                  name: infra-mcp-secrets
+                  key: coder-installation-id
+            - name: CODER_APP_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: infra-mcp-secrets
+                  key: coder-private-key
+            - name: CLONE_REPOS
+              value: "true"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
