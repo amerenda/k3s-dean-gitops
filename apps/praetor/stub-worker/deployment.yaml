@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: praetor-stub-worker
+  namespace: praetor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: praetor-stub-worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: praetor-stub-worker
+    spec:
+      containers:
+        - name: stub-worker
+          image: amerenda/praetor-stub:latest
+          imagePullPolicy: Always
+          env:
+            - name: HATCHET_CLIENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hatchet-worker-token
+                  key: token
+            - name: HATCHET_CLIENT_TLS_STRATEGY
+              value: "none"
+            - name: STUB_CRON_INTERVAL
+              value: "*/5 * * * *"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
