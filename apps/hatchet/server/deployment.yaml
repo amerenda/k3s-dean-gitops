@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hatchet-server
+  namespace: hatchet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hatchet-server
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: hatchet-server
+    spec:
+      containers:
+        - name: server
+          image: ghcr.io/hatchet-dev/hatchet/hatchet-lite:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8888
+            - containerPort: 7077
+          envFrom:
+            - configMapRef:
+                name: hatchet-config
+          env:
+            - name: SERVER_ENCRYPTION_MASTER_KEYSET
+              valueFrom:
+                secretKeyRef:
+                  name: hatchet-encryption-secrets
+                  key: master-keyset
+            - name: SERVER_ENCRYPTION_JWT_PUBLIC_KEYSET
+              valueFrom:
+                secretKeyRef:
+                  name: hatchet-encryption-secrets
+                  key: jwt-public-keyset
+            - name: SERVER_ENCRYPTION_JWT_PRIVATE_KEYSET
+              valueFrom:
+                secretKeyRef:
+                  name: hatchet-encryption-secrets
+                  key: jwt-private-keyset
+            - name: SERVER_AUTH_COOKIE_SECRETS
+              valueFrom:
+                secretKeyRef:
+                  name: hatchet-auth-secrets
+                  key: cookie-secrets
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: DATABASE_URL
+              value: "postgresql://hatchet:$(DB_PASSWORD)@10.100.20.18:5432/hatchet"
+          readinessProbe:
+            httpGet:
+              path: /api/ready
+              port: 8888
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/ready
+              port: 8888
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi

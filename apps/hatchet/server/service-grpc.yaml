@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hatchet-grpc
+  namespace: hatchet
+spec:
+  selector:
+    app: hatchet-server
+  ports:
+    - port: 7077
+      targetPort: 7077
+      protocol: TCP
