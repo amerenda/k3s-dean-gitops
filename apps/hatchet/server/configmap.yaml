@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hatchet-config
+  namespace: hatchet
+data:
+  SERVER_URL: "https://hatchet.amer.dev"
+  SERVER_GRPC_BROADCAST_ADDRESS: "hatchet-grpc.hatchet.svc.cluster.local:7077"
+  SERVER_GRPC_BIND_ADDRESS: "0.0.0.0"
+  SERVER_GRPC_PORT: "7077"
+  SERVER_AUTH_COOKIE_DOMAIN: "hatchet.amer.dev"
+  SERVER_AUTH_COOKIE_INSECURE: "f"
+  SERVER_DEFAULT_ENGINE_VERSION: "V1"
+  SERVER_MSGQUEUE_KIND: "postgres"
