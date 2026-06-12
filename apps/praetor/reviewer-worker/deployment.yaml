@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: praetor-reviewer-worker
+  namespace: praetor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: praetor-reviewer-worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: praetor-reviewer-worker
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: reviewer-worker
+          image: amerenda/praetor-reviewer:latest
+          imagePullPolicy: Always
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+          env:
+            - name: HATCHET_CLIENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-reviewer-secrets
+                  key: hatchet-token
+            - name: HATCHET_CLIENT_TLS_STRATEGY
+              value: "none"
+            - name: LITELLM_BASE_URL
+              value: "https://litellm.amer.dev/v1"
+            - name: LITELLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-reviewer-secrets
+                  key: litellm-api-key
+            - name: LLM_MODEL
+              value: "qwen3-35b"
+            - name: REVIEWER_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-reviewer-secrets
+                  key: reviewer-app-id
+            - name: REVIEWER_APP_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-reviewer-secrets
+                  key: reviewer-private-key
+            - name: REVIEWER_APP_INSTALLATION_ID
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-reviewer-secrets
+                  key: reviewer-installation-id
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

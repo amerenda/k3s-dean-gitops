@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: praetor-qa-worker
+  namespace: praetor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: praetor-qa-worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: praetor-qa-worker
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: qa-worker
+          image: amerenda/praetor-qa:latest
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+          env:
+            - name: HATCHET_CLIENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-qa-secrets
+                  key: hatchet-token
+            - name: HATCHET_CLIENT_TLS_STRATEGY
+              value: "none"
+            - name: LITELLM_BASE_URL
+              value: "https://litellm.amer.dev/v1"
+            - name: LITELLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-qa-secrets
+                  key: litellm-api-key
+            - name: LLM_MODEL
+              value: "qwen3-35b"
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
