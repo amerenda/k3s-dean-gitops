@@ -1,0 +1,56 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hatchet-seed-user
+  namespace: hatchet
+  annotations:
+    # Re-run this job whenever the configmap changes (via ArgoCD hook).
+    # Use a fixed name so re-deploys replace rather than accumulate jobs.
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: seed-user
+          image: postgres:16-alpine
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: HATCHET_USER_EMAIL
+              value: "amerenda@proton.me"
+            - name: HATCHET_TENANT_ID
+              value: "707d0855-80ab-4e1f-a156-f1c4546cbf52"
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              export PGHOST=10.100.20.18
+              export PGUSER=hatchet
+              export PGDATABASE=hatchet
+
+              # Mark user email as verified (idempotent)
+              psql -v ON_ERROR_STOP=1 \
+                -v "user_email=${HATCHET_USER_EMAIL}" \
+                -c "UPDATE \"User\" SET \"emailVerified\" = true WHERE email = :'user_email';"
+
+              # Ensure user is OWNER of the Default tenant (idempotent)
+              psql -v ON_ERROR_STOP=1 \
+                -v "user_email=${HATCHET_USER_EMAIL}" \
+                -v "tenant_id=${HATCHET_TENANT_ID}" \
+                -c "INSERT INTO \"TenantMember\" (id, \"tenantId\", \"userId\", role) SELECT gen_random_uuid(), :'tenant_id'::uuid, id, 'OWNER' FROM \"User\" WHERE email = :'user_email' ON CONFLICT DO NOTHING;"
+
+              echo "done: user seeded"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
