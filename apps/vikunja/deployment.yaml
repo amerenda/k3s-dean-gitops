@@ -54,6 +54,10 @@ spec:
               value: "false"
             - name: VIKUNJA_SERVICE_FRONTENDURL
               value: "https://todo.amer.dev/"
+            - name: VIKUNJA_WEBHOOKS_ENABLED
+              value: "true"
+            - name: VIKUNJA_QUEUE_TYPE
+              value: "in-memory"
           readinessProbe:
             httpGet:
               path: /api/v1/info
