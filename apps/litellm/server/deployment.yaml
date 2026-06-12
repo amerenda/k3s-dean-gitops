@@ -32,6 +32,11 @@ spec:
             secretKeyRef:
               name: litellm-secrets
               key: master-key
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: litellm-secrets
+              key: database-url
         readinessProbe:
           httpGet:
             path: /health/readiness
