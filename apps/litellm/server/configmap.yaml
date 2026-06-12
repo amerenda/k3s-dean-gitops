@@ -18,6 +18,7 @@ data:
         litellm_params:
           model: ollama/nomic-embed-text
           api_base: http://10.100.20.18:11434
+          drop_params: true
       - model_name: ollama/*
         litellm_params:
           model: ollama/*
