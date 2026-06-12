@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: ghcr.io/hatchet-dev/hatchet/hatchet-lite:latest
+          image: ghcr.io/hatchet-dev/hatchet/hatchet-lite:v0.89.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8888
