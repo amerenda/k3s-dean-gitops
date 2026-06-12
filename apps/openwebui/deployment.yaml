@@ -23,7 +23,7 @@ spec:
             - containerPort: 8080
           env:
             - name: OPENAI_API_BASE_URL
-              value: "https://llm-manager-backend.amer.dev/v1"
+              value: "https://litellm.amer.dev/v1"
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
