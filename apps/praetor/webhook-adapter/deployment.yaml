@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: praetor-webhook-adapter
+  namespace: praetor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: praetor-webhook-adapter
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: praetor-webhook-adapter
+    spec:
+      containers:
+        - name: webhook-adapter
+          image: amerenda/praetor-webhook:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: VIKUNJA_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: vikunja-webhook-secret
+            - name: VIKUNJA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: vikunja-token
+            - name: HATCHET_CLIENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: hatchet-token
+            - name: HATCHET_CLIENT_TLS_STRATEGY
+              value: "none"
+            - name: VIKUNJA_BASE_URL
+              value: "https://todo.amer.dev"
+            - name: VIKUNJA_PROJECT_ID
+              value: "21"
+            - name: WEBHOOK_TARGET_URL
+              value: "https://praetor.amer.dev/webhooks/vikunja"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi

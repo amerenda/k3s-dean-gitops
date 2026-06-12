@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: praetor-research-worker
+  namespace: praetor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: praetor-research-worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: praetor-research-worker
+    spec:
+      containers:
+        - name: research-worker
+          image: amerenda/praetor-research:latest
+          imagePullPolicy: Always
+          env:
+            - name: HATCHET_CLIENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-research-secrets
+                  key: hatchet-token
+            - name: HATCHET_CLIENT_TLS_STRATEGY
+              value: "none"
+            - name: MEM0_BASE_URL
+              value: "https://mem0.amer.dev"
+            - name: MEM0_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-research-secrets
+                  key: mem0-api-key
+            - name: VIKUNJA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-research-secrets
+                  key: vikunja-token
+            - name: VIKUNJA_BASE_URL
+              value: "https://todo.amer.dev"
+            - name: LITELLM_BASE_URL
+              value: "https://litellm.amer.dev/v1"
+            - name: LITELLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-research-secrets
+                  key: litellm-api-key
+            - name: SEARXNG_URL
+              value: "https://searxng.amer.dev"
+            - name: LLM_MODEL
+              value: "qwen3-35b"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
