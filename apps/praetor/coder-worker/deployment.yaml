@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: praetor-coder-worker
+  namespace: praetor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: praetor-coder-worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: praetor-coder-worker
+    spec:
+      containers:
+        - name: coder-worker
+          image: amerenda/praetor-coder:latest
+          imagePullPolicy: Always
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+          env:
+            - name: HATCHET_CLIENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-coder-secrets
+                  key: hatchet-token
+            - name: HATCHET_CLIENT_TLS_STRATEGY
+              value: "none"
+            - name: MEM0_BASE_URL
+              value: "https://mem0.amer.dev"
+            - name: MEM0_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-coder-secrets
+                  key: mem0-api-key
+            - name: VIKUNJA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-coder-secrets
+                  key: vikunja-token
+            - name: VIKUNJA_BASE_URL
+              value: "https://todo.amer.dev"
+            - name: LITELLM_BASE_URL
+              value: "https://litellm.amer.dev/v1"
+            - name: LITELLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-coder-secrets
+                  key: litellm-api-key
+            - name: LLM_MODEL
+              value: "coder"
+            - name: CODER_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-coder-secrets
+                  key: coder-app-id
+            - name: CODER_APP_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-coder-secrets
+                  key: coder-private-key
+            - name: CODER_APP_INSTALLATION_ID
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-coder-secrets
+                  key: coder-installation-id
+            - name: SCRATCH_DIR
+              value: "/scratch"
+          volumeMounts:
+            - name: scratch
+              mountPath: /scratch
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: scratch
+          emptyDir:
+            sizeLimit: 4Gi
