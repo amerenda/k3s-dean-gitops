@@ -18,6 +18,10 @@ spec:
       labels:
         app: praetor-coder-worker
     spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: coder-worker
           image: amerenda/praetor-coder:latest
