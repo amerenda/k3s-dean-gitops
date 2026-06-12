@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mem0-config
+  namespace: mem0
+data:
+  POSTGRES_HOST: "10.100.20.18"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "mem0"
+  POSTGRES_USER: "mem0"
+  OPENAI_BASE_URL: "https://litellm.amer.dev/v1"
+  MEM0_DEFAULT_LLM_MODEL: "qwen3-35b"
+  MEM0_DEFAULT_EMBEDDER_MODEL: "nomic-embed-text"
+  MEM0_TELEMETRY: "false"
+  DASHBOARD_URL: "https://mem0.amer.dev"
