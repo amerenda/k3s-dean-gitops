@@ -14,6 +14,9 @@ data:
           extra_body:
             chat_template_kwargs:
               enable_thinking: false
+        model_info:
+          max_input_tokens: 32768
+          max_output_tokens: 4096
       - model_name: nomic-embed-text
         litellm_params:
           model: ollama/nomic-embed-text
