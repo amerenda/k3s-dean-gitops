@@ -13,3 +13,4 @@ data:
   MEM0_DEFAULT_EMBEDDER_MODEL: "nomic-embed-text"
   MEM0_TELEMETRY: "false"
   DASHBOARD_URL: "https://mem0.amer.dev"
+  APP_DB_NAME: "mem0"
