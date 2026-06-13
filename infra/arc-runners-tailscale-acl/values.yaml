@@ -20,4 +20,4 @@ template:
               secretKeyRef:
                 name: runner-ci-credentials
                 key: TS_API_KEY
-namespaceOverride: arc-runners-tailscale-acl
+namespaceOverride: arc-runners

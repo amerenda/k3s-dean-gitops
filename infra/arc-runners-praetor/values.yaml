@@ -45,4 +45,4 @@ template:
           type: Socket
       - name: work
         emptyDir: {}
-namespaceOverride: arc-runners-praetor
+namespaceOverride: arc-runners

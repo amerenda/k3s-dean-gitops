@@ -59,4 +59,4 @@ template:
         hostPath:
           path: /mnt/storage/docker-build-cache
           type: DirectoryOrCreate
-namespaceOverride: arc-runners-llm-agents
+namespaceOverride: arc-runners

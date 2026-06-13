@@ -15,6 +15,11 @@ metadata:
     app.kubernetes.io/part-of: argocd
 data:
   server.hydrate: "false"
+  resource.customizations.health.actions.github.com_AutoscalingRunnerSet: |
+    hs = {}
+    hs.status = "Healthy"
+    hs.message = "Runner scale set is registered"
+    return hs
   resource.exclusions: |
     - apiGroups:
         - ""
