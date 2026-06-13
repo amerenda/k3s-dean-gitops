@@ -56,5 +56,7 @@ template:
           path: /var/run/docker.sock
           type: Socket
       - name: work
-        emptyDir: {}
+        hostPath:
+          path: /mnt/storage/k3s-runner-work
+          type: DirectoryOrCreate
 namespaceOverride: arc-runners
