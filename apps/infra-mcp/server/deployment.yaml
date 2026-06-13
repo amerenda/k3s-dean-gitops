@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: amerenda/infra-mcp:latest
+          image: amerenda/infra-mcp:sha-0a7a6ba
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
