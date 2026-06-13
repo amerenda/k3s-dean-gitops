@@ -29,8 +29,7 @@ spec:
         - name: strip-praetor-prefix
           namespace: default
       services:
-        - name: praetor-webhook-adapter
-          namespace: praetor
+        - name: praetor-webhook-adapter-proxy
           port: 80
 ---
 apiVersion: traefik.io/v1alpha1
@@ -42,6 +41,20 @@ spec:
   stripPrefix:
     prefixes:
       - /praetor
+---
+# ExternalName proxy so the default-ns IngressRoute can reach praetor-webhook-adapter
+# in the praetor namespace (Traefik CRD provider doesn't allow cross-namespace refs
+# without allowCrossNamespace=true).
+apiVersion: v1
+kind: Service
+metadata:
+  name: praetor-webhook-adapter-proxy
+  namespace: default
+spec:
+  type: ExternalName
+  externalName: praetor-webhook-adapter.praetor.svc.cluster.local
+  ports:
+    - port: 80
 ---
 # TLS cert — auto-created by cert-manager annotation on the old Ingress won't
 # work for IngressRoute, so we need an explicit Certificate resource.
