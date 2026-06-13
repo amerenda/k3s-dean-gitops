@@ -10,6 +10,10 @@ minRunners: 0
 maxRunners: 3
 template:
   spec:
+    tolerations:
+      - key: node.kubernetes.io/disk-pressure
+        operator: Exists
+        effect: NoSchedule
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
