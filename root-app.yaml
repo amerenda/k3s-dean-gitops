@@ -969,7 +969,7 @@ metadata:
 spec:
   project: infra
   sources:
-    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
       chart: gha-runner-scale-set
       targetRevision: 0.13.0
       helm:
