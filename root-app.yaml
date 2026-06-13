@@ -812,8 +812,8 @@ metadata:
 spec:
   project: infra
   sources:
-    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set-controller
-      path: .
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set-controller
       targetRevision: 0.13.0
       helm:
         valueFiles:
@@ -924,8 +924,8 @@ metadata:
 spec:
   project: infra
   sources:
-    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
-      path: .
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
       targetRevision: 0.13.0
       helm:
         valueFiles:
@@ -938,7 +938,7 @@ spec:
     namespace: arc-runners
   syncPolicy:
     automated:
-      prune: true
+      prune: false
       selfHeal: true
     syncOptions:
       - ServerSideApply=true
@@ -983,7 +983,7 @@ spec:
     namespace: arc-runners
   syncPolicy:
     automated:
-      prune: true
+      prune: false
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
@@ -1016,8 +1016,8 @@ metadata:
 spec:
   project: infra
   sources:
-    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
-      path: .
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
       targetRevision: 0.13.0
       helm:
         valueFiles:
@@ -1030,7 +1030,7 @@ spec:
     namespace: arc-runners
   syncPolicy:
     automated:
-      prune: true
+      prune: false
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
@@ -1063,8 +1063,8 @@ metadata:
 spec:
   project: infra
   sources:
-    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
-      path: .
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
       targetRevision: 0.13.0
       helm:
         valueFiles:
@@ -1077,7 +1077,7 @@ spec:
     namespace: arc-runners
   syncPolicy:
     automated:
-      prune: true
+      prune: false
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
@@ -1110,8 +1110,8 @@ metadata:
 spec:
   project: infra
   sources:
-    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
-      path: .
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
       targetRevision: 0.13.0
       helm:
         valueFiles:
@@ -1124,7 +1124,7 @@ spec:
     namespace: arc-runners
   syncPolicy:
     automated:
-      prune: true
+      prune: false
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
@@ -1157,8 +1157,8 @@ metadata:
 spec:
   project: infra
   sources:
-    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
-      path: .
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
       targetRevision: 0.13.0
       helm:
         valueFiles:
@@ -1171,7 +1171,7 @@ spec:
     namespace: arc-runners
   syncPolicy:
     automated:
-      prune: true
+      prune: false
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
@@ -1483,8 +1483,8 @@ metadata:
 spec:
   project: infra
   sources:
-    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
-      path: .
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
       targetRevision: 0.13.0
       helm:
         valueFiles:
@@ -1497,7 +1497,7 @@ spec:
     namespace: arc-runners
   syncPolicy:
     automated:
-      prune: true
+      prune: false
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
@@ -1700,8 +1700,8 @@ metadata:
 spec:
   project: infra
   sources:
-    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
-      path: .
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
       targetRevision: 0.13.0
       helm:
         valueFiles:
@@ -1714,7 +1714,7 @@ spec:
     namespace: arc-runners
   syncPolicy:
     automated:
-      prune: true
+      prune: false
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
@@ -1812,8 +1812,8 @@ metadata:
 spec:
   project: infra
   sources:
-    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
-      path: .
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
       targetRevision: 0.13.0
       helm:
         valueFiles:
@@ -1826,7 +1826,7 @@ spec:
     namespace: arc-runners
   syncPolicy:
     automated:
-      prune: true
+      prune: false
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
@@ -1933,8 +1933,8 @@ metadata:
 spec:
   project: infra
   sources:
-    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
-      path: .
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
       targetRevision: 0.13.0
       helm:
         valueFiles:
@@ -1947,7 +1947,7 @@ spec:
     namespace: arc-runners
   syncPolicy:
     automated:
-      prune: true
+      prune: false
       selfHeal: true
     syncOptions:
       - ServerSideApply=true
@@ -1978,8 +1978,8 @@ metadata:
 spec:
   project: infra
   sources:
-    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
-      path: .
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
       targetRevision: 0.13.0
       helm:
         valueFiles:
@@ -1992,7 +1992,7 @@ spec:
     namespace: arc-runners
   syncPolicy:
     automated:
-      prune: true
+      prune: false
       selfHeal: true
     syncOptions:
       - ServerSideApply=true
