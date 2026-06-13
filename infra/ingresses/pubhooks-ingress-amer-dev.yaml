@@ -23,6 +23,12 @@ spec:
       services:
         - name: komodo-external
           port: 9120
+    - match: Host(`pubhooks.amer.dev`) && PathPrefix(`/webhooks/github`)
+      kind: Rule
+      services:
+        - name: praetor-webhook-adapter
+          namespace: praetor
+          port: 80
 ---
 # TLS cert — auto-created by cert-manager annotation on the old Ingress won't
 # work for IngressRoute, so we need an explicit Certificate resource.
