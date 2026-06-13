@@ -942,6 +942,7 @@ spec:
       selfHeal: true
     syncOptions:
       - ServerSideApply=true
+      - IgnoreExtraneous=true
     retry:
       limit: 5
       backoff:
@@ -1038,6 +1039,7 @@ spec:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground
       - ServerSideApply=true
+      - IgnoreExtraneous=true
     retry:
       limit: 5
       backoff:
@@ -1086,6 +1088,7 @@ spec:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground
       - ServerSideApply=true
+      - IgnoreExtraneous=true
     retry:
       limit: 5
       backoff:
@@ -1418,6 +1421,7 @@ spec:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground
       - ServerSideApply=true
+      - IgnoreExtraneous=true
     retry:
       limit: 5
       backoff:
@@ -1530,6 +1534,7 @@ spec:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground
       - ServerSideApply=true
+      - IgnoreExtraneous=true
     retry:
       limit: 5
       backoff:
@@ -1608,6 +1613,7 @@ spec:
       selfHeal: true
     syncOptions:
       - ServerSideApply=true
+      - IgnoreExtraneous=true
     retry:
       limit: 5
       backoff:
@@ -1653,6 +1659,7 @@ spec:
       selfHeal: true
     syncOptions:
       - ServerSideApply=true
+      - IgnoreExtraneous=true
     retry:
       limit: 5
       backoff:
