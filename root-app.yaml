@@ -1964,6 +1964,50 @@ spec:
         maxDuration: 3m
 
 ---
+# Infrastructure: ARC runners for praetor
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-arc-runners-praetor
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
+      path: .
+      targetRevision: 0.13.0
+      helm:
+        valueFiles:
+          - $values/infra/arc-runners-praetor/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      path: infra/arc-runners-praetor
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arc-runners-praetor
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
 # Application: bws-mcp server
 apiVersion: argoproj.io/v1alpha1
 kind: Application
