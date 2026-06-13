@@ -26,7 +26,7 @@ spec:
                       - archlinux
       containers:
         - name: schoolmode
-          image: amerenda/schoolmode:sha-b66ec4b
+          image: amerenda/schoolmode:sha-b621711
           ports:
             - containerPort: 8080
           env:
