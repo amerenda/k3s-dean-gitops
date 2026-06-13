@@ -18,6 +18,8 @@ spec:
       labels:
         app: praetor-webhook-adapter
     spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
       containers:
         - name: webhook-adapter
           image: amerenda/praetor-webhook:latest

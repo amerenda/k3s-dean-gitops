@@ -18,6 +18,8 @@ spec:
       labels:
         app: praetor-coder-worker
     spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
@@ -81,6 +83,8 @@ spec:
           volumeMounts:
             - name: scratch
               mountPath: /scratch
+            - name: home
+              mountPath: /home/appuser
           resources:
             requests:
               cpu: 100m
@@ -92,3 +96,5 @@ spec:
         - name: scratch
           emptyDir:
             sizeLimit: 4Gi
+        - name: home
+          emptyDir: {}
