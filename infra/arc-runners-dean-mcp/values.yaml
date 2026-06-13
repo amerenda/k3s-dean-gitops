@@ -1,7 +1,7 @@
 # ARC runner scale set for amerenda/dean-mcp (covers infra-mcp and bws-mcp)
 # Host Docker socket — native x86 builds on murderbot with layer cache
 githubConfigUrl: "https://github.com/amerenda/dean-mcp"
-runnerScaleSetName: arc-runner-set
+runnerScaleSetName: arc-runner-dean-mcp
 githubConfigSecret: controller-manager
 controllerServiceAccount:
   name: infra-arc-controller

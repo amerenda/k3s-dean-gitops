@@ -1,7 +1,7 @@
 # ARC runner scale set for amerenda/k3s-runners
 # Host Docker socket — amd64 builds on murderbot (primary) or archlinux (overflow / when murderbot is down)
 githubConfigUrl: "https://github.com/amerenda/k3s-runners"
-runnerScaleSetName: arc-runner-set
+runnerScaleSetName: arc-runner-k3s-runners
 githubConfigSecret: controller-manager
 controllerServiceAccount:
   name: infra-arc-controller
