@@ -1,5 +1,5 @@
 # ARC runner scale set for amerenda/praetor
-# Host Docker socket — native x86 builds on murderbot with layer cache
+# Host Docker socket — amd64 builds on murderbot (primary) or archlinux (overflow)
 githubConfigUrl: "https://github.com/amerenda/praetor"
 runnerScaleSetName: arc-runner-praetor
 githubConfigSecret: controller-manager
@@ -10,10 +10,18 @@ minRunners: 0
 maxRunners: 3
 template:
   spec:
-    nodeSelector:
-      kubernetes.io/hostname: murderbot
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - murderbot
+                    - archlinux
     securityContext:
-      supplementalGroups: [989]
+      supplementalGroups: [989, 952, 968]
     containers:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest
