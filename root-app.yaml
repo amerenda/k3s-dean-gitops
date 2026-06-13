@@ -989,6 +989,7 @@ spec:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground
       - ServerSideApply=true
+      - IgnoreExtraneous=true
     retry:
       limit: 5
       backoff:
