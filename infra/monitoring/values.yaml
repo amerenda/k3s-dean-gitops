@@ -33,10 +33,20 @@ prometheus:
           resources:
             requests:
               storage: 2Gi
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - murderbot
+                    - archlinux
     resources:
       requests:
         cpu: 300m
-        memory: 768Mi
+        memory: 1Gi
       limits:
         cpu: "1"
         memory: 2Gi
