@@ -1,7 +1,7 @@
-# ARC runner scale set for amerenda/dean-mcp
+# ARC runner scale set for amerenda/quiz
 # Host Docker socket — amd64 builds on murderbot (primary) or archlinux (overflow)
-githubConfigUrl: "https://github.com/amerenda/dean-mcp"
-runnerScaleSetName: arc-runner-dean-mcp
+githubConfigUrl: "https://github.com/amerenda/quiz"
+runnerScaleSetName: arc-runner-quiz
 githubConfigSecret: controller-manager
 controllerServiceAccount:
   name: infra-arc-controller
