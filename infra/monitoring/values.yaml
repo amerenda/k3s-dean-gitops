@@ -43,6 +43,14 @@ prometheus:
                   values:
                     - murderbot
                     - archlinux
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - murderbot
     resources:
       requests:
         cpu: 300m
