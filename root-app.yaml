@@ -861,14 +861,64 @@ spec:
     - /spec/data/2/remoteRef/metadataPolicy
 
 ---
-# Infrastructure: GitHub Actions Runner Scale Set
+# Infrastructure: ARC runner shared secrets (ExternalSecrets only — all runner scale sets consume these)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-arc-runner-secrets
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: infra/arc-runners
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arc-runners
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+  - group: "external-secrets.io"
+    kind: ExternalSecret
+    jsonPointers:
+    - /spec/data/0/remoteRef/conversionStrategy
+    - /spec/data/0/remoteRef/decodingStrategy
+    - /spec/data/0/remoteRef/metadataPolicy
+    - /spec/data/1/remoteRef/conversionStrategy
+    - /spec/data/1/remoteRef/decodingStrategy
+    - /spec/data/1/remoteRef/metadataPolicy
+    - /spec/data/2/remoteRef/conversionStrategy
+    - /spec/data/2/remoteRef/decodingStrategy
+    - /spec/data/2/remoteRef/metadataPolicy
+    - /spec/data/3/remoteRef/conversionStrategy
+    - /spec/data/3/remoteRef/decodingStrategy
+    - /spec/data/3/remoteRef/metadataPolicy
+
+---
+# Infrastructure: ARC Runner Scale Set — k3s-dean-gitops repo
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: infra-arc-runners
   namespace: default
   annotations:
-    argocd.argoproj.io/sync-wave: "5"  # Install after controller and external-secrets
+    argocd.argoproj.io/sync-wave: "5"
   finalizers:
     - resources-finalizer.argocd.argoproj.io/background
 spec:
@@ -883,9 +933,6 @@ spec:
     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      path: infra/arc-runners
   destination:
     server: https://kubernetes.default.svc
     namespace: arc-runners
@@ -894,8 +941,6 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
-      - PrunePropagationPolicy=foreground
       - ServerSideApply=true
     retry:
       limit: 5
@@ -904,27 +949,6 @@ spec:
         factor: 2
         maxDuration: 3m
   ignoreDifferences:
-  - group: "apiextensions.k8s.io"
-    kind: CustomResourceDefinition
-    jsonPointers:
-    - /spec/preserveUnknownFields
-  - group: "external-secrets.io"
-    kind: ExternalSecret
-    name: controller-manager
-    jsonPointers:
-    - /spec/data/0/remoteRef/conversionStrategy
-    - /spec/data/0/remoteRef/decodingStrategy
-    - /spec/data/0/remoteRef/metadataPolicy
-    - /spec/data/1/remoteRef/conversionStrategy
-    - /spec/data/1/remoteRef/decodingStrategy
-    - /spec/data/1/remoteRef/metadataPolicy
-    - /spec/data/2/remoteRef/conversionStrategy
-    - /spec/data/2/remoteRef/decodingStrategy
-    - /spec/data/2/remoteRef/metadataPolicy
-  - group: "actions.summerwind.dev"
-    kind: HorizontalRunnerAutoscaler
-    jsonPointers:
-    - /spec/scaleUpTriggers
   - group: "actions.github.com"
     kind: AutoscalingRunnerSet
     jsonPointers:
@@ -954,12 +978,9 @@ spec:
     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      path: infra/arc-runners-ecdysis
   destination:
     server: https://kubernetes.default.svc
-    namespace: arc-runners-ecdysis
+    namespace: arc-runners
   syncPolicy:
     automated:
       prune: true
@@ -1004,12 +1025,9 @@ spec:
     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      path: infra/arc-runners-llm-manager
   destination:
     server: https://kubernetes.default.svc
-    namespace: arc-runners-llm-manager
+    namespace: arc-runners
   syncPolicy:
     automated:
       prune: true
@@ -1054,12 +1072,9 @@ spec:
     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      path: infra/arc-runners-k3s-runners
   destination:
     server: https://kubernetes.default.svc
-    namespace: arc-runners-k3s-runners
+    namespace: arc-runners
   syncPolicy:
     automated:
       prune: true
@@ -1104,12 +1119,9 @@ spec:
     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      path: infra/arc-runners-llm-agents
   destination:
     server: https://kubernetes.default.svc
-    namespace: arc-runners-llm-agents
+    namespace: arc-runners
   syncPolicy:
     automated:
       prune: true
@@ -1154,12 +1166,9 @@ spec:
     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      path: infra/arc-runners-tailscale-acl
   destination:
     server: https://kubernetes.default.svc
-    namespace: arc-runners-tailscale-acl
+    namespace: arc-runners
   syncPolicy:
     automated:
       prune: true
@@ -1483,12 +1492,9 @@ spec:
     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      path: infra/arc-runners-mycroft
   destination:
     server: https://kubernetes.default.svc
-    namespace: arc-runners-mycroft
+    namespace: arc-runners
   syncPolicy:
     automated:
       prune: true
@@ -1703,12 +1709,9 @@ spec:
     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      path: infra/arc-runners-wikimedia
   destination:
     server: https://kubernetes.default.svc
-    namespace: arc-runners-wikimedia
+    namespace: arc-runners
   syncPolicy:
     automated:
       prune: true
@@ -1818,12 +1821,9 @@ spec:
     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      path: infra/arc-runners-schoolmode
   destination:
     server: https://kubernetes.default.svc
-    namespace: arc-runners-schoolmode
+    namespace: arc-runners
   syncPolicy:
     automated:
       prune: true
@@ -1942,19 +1942,14 @@ spec:
     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      path: infra/arc-runners-dean-mcp
   destination:
     server: https://kubernetes.default.svc
-    namespace: arc-runners-dean-mcp
+    namespace: arc-runners
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
-      - PrunePropagationPolicy=foreground
       - ServerSideApply=true
     retry:
       limit: 5
@@ -1962,6 +1957,12 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 3m
+  ignoreDifferences:
+  - group: "actions.github.com"
+    kind: AutoscalingRunnerSet
+    jsonPointers:
+    - /status/pendingEphemeralRunners
+    - /status/currentRunners
 
 ---
 # Infrastructure: ARC runners for praetor
@@ -1986,19 +1987,14 @@ spec:
     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
-      targetRevision: main
-      path: infra/arc-runners-praetor
   destination:
     server: https://kubernetes.default.svc
-    namespace: arc-runners-praetor
+    namespace: arc-runners
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
-      - PrunePropagationPolicy=foreground
       - ServerSideApply=true
     retry:
       limit: 5
@@ -2006,6 +2002,12 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 3m
+  ignoreDifferences:
+  - group: "actions.github.com"
+    kind: AutoscalingRunnerSet
+    jsonPointers:
+    - /status/pendingEphemeralRunners
+    - /status/currentRunners
 
 ---
 # Application: bws-mcp server

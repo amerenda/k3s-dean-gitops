@@ -53,4 +53,4 @@ template:
           type: Socket
       - name: work
         emptyDir: {}
-namespaceOverride: arc-runners-ecdysis
+namespaceOverride: arc-runners

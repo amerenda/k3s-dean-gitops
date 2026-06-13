@@ -57,4 +57,4 @@ template:
           type: Socket
       - name: work
         emptyDir: {}
-namespaceOverride: arc-runners-mycroft
+namespaceOverride: arc-runners
