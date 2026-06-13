@@ -15,6 +15,7 @@ metadata:
     app.kubernetes.io/part-of: argocd
 data:
   server.hydrate: "false"
+  application.resourceTrackingMethod: annotation
   resource.customizations.health.actions.github.com_AutoscalingRunnerSet: |
     hs = {}
     hs.status = "Healthy"
@@ -31,5 +32,11 @@ data:
         - "apiextensions.crossplane.io"
       kinds:
         - ProviderConfigUsage
+      clusters:
+        - "*"
+    - apiGroups:
+        - "actions.github.com"
+      kinds:
+        - AutoscalingListener
       clusters:
         - "*"
