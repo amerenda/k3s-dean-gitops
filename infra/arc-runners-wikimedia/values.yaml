@@ -1,7 +1,7 @@
 # ARC runner scale set for amerenda/wikimedia
 # Host Docker socket — amd64 builds on murderbot (primary) or archlinux (overflow / when murderbot is down)
 githubConfigUrl: "https://github.com/amerenda/wikimedia"
-runnerScaleSetName: arc-runner-set
+runnerScaleSetName: arc-runner-wikimedia
 githubConfigSecret: controller-manager
 controllerServiceAccount:
   name: infra-arc-controller

@@ -1,7 +1,7 @@
 # ARC runner scale set for amerenda/mycroft
 # Host Docker socket — amd64 builds on murderbot (primary) or archlinux (overflow / when murderbot is down)
 githubConfigUrl: "https://github.com/amerenda/mycroft"
-runnerScaleSetName: arc-runner-set
+runnerScaleSetName: arc-runner-mycroft
 githubConfigSecret: controller-manager
 controllerServiceAccount:
   name: infra-arc-controller

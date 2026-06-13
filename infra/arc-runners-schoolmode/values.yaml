@@ -1,7 +1,7 @@
 # ARC runner scale set for amerenda/schoolmode
 # Host Docker socket — amd64 builds on murderbot (primary) or archlinux (overflow / when murderbot is down)
 githubConfigUrl: "https://github.com/amerenda/schoolmode"
-runnerScaleSetName: arc-runner-set
+runnerScaleSetName: arc-runner-schoolmode
 githubConfigSecret: controller-manager
 controllerServiceAccount:
   name: infra-arc-controller
