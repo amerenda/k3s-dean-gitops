@@ -18,19 +18,11 @@ spec:
       labels:
         app: mem0-server
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: kubernetes.io/hostname
-                    operator: In
-                    values:
-                      - murderbot
-                      - archlinux
+      nodeSelector:
+        kubernetes.io/arch: arm64
       containers:
         - name: server
-          image: amerenda/mem0-server:latest
+          image: mem0/mem0-api-server:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
