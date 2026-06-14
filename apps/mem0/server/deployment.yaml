@@ -18,11 +18,9 @@ spec:
       labels:
         app: mem0-server
     spec:
-      nodeSelector:
-        kubernetes.io/arch: arm64
       containers:
         - name: server
-          image: mem0/mem0-api-server:latest
+          image: amerenda/mem0-server:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
