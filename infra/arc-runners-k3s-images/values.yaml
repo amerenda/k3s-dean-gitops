@@ -1,7 +1,7 @@
-# ARC runner scale set for amerenda/praetor
-# Host Docker socket — amd64 builds on murderbot (primary) or archlinux (overflow)
-githubConfigUrl: "https://github.com/amerenda/praetor"
-runnerScaleSetName: arc-runner-praetor
+# ARC runner scale set for amerenda/k3s-images
+# Host Docker socket — multi-arch builds via buildx+QEMU on murderbot (primary) or archlinux (overflow)
+githubConfigUrl: "https://github.com/amerenda/k3s-images"
+runnerScaleSetName: arc-runner-k3s-images
 githubConfigSecret: controller-manager
 controllerServiceAccount:
   name: infra-arc-controller
