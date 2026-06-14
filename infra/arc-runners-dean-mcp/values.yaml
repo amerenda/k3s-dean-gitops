@@ -29,10 +29,15 @@ template:
     initContainers:
       - name: init-work-dir
         image: busybox
-        command: ['sh', '-c', 'chmod 777 /home/runner/_work']
+        env:
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+        command: ['sh', '-c', 'mkdir -p /mnt/root/$(MY_POD_NAME) && chmod 777 /mnt/root/$(MY_POD_NAME)']
         volumeMounts:
           - name: work
-            mountPath: /home/runner/_work
+            mountPath: /mnt/root
     containers:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest
@@ -52,11 +57,16 @@ template:
               secretKeyRef:
                 name: runner-ci-credentials
                 key: GITOPS_PAT
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
         volumeMounts:
           - name: docker-sock
             mountPath: /var/run/docker.sock
           - name: work
             mountPath: /home/runner/_work
+            subPathExpr: $(MY_POD_NAME)
     volumes:
       - name: docker-sock
         hostPath:
