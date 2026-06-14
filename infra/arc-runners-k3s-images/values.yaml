@@ -1,0 +1,79 @@
+# ARC runner scale set for amerenda/k3s-images
+# Host Docker socket — multi-arch builds via buildx+QEMU on murderbot (primary) or archlinux (overflow)
+githubConfigUrl: "https://github.com/amerenda/k3s-images"
+runnerScaleSetName: arc-runner-k3s-images
+githubConfigSecret: controller-manager
+controllerServiceAccount:
+  name: infra-arc-controller
+  namespace: arc-systems
+minRunners: 0
+maxRunners: 3
+template:
+  spec:
+    tolerations:
+      - key: node.kubernetes.io/disk-pressure
+        operator: Exists
+        effect: NoSchedule
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - murderbot
+                    - archlinux
+    securityContext:
+      supplementalGroups: [989, 952, 968]
+    initContainers:
+      - name: init-work-dir
+        image: busybox
+        env:
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+        command: ['sh', '-c', 'mkdir -p /mnt/root/$(MY_POD_NAME) && chmod 777 /mnt/root/$(MY_POD_NAME)']
+        volumeMounts:
+          - name: work
+            mountPath: /mnt/root
+    containers:
+      - name: runner
+        image: ghcr.io/actions/actions-runner:latest
+        command: ["/home/runner/run.sh"]
+        env:
+          - name: DOCKER_HOST
+            value: "unix:///var/run/docker.sock"
+          - name: DOCKERHUB_USERNAME
+            value: "amerenda"
+          - name: DOCKERHUB_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: runner-ci-credentials
+                key: DOCKERHUB_TOKEN
+          - name: GITOPS_PAT
+            valueFrom:
+              secretKeyRef:
+                name: runner-ci-credentials
+                key: GITOPS_PAT
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+        volumeMounts:
+          - name: docker-sock
+            mountPath: /var/run/docker.sock
+          - name: work
+            mountPath: /home/runner/_work
+            subPathExpr: $(MY_POD_NAME)
+    volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+      - name: work
+        hostPath:
+          path: /mnt/storage/k3s-runner-work
+          type: DirectoryOrCreate
+namespaceOverride: arc-runners
