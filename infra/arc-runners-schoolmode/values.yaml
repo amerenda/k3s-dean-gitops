@@ -26,6 +26,13 @@ template:
                     - archlinux
     securityContext:
       supplementalGroups: [989, 952, 968]
+    initContainers:
+      - name: init-work-dir
+        image: busybox
+        command: ['sh', '-c', 'chmod 777 /home/runner/_work']
+        volumeMounts:
+          - name: work
+            mountPath: /home/runner/_work
     containers:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest
