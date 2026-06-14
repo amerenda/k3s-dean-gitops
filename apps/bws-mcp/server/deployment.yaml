@@ -30,6 +30,8 @@ spec:
                 secretKeyRef:
                   name: bws-mcp-token
                   key: token
+            - name: BWS_PROJECT_ID
+              value: "6353f589-39c0-45f2-9e9c-b36f00e0c282"
           readinessProbe:
             httpGet:
               path: /health
