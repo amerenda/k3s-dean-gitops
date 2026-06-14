@@ -35,7 +35,9 @@ spec:
                   name: openwebui-secrets
                   key: secret-key
             - name: WEBUI_URL
-              value: "https://zoidberg.amer.dev"
+              value: "https://claw.amer.dev"
+            - name: DEFAULT_MODELS
+              value: "qwen3-35b"
             - name: ENABLE_OLLAMA_API
               value: "false"
             - name: WEBUI_AUTH
