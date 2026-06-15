@@ -16,8 +16,8 @@ spec:
         reloader.stakater.com/auto: "true"
     spec:
       serviceAccountName: openhands
-      # Host Docker socket — same pattern as ARC: murderbot (primary) or archlinux when murderbot is down.
-      # supplementalGroups 989 = docker GID on Debian (murderbot); add archlinux GID if Docker access fails on Arch.
+      # Needs Docker socket — pin to murderbot (primary) or archlinux.
+      # supplementalGroups 989 = docker GID on Debian (murderbot).
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -40,53 +40,6 @@ spec:
               mountPath: /.openhands
               subPath: .openhands
 
-        - name: register
-          image: curlimages/curl:latest
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              set -e
-              KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-              KUBE_NS=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
-              KUBE_API=https://kubernetes.default.svc
-              KUBE_CA=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-
-              while true; do
-                RESP=$(curl -sf -X POST "${LLM_MANAGER_API_URL}/api/apps/discover" \
-                  -H "Content-Type: application/json" \
-                  -d "{\"name\":\"openhands\",\"base_url\":\"https://hands.amer.dev\",\"registration_secret\":\"${LLM_REGISTRATION_SECRET}\",\"capabilities\":[\"chat\"]}" \
-                  ) || { echo "llm-manager unreachable, retrying in 10s..."; sleep 10; continue; }
-
-                STATUS=$(echo "$RESP" | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
-
-                if [ "$STATUS" = "approved" ]; then
-                  API_KEY=$(echo "$RESP" | grep -o '"api_key":"[^"]*"' | cut -d'"' -f4)
-                  ENCODED=$(printf '%s' "$API_KEY" | base64 | tr -d '\n')
-                  curl -sf -X PATCH \
-                    --cacert "$KUBE_CA" \
-                    -H "Authorization: Bearer $KUBE_TOKEN" \
-                    -H "Content-Type: application/strategic-merge-patch+json" \
-                    "${KUBE_API}/api/v1/namespaces/${KUBE_NS}/secrets/openhands-api-key" \
-                    -d "{\"data\":{\"api-key\":\"${ENCODED}\"}}"
-                  echo "Registered — API key stored."
-                  exit 0
-                fi
-
-                echo "Status: ${STATUS}. Approve 'openhands' in the llm-manager UI, then this will proceed."
-                sleep 10
-              done
-          env:
-            - name: LLM_MANAGER_API_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: openhands-config
-                  key: LLM_MANAGER_API_URL
-            - name: LLM_REGISTRATION_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: openhands-secrets
-                  key: llm-registration-secret
-
       containers:
         - name: openhands
           image: ghcr.io/all-hands-ai/openhands:latest
@@ -106,8 +59,8 @@ spec:
             - name: LLM_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: openhands-api-key
-                  key: api-key
+                  name: openhands-secrets
+                  key: litellm-master-key
             - name: GITHUB_APP_ID
               valueFrom:
                 secretKeyRef:
@@ -131,6 +84,9 @@ spec:
               mountPath: /workspace
             - name: docker-sock
               mountPath: /var/run/docker.sock
+            - name: mcp-config
+              mountPath: /etc/openhands/config.toml
+              subPath: config.toml
           resources:
             requests:
               cpu: 200m
@@ -147,3 +103,6 @@ spec:
           hostPath:
             path: /var/run/docker.sock
             type: Socket
+        - name: mcp-config
+          configMap:
+            name: openhands-mcp-config
