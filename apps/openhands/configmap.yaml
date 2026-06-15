@@ -4,14 +4,9 @@ metadata:
   name: openhands-config
   namespace: openhands
 data:
-  # ── Model is controlled via llm-manager aliases — no git changes needed. ──
-  # ── In the llm-manager UI: Models → any model → Aliases tab             ──
-  # ── Create alias "hands-model" pointing to whichever model you want.    ──
-  # ── Update the alias target to switch models instantly.                  ──
-  LLM_MODEL: "openai/hands-model"
-  # ─────────────────────────────────────────────────────────────────────────
-  LLM_BASE_URL: "https://llm-manager-backend.amer.dev/v1"
-  LLM_MANAGER_API_URL: "https://llm-manager-backend.amer.dev"
+  LLM_MODEL: "openai/qwen3-35b"
+  LLM_BASE_URL: "https://litellm.amer.dev/v1"
   WORKSPACE_BASE: "/workspace"
   DOCKER_HOST: "unix:///var/run/docker.sock"
-  SANDBOX_RUNTIME_CONTAINER_IMAGE: "ghcr.io/all-hands-ai/runtime:0.59-nikolaik"
+  SANDBOX_RUNTIME_CONTAINER_IMAGE: "ghcr.io/all-hands-ai/runtime:latest-nikolaik"
+  OPENHANDS_CONFIG_PATH: "/etc/openhands/config.toml"
