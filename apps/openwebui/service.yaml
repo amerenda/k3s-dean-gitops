@@ -4,8 +4,18 @@ metadata:
   name: openwebui
   namespace: openwebui
 spec:
-  selector:
-    app: openwebui
   ports:
-    - port: 80
-      targetPort: 8080
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: openwebui
+  namespace: openwebui
+subsets:
+  - addresses:
+      - ip: 10.100.20.18
+    ports:
+      - port: 3000
