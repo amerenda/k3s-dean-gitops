@@ -27,6 +27,12 @@ spec:
           env:
             - name: SEARXNG_URL
               value: "http://searxng.searxng.svc.cluster.local:8080"
+            - name: MAX_RESULTS
+              value: "5"
+            - name: MAX_CONTENT_CHARS
+              value: "200"
+            - name: MAX_URL_CONTENT_CHARS
+              value: "4000"
           readinessProbe:
             httpGet:
               path: /health
