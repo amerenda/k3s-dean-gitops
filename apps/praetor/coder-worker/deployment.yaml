@@ -102,8 +102,8 @@ spec:
               cpu: 100m
               memory: 1024Mi
             limits:
-              cpu: 500m
-              memory: 4096Mi
+              cpu: 1000m
+              memory: 8192Mi
       volumes:
         - name: scratch
           emptyDir:
