@@ -90,3 +90,8 @@ data:
       allowed_fails: 5
       retry_policy:
         BadRequestErrorRetries: 3
+
+    mcp_servers:
+      mcp-searxng:
+        url: "http://mcp-searxng-server.mcp-searxng.svc.cluster.local:8000/mcp"
+        transport: "http"
