@@ -10,3 +10,16 @@ spec:
   resources:
     requests:
       storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openhands-scratch
+  namespace: openhands
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 10Gi

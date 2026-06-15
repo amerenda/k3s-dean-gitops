@@ -18,29 +18,17 @@ spec:
         reloader.stakater.com/auto: "true"
     spec:
       serviceAccountName: openhands
-      # Needs Docker socket — pin to murderbot (primary) or archlinux.
-      # supplementalGroups 989 = docker GID on Debian (murderbot).
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: kubernetes.io/hostname
-                    operator: In
-                    values:
-                      - murderbot
-                      - archlinux
-      securityContext:
-        supplementalGroups: [989]
 
       initContainers:
         - name: fix-perms
           image: busybox:latest
-          command: ["sh", "-c", "chown -R 1000:1000 /.openhands"]
+          command: ["sh", "-c", "chown -R 1000:1000 /.openhands /workspace"]
           volumeMounts:
-            - name: workspace
+            - name: data
               mountPath: /.openhands
               subPath: .openhands
+            - name: scratch
+              mountPath: /workspace
 
       containers:
         - name: openhands
@@ -54,10 +42,6 @@ spec:
           env:
             - name: SANDBOX_USER_ID
               value: "1000"
-            - name: DOCKER_HOST_ADDR
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.hostIP
             - name: LLM_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -79,13 +63,11 @@ spec:
                   name: openhands-secrets
                   key: github-app-private-key
           volumeMounts:
-            - name: workspace
+            - name: data
               mountPath: /.openhands
               subPath: .openhands
-            - name: workspace
+            - name: scratch
               mountPath: /workspace
-            - name: docker-sock
-              mountPath: /var/run/docker.sock
             - name: mcp-config
               mountPath: /etc/openhands/config.toml
               subPath: config.toml
@@ -98,13 +80,12 @@ spec:
               memory: 2Gi
 
       volumes:
-        - name: workspace
+        - name: data
           persistentVolumeClaim:
             claimName: openhands-workspace
-        - name: docker-sock
-          hostPath:
-            path: /var/run/docker.sock
-            type: Socket
+        - name: scratch
+          persistentVolumeClaim:
+            claimName: openhands-scratch
         - name: mcp-config
           configMap:
             name: openhands-mcp-config

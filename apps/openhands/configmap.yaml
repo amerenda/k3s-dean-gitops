@@ -7,6 +7,5 @@ data:
   LLM_MODEL: "openai/qwen3-35b"
   LLM_BASE_URL: "https://litellm.amer.dev/v1"
   WORKSPACE_BASE: "/workspace"
-  DOCKER_HOST: "unix:///var/run/docker.sock"
-  SANDBOX_RUNTIME_CONTAINER_IMAGE: "ghcr.io/all-hands-ai/runtime:latest-nikolaik"
+  RUNTIME: "local"
   OPENHANDS_CONFIG_PATH: "/etc/openhands/config.toml"
