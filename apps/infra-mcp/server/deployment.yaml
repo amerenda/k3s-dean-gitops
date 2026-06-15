@@ -47,8 +47,6 @@ spec:
                   key: coder-private-key
             - name: CLONE_REPOS
               value: "true"
-            - name: SEARXNG_URL
-              value: "http://searxng.searxng.svc.cluster.local:8080"
           readinessProbe:
             httpGet:
               path: /health
