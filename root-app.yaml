@@ -1006,6 +1006,54 @@ spec:
 
 
 ---
+# Infrastructure: ARC Runner Scale Set — llm-manager repo
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-arc-runners-llm-manager
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
+      targetRevision: 0.13.0
+      helm:
+        valueFiles:
+          - $values/infra/arc-runners-llm-manager/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arc-runners
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - ServerSideApply=true
+      - IgnoreExtraneous=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+  - group: "actions.github.com"
+    kind: AutoscalingRunnerSet
+    jsonPointers:
+    - /status/pendingEphemeralRunners
+    - /status/currentRunners
+
+---
 # Infrastructure: ARC Runner Scale Set — k3s-runners repo
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -1189,6 +1237,129 @@ spec:
         factor: 2
         maxDuration: 3m
 
+
+---
+# Application: Mycroft Workflow Templates
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-mycroft-workflows
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/mycroft/workflows
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mycroft
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Infrastructure: Argo Workflows
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-argo-workflows
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: https://argoproj.github.io/argo-helm
+      chart: argo-workflows
+      targetRevision: 0.45.3
+      helm:
+        valueFiles:
+          - $values/infra/argo-workflows/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Infrastructure: ARC Runner Scale Set — mycroft repo
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-arc-runners-mycroft
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
+      targetRevision: 0.13.0
+      helm:
+        valueFiles:
+          - $values/infra/arc-runners-mycroft/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arc-runners
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - ServerSideApply=true
+      - IgnoreExtraneous=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+  - group: "actions.github.com"
+    kind: AutoscalingRunnerSet
+    jsonPointers:
+    - /status/pendingEphemeralRunners
+    - /status/currentRunners
 
 ---
 # Application: Wikimedia (prod)
@@ -1407,6 +1578,120 @@ spec:
     jsonPointers:
     - /status/pendingEphemeralRunners
     - /status/currentRunners
+---
+# App: Block Page — DNS block page for school mode
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-block-page
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/block-page
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: block-page
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+---
+# App: School Mode — DNS distraction blocker UI
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-schoolmode
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/schoolmode
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: schoolmode
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+---
+# Infrastructure: ARC Runner Scale Set — schoolmode repo
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-arc-runners-schoolmode
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: infra
+  sources:
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
+      targetRevision: 0.13.0
+      helm:
+        valueFiles:
+          - $values/infra/arc-runners-schoolmode/values.yaml
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arc-runners
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - ServerSideApply=true
+      - IgnoreExtraneous=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+  - group: "actions.github.com"
+    kind: AutoscalingRunnerSet
+    jsonPointers:
+    - /status/pendingEphemeralRunners
+    - /status/currentRunners
+
 ---
 # Application: infra-mcp server
 apiVersion: argoproj.io/v1alpha1
