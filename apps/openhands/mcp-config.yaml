@@ -8,9 +8,9 @@ data:
     [mcp]
 
     # infra-mcp: k3s/Komodo provisioning, secret hygiene, app scaffolding
-    [[mcp.sse_servers]]
-    url = "http://infra-mcp-server.infra-mcp.svc.cluster.local:8000/sse"
+    [[mcp.shttp_servers]]
+    url = "http://infra-mcp-server.infra-mcp.svc.cluster.local:8000/mcp"
 
     # bws-mcp: Bitwarden Secrets Manager proxy
-    [[mcp.sse_servers]]
-    url = "http://bws-mcp-server.bws-mcp.svc.cluster.local:8000/sse"
+    [[mcp.shttp_servers]]
+    url = "http://bws-mcp-server.bws-mcp.svc.cluster.local:8000/mcp"
