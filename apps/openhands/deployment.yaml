@@ -19,17 +19,6 @@ spec:
     spec:
       serviceAccountName: openhands
 
-      initContainers:
-        - name: fix-perms
-          image: busybox:latest
-          command: ["sh", "-c", "chown -R 1000:1000 /.openhands /workspace"]
-          volumeMounts:
-            - name: data
-              mountPath: /.openhands
-              subPath: .openhands
-            - name: scratch
-              mountPath: /workspace
-
       containers:
         - name: openhands
           image: ghcr.io/all-hands-ai/openhands:latest
@@ -40,8 +29,6 @@ spec:
             - configMapRef:
                 name: openhands-config
           env:
-            - name: SANDBOX_USER_ID
-              value: "1000"
             - name: LLM_API_KEY
               valueFrom:
                 secretKeyRef:
