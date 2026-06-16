@@ -55,6 +55,18 @@ spec:
                 secretKeyRef:
                   name: praetor-webhook-secrets
                   key: github-webhook-secret
+            - name: PRAETOR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: praetor-api-key
+            - name: MEM0_BASE_URL
+              value: "https://mem0.amer.dev"
+            - name: MEM0_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: mem0-api-key
           livenessProbe:
             httpGet:
               path: /healthz

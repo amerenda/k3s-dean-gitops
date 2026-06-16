@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: praetor-mcp-server
+  namespace: praetor-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: praetor-mcp-server
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: praetor-mcp-server
+    spec:
+      containers:
+        - name: server
+          image: amerenda/praetor-mcp:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PRAETOR_BASE_URL
+              value: "https://praetor.amer.dev"
+            - name: PRAETOR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-mcp-secrets
+                  key: PRAETOR_API_KEY
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
