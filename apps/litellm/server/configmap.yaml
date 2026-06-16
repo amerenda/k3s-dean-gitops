@@ -20,8 +20,9 @@ data:
           max_output_tokens: 8192
 
       # qwen3-35b-think: thinking-enabled variant for OpenWebUI interactive chat.
-      # Thinking tokens stream visibly so the model can reason about tool use.
-      # Do NOT use for Claude Code / opencode (thinking adds latency there).
+      # Model reasons about when to call tools; thinking is stripped from output
+      # (server default preserve_thinking=false) so users see only real content.
+      # Do NOT use for Claude Code / opencode (thinking adds ~1-3s TTFT latency).
       - model_name: qwen3-35b-think
         litellm_params:
           model: openai/qwen3-35b
@@ -30,7 +31,6 @@ data:
           extra_body:
             chat_template_kwargs:
               enable_thinking: true
-              preserve_thinking: true
         model_info:
           max_input_tokens: 131072
           max_output_tokens: 8192
