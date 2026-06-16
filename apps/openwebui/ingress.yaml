@@ -28,7 +28,7 @@ spec:
               service:
                 name: openwebui
                 port:
-                  number: 3000
+                  number: 3001
     - host: bot.amer.dev
       http:
         paths:
@@ -38,4 +38,4 @@ spec:
               service:
                 name: openwebui
                 port:
-                  number: 3000
+                  number: 3001
