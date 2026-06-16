@@ -7,7 +7,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    external-dns.alpha.kubernetes.io/hostname: zoidberg.amer.dev,bot.amer.dev,murder.amer.dev
+    external-dns.alpha.kubernetes.io/hostname: zoidberg.amer.dev,bot.amer.dev
     external-dns.alpha.kubernetes.io/ttl: "300"
 spec:
   ingressClassName: infra-traefik
@@ -18,9 +18,6 @@ spec:
     - hosts:
         - bot.amer.dev
       secretName: bot-amer-dev-tls
-    - hosts:
-        - murder.amer.dev
-      secretName: murder-amer-dev-tls
   rules:
     - host: zoidberg.amer.dev
       http:
@@ -33,16 +30,6 @@ spec:
                 port:
                   number: 3000
     - host: bot.amer.dev
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: openwebui
-                port:
-                  number: 3000
-    - host: murder.amer.dev
       http:
         paths:
           - path: /
