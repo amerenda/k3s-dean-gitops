@@ -16,8 +16,8 @@ data:
             chat_template_kwargs:
               enable_thinking: false
         model_info:
-          max_input_tokens: 32768
-          max_output_tokens: 4096
+          max_input_tokens: 131072
+          max_output_tokens: 8192
 
       # coder is an alias for qwen3-35b — lets agents and UIs pick
       # a coding-optimised endpoint without hardcoding the model name.
@@ -31,8 +31,8 @@ data:
             chat_template_kwargs:
               enable_thinking: false
         model_info:
-          max_input_tokens: 32768
-          max_output_tokens: 4096
+          max_input_tokens: 131072
+          max_output_tokens: 8192
 
       # --- archlinux (RX 9070 XT, 16GB VRAM, Ollama) ---
       - model_name: qwen3-14b
