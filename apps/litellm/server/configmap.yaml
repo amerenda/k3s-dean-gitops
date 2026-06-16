@@ -117,3 +117,9 @@ data:
       github_mcp:
         url: "http://github-mcp-server.github-mcp.svc.cluster.local:8000/mcp"
         transport: "http"
+      praetor_mcp:
+        url: "http://praetor-mcp-server.praetor-mcp.svc.cluster.local:8000/mcp"
+        transport: "http"
+      infra_mcp:
+        url: "http://infra-mcp-server.infra-mcp.svc.cluster.local:8000/mcp"
+        transport: "http"
