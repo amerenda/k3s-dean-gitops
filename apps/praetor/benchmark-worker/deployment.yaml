@@ -60,16 +60,8 @@ spec:
                 secretKeyRef:
                   name: praetor-research-secrets
                   key: langfuse-secret-key
-            - name: GITHUB_APP_ID
-              valueFrom:
-                secretKeyRef:
-                  name: praetor-reviewer-secrets
-                  key: github-app-id
-            - name: GITHUB_PRIVATE_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: praetor-reviewer-secrets
-                  key: github-private-key
+            - name: LITELLM_MCP_URL
+              value: "https://litellm.amer.dev/mcp/"
           resources:
             requests:
               cpu: 100m
