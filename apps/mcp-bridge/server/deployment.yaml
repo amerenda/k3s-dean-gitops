@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-bridge-server
+  namespace: mcp-bridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-bridge-server
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: mcp-bridge-server
+    spec:
+      containers:
+        - name: server
+          image: amerenda/mcp-bridge:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: LITELLM_MCP_URL
+              value: "https://litellm.amer.dev/mcp"
+            - name: LITELLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mcp-bridge-secrets
+                  key: litellm-api-key
+          readinessProbe:
+            httpGet:
+              path: /mcp/openapi.json
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /mcp/openapi.json
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
