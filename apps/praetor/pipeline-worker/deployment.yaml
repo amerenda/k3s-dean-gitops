@@ -93,7 +93,7 @@ spec:
               memory: 512Mi
             limits:
               cpu: 1000m
-              memory: 2Gi
+              memory: 6Gi
       volumes:
         - name: scratch
           emptyDir:
