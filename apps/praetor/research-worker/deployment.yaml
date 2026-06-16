@@ -54,7 +54,7 @@ spec:
                   name: praetor-research-secrets
                   key: litellm-api-key
             - name: LITELLM_MCP_URL
-              value: "https://litellm.amer.dev/mcp"
+              value: "https://litellm.amer.dev/mcp/"
             - name: LLM_MODEL
               value: "qwen3-35b"
             - name: LANGFUSE_HOST
@@ -75,4 +75,4 @@ spec:
               memory: 512Mi
             limits:
               cpu: 1000m
-              memory: 2Gi
+              memory: 6Gi

@@ -81,7 +81,7 @@ spec:
             - name: SCRATCH_DIR
               value: "/scratch"
             - name: LITELLM_MCP_URL
-              value: "https://litellm.amer.dev/mcp"
+              value: "https://litellm.amer.dev/mcp/"
             - name: LANGFUSE_HOST
               value: "https://langfuse.amer.dev"
             - name: LANGFUSE_PUBLIC_KEY
