@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: praetor-benchmark-worker
+  namespace: praetor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: praetor-benchmark-worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: praetor-benchmark-worker
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      containers:
+        - name: benchmark-worker
+          image: amerenda/praetor-benchmark:latest
+          imagePullPolicy: Always
+          env:
+            - name: HATCHET_CLIENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-research-secrets
+                  key: hatchet-token
+            - name: HATCHET_CLIENT_TLS_STRATEGY
+              value: "none"
+            - name: MEM0_BASE_URL
+              value: "https://mem0.amer.dev"
+            - name: MEM0_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-research-secrets
+                  key: mem0-api-key
+            - name: LITELLM_BASE_URL
+              value: "https://litellm.amer.dev/v1"
+            - name: LITELLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-research-secrets
+                  key: litellm-api-key
+            - name: LLM_MODEL
+              value: "qwen3-35b"
+            - name: LANGFUSE_HOST
+              value: "https://langfuse.amer.dev"
+            - name: LANGFUSE_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-research-secrets
+                  key: langfuse-public-key
+            - name: LANGFUSE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-research-secrets
+                  key: langfuse-secret-key
+            - name: GITHUB_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-reviewer-secrets
+                  key: github-app-id
+            - name: GITHUB_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-reviewer-secrets
+                  key: github-private-key
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 2Gi
