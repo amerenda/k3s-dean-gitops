@@ -12,6 +12,7 @@ data:
           model: openai/qwen3-35b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
+          timeout: 600
           extra_body:
             chat_template_kwargs:
               enable_thinking: false
@@ -29,6 +30,7 @@ data:
           model: openai/qwen3-35b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
+          timeout: 600
           extra_body:
             chat_template_kwargs:
               enable_thinking: true
@@ -45,6 +47,7 @@ data:
           model: openai/qwen3-35b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
+          timeout: 600
           extra_body:
             chat_template_kwargs:
               enable_thinking: false
