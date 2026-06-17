@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: phase16-e2e-backend-uat
+  namespace: phase16-e2e
+spec:
+  selector:
+    app: phase16-e2e-backend-uat
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
