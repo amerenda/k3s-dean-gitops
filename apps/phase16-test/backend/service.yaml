@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: phase16-test-backend
+  namespace: phase16-test
+spec:
+  selector:
+    app: phase16-test-backend
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000

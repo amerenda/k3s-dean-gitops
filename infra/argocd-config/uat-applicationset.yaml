@@ -98,6 +98,23 @@ spec:
             path: apps/quiz/frontend-uat
             namespace: quiz
 
+  # --- phase16-test ---
+  - matrix:
+      generators:
+      - pullRequest:
+          github:
+            owner: amerenda
+            repo: k3s-dean-gitops
+            appSecretName: argocd-deploy-bot
+            labels:
+            - deploy:phase16-test
+          requeueAfterSeconds: 30
+      - list:
+          elements:
+          - app: phase16-test-backend
+            path: apps/phase16-test/backend-uat
+            namespace: phase16-test
+
   template:
     metadata:
       name: 'uat-{{.app}}-pr{{.number}}'
