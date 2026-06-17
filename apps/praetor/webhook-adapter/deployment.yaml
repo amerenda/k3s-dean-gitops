@@ -20,6 +20,7 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/arch: amd64
+      serviceAccountName: praetor-webhook-adapter
       containers:
         - name: webhook-adapter
           image: amerenda/praetor-webhook:latest
@@ -67,6 +68,21 @@ spec:
                 secretKeyRef:
                   name: praetor-webhook-secrets
                   key: mem0-api-key
+            - name: CODER_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: coder-app-id
+            - name: CODER_APP_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: coder-private-key
+            - name: CODER_APP_INSTALLATION_ID
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: coder-installation-id
           livenessProbe:
             httpGet:
               path: /healthz

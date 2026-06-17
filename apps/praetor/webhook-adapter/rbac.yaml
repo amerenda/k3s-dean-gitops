@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: praetor-webhook-adapter
+  namespace: praetor
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: praetor-webhook-configmap-rw
+  namespace: praetor
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "create", "update", "patch"]
+    resourceNames: ["mcp-registry"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: praetor-webhook-configmap-rw
+  namespace: praetor
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: praetor-webhook-configmap-rw
+subjects:
+  - kind: ServiceAccount
+    name: praetor-webhook-adapter
+    namespace: praetor
