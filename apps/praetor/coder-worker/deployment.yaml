@@ -102,10 +102,10 @@ spec:
           resources:
             requests:
               cpu: 100m
-              memory: 1024Mi
+              memory: 2048Mi
             limits:
-              cpu: 1000m
-              memory: 8192Mi
+              cpu: 2000m
+              memory: 16384Mi
       volumes:
         - name: scratch
           emptyDir:
