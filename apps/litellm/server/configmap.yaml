@@ -126,3 +126,6 @@ data:
       infra_mcp:
         url: "http://infra-mcp-server.infra-mcp.svc.cluster.local:8000/mcp"
         transport: "http"
+      mcp-k8s-server:
+        url: "http://mcp-k8s-server-server.mcp-mcp-k8s-server.svc.cluster.local:8000/mcp"
+        transport: "http"
