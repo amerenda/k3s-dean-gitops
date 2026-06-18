@@ -91,7 +91,7 @@ spec:
                   name: praetor-webhook-secrets
                   key: litellm-api-key
             - name: PRAETOR_BASE_URL
-              value: "http://praetor-webhook-adapter.praetor.svc.cluster.local:8080"
+              value: "http://praetor-webhook-adapter.praetor.svc.cluster.local"
             - name: LLM_MODEL
               value: "qwen3-35b"
           livenessProbe:
