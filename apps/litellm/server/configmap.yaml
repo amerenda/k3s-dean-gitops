@@ -126,3 +126,9 @@ data:
       infra_mcp:
         url: "http://infra-mcp-server.infra-mcp.svc.cluster.local:8000/mcp"
         transport: "http"
+      mem0_mcp:
+        url: "http://mem0-server.mem0.svc.cluster.local:8000/mcp"
+        transport: "http"
+
+    litellm_settings:
+      custom_callback_module: custom_hooks/tool_strip_hook.py

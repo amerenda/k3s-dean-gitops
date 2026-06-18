@@ -18,7 +18,7 @@ spec:
       labels:
         app: litellm-server
       annotations:
-        configmap.reloader.stakater.com/reload: "litellm-config"
+        configmap.reloader.stakater.com/reload: "litellm-config,litellm-custom-hooks"
     spec:
       containers:
       - name: server
@@ -70,7 +70,13 @@ spec:
           mountPath: /app/config.yaml
           subPath: config.yaml
           readOnly: true
+        - name: custom-hooks
+          mountPath: /app/custom_hooks
+          readOnly: true
       volumes:
       - name: litellm-config
         configMap:
           name: litellm-config
+      - name: custom-hooks
+        configMap:
+          name: litellm-custom-hooks
