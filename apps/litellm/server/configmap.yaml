@@ -131,4 +131,5 @@ data:
         transport: "http"
 
     litellm_settings:
-      custom_callback_module: custom_hooks/tool_strip_hook.py
+      callbacks:
+        - custom_hooks.tool_strip_hook.proxy_handler_instance
