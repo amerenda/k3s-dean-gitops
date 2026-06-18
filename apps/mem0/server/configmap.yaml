@@ -15,3 +15,4 @@ data:
   DASHBOARD_URL: "https://mem0.amer.dev"
   APP_DB_NAME: "mem0"
   EMBEDDING_MODEL_DIMS: "768"
+  HISTORY_DB_PATH: "/tmp/history.db"
