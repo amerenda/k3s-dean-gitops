@@ -83,6 +83,17 @@ spec:
                 secretKeyRef:
                   name: praetor-webhook-secrets
                   key: coder-installation-id
+            - name: LITELLM_BASE_URL
+              value: "http://litellm-server.litellm.svc.cluster.local:4000/v1"
+            - name: LITELLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: litellm-api-key
+            - name: PRAETOR_BASE_URL
+              value: "http://praetor-webhook-adapter.praetor.svc.cluster.local:8080"
+            - name: LLM_MODEL
+              value: "qwen3-35b"
           livenessProbe:
             httpGet:
               path: /healthz
