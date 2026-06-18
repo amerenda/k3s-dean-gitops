@@ -2149,6 +2149,12 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 3m
+  ignoreDifferences:
+    - group: ""
+      kind: ConfigMap
+      name: mcp-registry
+      jsonPointers:
+        - /data
 ---
 # Application: praetor research worker
 apiVersion: argoproj.io/v1alpha1
