@@ -26,7 +26,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: qa-worker
-          image: amerenda/praetor-qa:sha-5dad33f
+          image: amerenda/praetor-qa:sha-2af2925
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
