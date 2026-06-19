@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: praetor-workers
+  namespace: praetor
+  labels:
+    app.kubernetes.io/component: praetor
+spec:
+  namespaceSelector:
+    matchNames:
+      - praetor
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - praetor-coder-worker
+          - praetor-research-worker
+          - praetor-reviewer-worker
+          - praetor-qa-worker
+          - praetor-benchmark-worker
+          - praetor-pipeline-worker
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s

@@ -133,6 +133,7 @@ data:
     litellm_settings:
       callbacks:
         - custom_hooks.tool_strip_hook.proxy_handler_instance
+        - prometheus
       kubernetes-mcp:
         url: "http://kubernetes-mcp-server.mcp-kubernetes-mcp.svc.cluster.local:8000/mcp"
         transport: "http"

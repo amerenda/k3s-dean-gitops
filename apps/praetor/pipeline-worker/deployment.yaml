@@ -87,6 +87,10 @@ spec:
               mountPath: /scratch
             - name: home
               mountPath: /home/appuser
+          ports:
+            - name: metrics
+              containerPort: 9095
+              protocol: TCP
           resources:
             requests:
               cpu: 100m
