@@ -62,6 +62,10 @@ spec:
                   key: langfuse-secret-key
             - name: LITELLM_MCP_URL
               value: "https://litellm.amer.dev/mcp/"
+          ports:
+            - name: metrics
+              containerPort: 9095
+              protocol: TCP
           resources:
             requests:
               cpu: 100m

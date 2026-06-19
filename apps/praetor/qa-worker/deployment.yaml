@@ -48,6 +48,10 @@ spec:
                   key: litellm-api-key
             - name: LLM_MODEL
               value: "qwen3-35b"
+          ports:
+            - name: metrics
+              containerPort: 9095
+              protocol: TCP
           resources:
             requests:
               cpu: 200m

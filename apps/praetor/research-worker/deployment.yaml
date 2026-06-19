@@ -69,6 +69,10 @@ spec:
                 secretKeyRef:
                   name: praetor-research-secrets
                   key: langfuse-secret-key
+          ports:
+            - name: metrics
+              containerPort: 9095
+              protocol: TCP
           resources:
             requests:
               cpu: 100m

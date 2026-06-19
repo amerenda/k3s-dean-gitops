@@ -64,6 +64,10 @@ spec:
                 secretKeyRef:
                   name: praetor-reviewer-secrets
                   key: reviewer-installation-id
+          ports:
+            - name: metrics
+              containerPort: 9095
+              protocol: TCP
           resources:
             requests:
               cpu: 100m
