@@ -52,11 +52,16 @@ template:
               secretKeyRef:
                 name: runner-ci-credentials
                 key: DOCKERHUB_TOKEN
-          - name: GITOPS_PAT
+          - name: CODER_APP_ID
             valueFrom:
               secretKeyRef:
                 name: runner-ci-credentials
-                key: GITOPS_PAT
+                key: CODER_APP_ID
+          - name: CODER_APP_PRIVATE_KEY
+            valueFrom:
+              secretKeyRef:
+                name: runner-ci-credentials
+                key: CODER_APP_PRIVATE_KEY
           - name: MY_POD_NAME
             valueFrom:
               fieldRef:
