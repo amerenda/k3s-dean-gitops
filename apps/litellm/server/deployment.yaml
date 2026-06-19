@@ -37,6 +37,8 @@ spec:
             secretKeyRef:
               name: litellm-secrets
               key: database-url
+        - name: MCP_TOOL_PREFIX_SEPARATOR
+          value: "_"
         readinessProbe:
           httpGet:
             path: /health/readiness
