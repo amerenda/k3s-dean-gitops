@@ -7,12 +7,33 @@ data:
   tool_strip_hook.py: |
     from litellm.integrations.custom_logger import CustomLogger
 
+    _SOFT_TOKEN_BUDGET = 80_000   # below this, skip stripping entirely
+    _HARD_TOKEN_BUDGET = 110_000  # drop full turns if still over after pair-strip
+    _CHARS_PER_TOKEN   = 4
+    _MIN_KEEP_TURNS    = 6        # always preserve at least this many user turns
+
+
+    def _estimate_tokens(msgs):
+        chars = sum(
+            len(str(m.get("content") or "")) + len(str(m.get("tool_calls") or ""))
+            for m in msgs
+        )
+        return chars // _CHARS_PER_TOKEN
+
+
     class ToolStripHook(CustomLogger):
         """
-        Drops raw tool-role messages from all prior turns before sending to
-        the model. Keeps all user + assistant messages (synthesized research).
-        Prevents context overflow on long sessions without degrading quality.
+        Two-stage context reducer, fired only near the token budget.
+
+        Stage 1 (soft, ~80K tokens): strips paired tool exchanges from all
+        turns before the last user message — both the assistant tool_calls
+        message AND the following tool result. Text responses stay intact.
+
+        Stage 2 (hard, ~110K tokens): if still over budget after stage 1,
+        drops the oldest complete turn (user + following messages) until
+        under budget or _MIN_KEEP_TURNS is reached.
         """
+
         async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
             if call_type not in ("completion", "acompletion"):
                 return data
@@ -20,15 +41,38 @@ data:
             if not msgs:
                 return data
 
+            if _estimate_tokens(msgs) < _SOFT_TOKEN_BUDGET:
+                return data
+
             last_user_idx = max(
                 (i for i, m in enumerate(msgs) if m.get("role") == "user"),
                 default=0
             )
 
-            data["messages"] = [
-                m for i, m in enumerate(msgs)
-                if m.get("role") != "tool" or i > last_user_idx
-            ]
+            # Stage 1: strip paired tool exchanges from prior turns
+            tool_result_idxs = {
+                i for i, m in enumerate(msgs)
+                if m.get("role") == "tool" and i <= last_user_idx
+            }
+            paired_call_idxs = {
+                i - 1
+                for i in tool_result_idxs
+                if i > 0
+                and msgs[i - 1].get("role") == "assistant"
+                and msgs[i - 1].get("tool_calls")
+            }
+            msgs = [m for i, m in enumerate(msgs) if i not in (tool_result_idxs | paired_call_idxs)]
+
+            # Stage 2: drop oldest turns if still over hard budget
+            while _estimate_tokens(msgs) >= _HARD_TOKEN_BUDGET:
+                user_idxs = [i for i, m in enumerate(msgs) if m.get("role") == "user"]
+                if len(user_idxs) <= _MIN_KEEP_TURNS:
+                    break
+                sys_prefix = [m for i, m in enumerate(msgs) if i < user_idxs[0] and m.get("role") == "system"]
+                msgs = sys_prefix + msgs[user_idxs[1]:]
+
+            data["messages"] = msgs
             return data
+
 
     proxy_handler_instance = ToolStripHook()
