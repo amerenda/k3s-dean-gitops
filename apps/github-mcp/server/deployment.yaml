@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: amerenda/github-mcp:sha-88bf80d
+          image: amerenda/github-mcp:sha-f380947
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
