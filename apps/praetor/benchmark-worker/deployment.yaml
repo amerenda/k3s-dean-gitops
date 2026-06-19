@@ -22,7 +22,7 @@ spec:
         kubernetes.io/arch: amd64
       containers:
         - name: benchmark-worker
-          image: amerenda/praetor-benchmark:sha-5dad33f
+          image: amerenda/praetor-benchmark:sha-2af2925
           imagePullPolicy: Always
           env:
             - name: HATCHET_CLIENT_TOKEN
