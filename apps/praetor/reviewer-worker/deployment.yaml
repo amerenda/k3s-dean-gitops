@@ -26,7 +26,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: reviewer-worker
-          image: amerenda/praetor-reviewer:sha-2af2925
+          image: amerenda/praetor-reviewer:sha-9b3baf8
           imagePullPolicy: Always
           securityContext:
             readOnlyRootFilesystem: true
