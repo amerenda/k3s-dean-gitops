@@ -7,7 +7,7 @@ data:
   tool_strip_hook.py: |
     from litellm.integrations.custom_logger import CustomLogger
 
-    _SOFT_TOKEN_BUDGET = 80_000   # below this, skip stripping entirely
+    _SOFT_TOKEN_BUDGET = 80_000   # below this, skip token-budget stripping
     _HARD_TOKEN_BUDGET = 110_000  # drop full turns if still over after pair-strip
     _CHARS_PER_TOKEN   = 4
     _MIN_KEEP_TURNS    = 6        # always preserve at least this many user turns
@@ -21,9 +21,70 @@ data:
         return chars // _CHARS_PER_TOKEN
 
 
+    def _cleanup_orphaned_tool_pairs(msgs):
+        """
+        Remove malformed tool call groups before they reach llama.cpp.
+
+        llama.cpp returns 400 when the message list contains:
+        - tool messages whose tool_call_id has no matching assistant.tool_calls entry
+        - assistant messages with tool_calls where at least one result is missing
+
+        Both cases are removed atomically (always the full group: assistant msg +
+        all its tool results) to avoid creating new orphans.
+
+        Returns number of messages removed (0 = message list was already clean).
+        """
+        # tool_call_id -> assistant message index (from assistant.tool_calls entries)
+        call_to_asst = {}
+        for i, m in enumerate(msgs):
+            if m.get("role") == "assistant":
+                for tc in (m.get("tool_calls") or []):
+                    tc_id = tc.get("id")
+                    if tc_id:
+                        call_to_asst[tc_id] = i
+
+        # tool_call_id -> list of tool result message indices
+        call_to_results = {}
+        for i, m in enumerate(msgs):
+            if m.get("role") == "tool":
+                tc_id = m.get("tool_call_id")
+                if tc_id:
+                    call_to_results.setdefault(tc_id, []).append(i)
+
+        # assistant message index -> list of tool_call_ids it issued
+        asst_to_calls = {}
+        for tc_id, asst_idx in call_to_asst.items():
+            asst_to_calls.setdefault(asst_idx, []).append(tc_id)
+
+        to_remove = set()
+
+        # Orphaned tool results: no matching assistant tool_calls entry
+        for tc_id, result_idxs in call_to_results.items():
+            if tc_id not in call_to_asst:
+                to_remove.update(result_idxs)
+
+        # Incomplete groups: assistant has tool_calls but at least one result missing.
+        # Remove entire group atomically to avoid leaving partial orphans.
+        for asst_idx, tc_ids in asst_to_calls.items():
+            if any(tc_id not in call_to_results for tc_id in tc_ids):
+                to_remove.add(asst_idx)
+                for tc_id in tc_ids:
+                    to_remove.update(call_to_results.get(tc_id, []))
+
+        if not to_remove:
+            return 0
+
+        for i in sorted(to_remove, reverse=True):
+            msgs.pop(i)
+        return len(to_remove)
+
+
     class ToolStripHook(CustomLogger):
         """
-        Two-stage context reducer, fired only near the token budget.
+        Two-stage context reducer with orphan cleanup.
+
+        Stage 0 (always): removes malformed tool call groups that would cause
+        llama.cpp to return 400 (orphaned tool_call_ids in either direction).
 
         Stage 1 (soft, ~80K tokens): strips paired tool exchanges from all
         turns before the last user message — both the assistant tool_calls
@@ -41,6 +102,10 @@ data:
             if not msgs:
                 return data
 
+            # Stage 0: always clean orphaned tool pairs (prevents 400 format errors)
+            _cleanup_orphaned_tool_pairs(msgs)
+
+            # Stages 1+2: token-budget stripping (handles context overflow)
             if _estimate_tokens(msgs) < _SOFT_TOKEN_BUDGET:
                 return data
 
