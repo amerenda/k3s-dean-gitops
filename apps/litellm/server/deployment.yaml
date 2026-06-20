@@ -75,6 +75,82 @@ spec:
         - name: custom-hooks
           mountPath: /app/custom_hooks
           readOnly: true
+      - name: owu-model-init
+        image: python:3.12-slim
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
+        env:
+        - name: OWU_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: litellm-secrets
+              key: owu-admin-password
+        command:
+        - python3
+        - -c
+        - |
+          import json, os, sys, time, urllib.request
+
+          BASE = "https://bot.amer.dev"
+          EMAIL = "alex@amer.dev"
+          MODEL = "qwen3-35b-think"
+
+          def api(url, data=None, token=None):
+              h = {"Content-Type": "application/json"}
+              if token:
+                  h["Authorization"] = f"Bearer {token}"
+              req = urllib.request.Request(
+                  url, data=json.dumps(data).encode() if data is not None else None, headers=h
+              )
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  return json.loads(r.read())
+
+          print("Waiting for LiteLLM readiness...")
+          while True:
+              try:
+                  with urllib.request.urlopen("http://localhost:4000/health/readiness", timeout=5) as r:
+                      if r.status == 200:
+                          break
+              except Exception:
+                  pass
+              time.sleep(5)
+
+          # Allow time for OWU to sync models from LiteLLM
+          print("LiteLLM healthy — waiting 45s for OWU model sync...")
+          time.sleep(45)
+
+          pw = os.environ.get("OWU_ADMIN_PASSWORD", "")
+          try:
+              token = api(f"{BASE}/api/v1/auths/signin", {"email": EMAIL, "password": pw})["token"]
+              models = api(f"{BASE}/api/v1/models/base", token=token)
+              m = next((x for x in models if x.get("id") == MODEL), None)
+              if not m:
+                  print(f"{MODEL} not found — nothing to do")
+              elif m.get("params", {}).get("function_calling") == "native":
+                  print(f"{MODEL}: function_calling=native already set")
+              else:
+                  print(f"{MODEL}: setting function_calling=native")
+                  api(f"{BASE}/api/v1/models/model/update", token=token, data={
+                      "id": m["id"], "name": m["name"],
+                      "meta": m.get("meta", {}),
+                      "params": {"function_calling": "native"},
+                      "is_active": m.get("is_active", True),
+                      "access_grants": m.get("access_grants", []),
+                  })
+                  print(f"{MODEL}: done")
+          except Exception as e:
+              print(f"Error: {e}", file=sys.stderr)
+
+          # Stay alive so k8s doesn't restart the pod
+          print("Sleeping...")
+          while True:
+              time.sleep(3600)
       volumes:
       - name: litellm-config
         configMap:
