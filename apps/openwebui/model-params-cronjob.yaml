@@ -1,0 +1,90 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: owu-model-params-reconciler
+  namespace: openwebui
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: reconciler
+              image: python:3.12-slim
+              imagePullPolicy: IfNotPresent
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+              env:
+                - name: OWU_ADMIN_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: openwebui-admin-credentials
+                      key: admin-password
+              command:
+                - python3
+                - -c
+                - |
+                  import json, os, sys, urllib.request, urllib.error
+
+                  BASE = "https://bot.amer.dev"
+                  EMAIL = "alex@amer.dev"
+                  MODEL = "qwen3-35b-think"
+
+                  def call(url, data=None, token=None):
+                      h = {"Content-Type": "application/json"}
+                      if token:
+                          h["Authorization"] = f"Bearer {token}"
+                      body = json.dumps(data).encode() if data is not None else None
+                      req = urllib.request.Request(url, data=body, headers=h)
+                      try:
+                          with urllib.request.urlopen(req) as resp:
+                              return json.loads(resp.read())
+                      except urllib.error.HTTPError as e:
+                          print(f"HTTP {e.code}: {e.read().decode()}", file=sys.stderr)
+                          sys.exit(1)
+
+                  pw = os.environ.get("OWU_ADMIN_PASSWORD", "")
+                  if not pw:
+                      print("OWU_ADMIN_PASSWORD not set", file=sys.stderr)
+                      sys.exit(1)
+
+                  resp = call(f"{BASE}/api/v1/auths/signin", data={"email": EMAIL, "password": pw})
+                  token = resp.get("token", "")
+                  if not token:
+                      print("auth failed", file=sys.stderr)
+                      sys.exit(1)
+
+                  models = call(f"{BASE}/api/v1/models/base", token=token)
+                  m = next((x for x in models if x.get("id") == MODEL), None)
+                  if not m:
+                      print(f"{MODEL} not found in /api/v1/models/base", file=sys.stderr)
+                      sys.exit(1)
+
+                  if m.get("params", {}).get("function_calling") == "native":
+                      print(f"{MODEL}: function_calling=native already set, nothing to do")
+                      sys.exit(0)
+
+                  print(f"{MODEL}: patching function_calling=native (was: '{m.get('params', {}).get('function_calling', '')}')")
+                  result = call(f"{BASE}/api/v1/models/model/update", token=token, data={
+                      "id": m["id"],
+                      "name": m["name"],
+                      "meta": m.get("meta", {}),
+                      "params": {"function_calling": "native"},
+                      "is_active": m.get("is_active", True),
+                      "access_grants": m.get("access_grants", []),
+                  })
+                  if result.get("params", {}).get("function_calling") == "native":
+                      print(f"{MODEL}: patched OK")
+                  else:
+                      print(f"patch may have failed: {result.get('params')}", file=sys.stderr)
+                      sys.exit(1)
