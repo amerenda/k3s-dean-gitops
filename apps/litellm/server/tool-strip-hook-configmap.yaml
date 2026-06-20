@@ -28,12 +28,26 @@ data:
         llama.cpp returns 400 when the message list contains:
         - tool messages whose tool_call_id has no matching assistant.tool_calls entry
         - assistant messages with tool_calls where at least one result is missing
+        - assistant tool_calls with invalid JSON in the arguments field (happens when
+          the reasoning budget is exhausted mid-generation, truncating the JSON)
 
-        Both cases are removed atomically (always the full group: assistant msg +
+        All cases are removed atomically (always the full group: assistant msg +
         all its tool results) to avoid creating new orphans.
 
         Returns number of messages removed (0 = message list was already clean).
         """
+        import json as _json
+
+        def _has_invalid_args(tc):
+            args = (tc.get("function") or {}).get("arguments", "")
+            if not args:
+                return False
+            try:
+                _json.loads(args)
+                return False
+            except Exception:
+                return True
+
         # tool_call_id -> assistant message index (from assistant.tool_calls entries)
         call_to_asst = {}
         for i, m in enumerate(msgs):
@@ -63,10 +77,14 @@ data:
             if tc_id not in call_to_asst:
                 to_remove.update(result_idxs)
 
-        # Incomplete groups: assistant has tool_calls but at least one result missing.
-        # Remove entire group atomically to avoid leaving partial orphans.
+        # Incomplete or malformed groups: remove entire group atomically.
+        # Triggers if: any result is missing, OR any tool_call has invalid JSON args
+        # (truncated by reasoning-budget exhaust mid-generation).
         for asst_idx, tc_ids in asst_to_calls.items():
-            if any(tc_id not in call_to_results for tc_id in tc_ids):
+            asst_tool_calls = (msgs[asst_idx].get("tool_calls") or [])
+            has_missing_result = any(tc_id not in call_to_results for tc_id in tc_ids)
+            has_bad_args = any(_has_invalid_args(tc) for tc in asst_tool_calls)
+            if has_missing_result or has_bad_args:
                 to_remove.add(asst_idx)
                 for tc_id in tc_ids:
                     to_remove.update(call_to_results.get(tc_id, []))
