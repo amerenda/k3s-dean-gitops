@@ -31,14 +31,12 @@ spec:
             - name: ALLOW_ONLY_READONLY_TOOLS
               value: "true"
           readinessProbe:
-            httpGet:
-              path: /health
+            tcpSocket:
               port: 3000
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
-            httpGet:
-              path: /health
+            tcpSocket:
               port: 3000
             initialDelaySeconds: 10
             periodSeconds: 30
