@@ -131,3 +131,6 @@ data:
       kubernetes-mcp:
         url: "http://kubernetes-mcp-server.mcp-kubernetes-mcp.svc.cluster.local:8000/mcp"
         transport: "http"
+      kubernetes-readonly:
+        url: "http://kubernetes-readonly-server.mcp-kubernetes-readonly.svc.cluster.local:3000/mcp"
+        transport: "http"
