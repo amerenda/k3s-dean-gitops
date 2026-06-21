@@ -23,7 +23,7 @@ spec:
       serviceAccountName: praetor-webhook-adapter
       containers:
         - name: webhook-adapter
-          image: amerenda/praetor-webhook:sha-ba6a18b
+          image: amerenda/praetor-webhook:sha-f2dc5bd
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
