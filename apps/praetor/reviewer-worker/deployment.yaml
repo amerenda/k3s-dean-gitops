@@ -64,6 +64,25 @@ spec:
                 secretKeyRef:
                   name: praetor-reviewer-secrets
                   key: reviewer-installation-id
+            - name: MEM0_BASE_URL
+              value: "https://mem0.amer.dev"
+            - name: MEM0_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-reviewer-secrets
+                  key: mem0-api-key
+            - name: LANGFUSE_HOST
+              value: "https://langfuse.amer.dev"
+            - name: LANGFUSE_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-reviewer-secrets
+                  key: langfuse-public-key
+            - name: LANGFUSE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-reviewer-secrets
+                  key: langfuse-secret-key
           ports:
             - name: metrics
               containerPort: 9095
@@ -74,4 +93,4 @@ spec:
               memory: 256Mi
             limits:
               cpu: 1000m
-              memory: 512Mi
+              memory: 1Gi
