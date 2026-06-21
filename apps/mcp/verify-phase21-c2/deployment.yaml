@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: verify-phase21-c2-server
+  namespace: mcp-verify-phase21-c2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: verify-phase21-c2-server
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: verify-phase21-c2-server
+    spec:
+      serviceAccountName: mcp-k8s-sa
+      containers:
+        - name: server
+          image: docker.io/flux159/mcp-server-kubernetes:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3001
+          env:
+            - name: HOST
+              value: "0.0.0.0"
+          readinessProbe:
+            tcpSocket:
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
