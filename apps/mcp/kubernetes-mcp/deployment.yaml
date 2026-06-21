@@ -26,6 +26,8 @@ spec:
           ports:
             - containerPort: 3000
           env:
+            - name: HOST
+              value: "0.0.0.0"
             - name: ENABLE_UNSAFE_STREAMABLE_HTTP_TRANSPORT
               value: "true"
             - name: ALLOW_ONLY_READONLY_TOOLS
