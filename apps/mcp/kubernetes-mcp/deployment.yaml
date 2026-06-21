@@ -18,22 +18,28 @@ spec:
       labels:
         app: kubernetes-mcp-server
     spec:
+      serviceAccountName: kubernetes-mcp-sa
       containers:
         - name: server
-          image: ghcr.io/anthropics/mcp-server-kubernetes:latest
+          image: ghcr.io/flux159/mcp-server-kubernetes:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8000
+            - containerPort: 3000
+          env:
+            - name: ENABLE_UNSAFE_STREAMABLE_HTTP_TRANSPORT
+              value: "true"
+            - name: ALLOW_ONLY_READONLY_TOOLS
+              value: "true"
           readinessProbe:
             httpGet:
               path: /health
-              port: 8000
+              port: 3000
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /health
-              port: 8000
+              port: 3000
             initialDelaySeconds: 10
             periodSeconds: 30
           resources:
