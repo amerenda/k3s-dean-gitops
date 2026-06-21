@@ -131,3 +131,6 @@ data:
       kubernetes-mcp:
         url: "http://kubernetes-mcp-server.mcp-kubernetes-mcp.svc.cluster.local:8000/mcp"
         transport: "http"
+      verify-phase21-c1:
+        url: "http://verify-phase21-c1-server.mcp-verify-phase21-c1.svc.cluster.local:8080/mcp"
+        transport: "http"
