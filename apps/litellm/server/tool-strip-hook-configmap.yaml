@@ -101,18 +101,21 @@ data:
 
 
     def _inject_synthesis_signal(msgs, tool_count):
-        """Append a synthesis directive to the last tool result message."""
+        """Prepend a synthesis directive to the last tool result message.
+
+        Prepended (not appended) because the jinja template caps tool response
+        content at max_tool_response_chars=3000 — an appended signal would be
+        silently truncated if the tool result is already at the limit.
+        """
         for i in range(len(msgs) - 1, -1, -1):
             if msgs[i].get("role") == "tool":
                 content = msgs[i].get("content") or ""
-                if isinstance(content, str) and "[SYSTEM:" not in content:
-                    msgs[i]["content"] = (
-                        content
-                        + f"\n\n[SYSTEM: You have now made {tool_count} tool calls. "
-                        "You have sufficient information to answer. "
-                        "DO NOT call any more tools. "
-                        "Write your complete, final synthesized answer now.]"
+                if isinstance(content, str) and "[STOP:" not in content:
+                    signal = (
+                        f"[STOP: {tool_count} tool calls made — sufficient information gathered. "
+                        "DO NOT call any more tools. Write your final synthesized answer now.]\n\n"
                     )
+                    msgs[i]["content"] = signal + content
                 break
 
 
