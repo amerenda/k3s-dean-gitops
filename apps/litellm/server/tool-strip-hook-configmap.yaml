@@ -12,6 +12,9 @@ data:
     _CHARS_PER_TOKEN   = 4
     _MIN_KEEP_TURNS    = 6        # always preserve at least this many user turns
 
+    _SYNTHESIS_SIGNAL_AFTER = 5   # inject "stop calling tools" into last tool result
+    _FORCE_NO_TOOLS_AFTER   = 8   # strip tools from request entirely after this many
+
 
     def _estimate_tokens(msgs):
         chars = sum(
@@ -97,9 +100,33 @@ data:
         return len(to_remove)
 
 
+    def _inject_synthesis_signal(msgs, tool_count):
+        """Append a synthesis directive to the last tool result message."""
+        for i in range(len(msgs) - 1, -1, -1):
+            if msgs[i].get("role") == "tool":
+                content = msgs[i].get("content") or ""
+                if isinstance(content, str) and "[SYSTEM:" not in content:
+                    msgs[i]["content"] = (
+                        content
+                        + f"\n\n[SYSTEM: You have now made {tool_count} tool calls. "
+                        "You have sufficient information to answer. "
+                        "DO NOT call any more tools. "
+                        "Write your complete, final synthesized answer now.]"
+                    )
+                break
+
+
     class ToolStripHook(CustomLogger):
         """
-        Two-stage context reducer with orphan cleanup.
+        Two-stage context reducer with orphan cleanup, plus synthesis enforcement.
+
+        Stage -1 (synthesis signal, after _SYNTHESIS_SIGNAL_AFTER tool calls):
+        Appends a hard stop directive to the last tool result so the model cannot
+        reason its way past the system-prompt tool-call limit.
+
+        Stage -1b (force no tools, after _FORCE_NO_TOOLS_AFTER tool calls):
+        Strips the tools list from the request so the model physically cannot
+        make more tool calls regardless of what it wants to do.
 
         Stage 0 (always): removes malformed tool call groups that would cause
         llama.cpp to return 400 (orphaned tool_call_ids in either direction).
@@ -119,6 +146,14 @@ data:
             msgs = data.get("messages", [])
             if not msgs:
                 return data
+
+            # Stages -1 and -1b: synthesis enforcement
+            tool_msg_count = sum(1 for m in msgs if m.get("role") == "tool")
+            if tool_msg_count >= _SYNTHESIS_SIGNAL_AFTER:
+                _inject_synthesis_signal(msgs, tool_msg_count)
+            if tool_msg_count >= _FORCE_NO_TOOLS_AFTER:
+                data.pop("tools", None)
+                data.pop("tool_choice", None)
 
             # Stage 0: always clean orphaned tool pairs (prevents 400 format errors)
             _cleanup_orphaned_tool_pairs(msgs)
