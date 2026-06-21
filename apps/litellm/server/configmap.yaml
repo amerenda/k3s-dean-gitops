@@ -117,9 +117,6 @@ data:
       web:
         url: "http://mcp-searxng-server.mcp-searxng.svc.cluster.local:8000/mcp"
         transport: "http"
-      github:
-        url: "http://github-mcp-server.github-mcp.svc.cluster.local:8000/mcp"
-        transport: "http"
       infra:
         url: "http://infra-mcp-server.infra-mcp.svc.cluster.local:8000/mcp"
         transport: "http"
