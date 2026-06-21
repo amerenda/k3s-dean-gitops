@@ -21,7 +21,7 @@ spec:
       serviceAccountName: kubernetes-mcp-sa
       containers:
         - name: server
-          image: ghcr.io/flux159/mcp-server-kubernetes:latest
+          image: flux159/mcp-server-kubernetes:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
