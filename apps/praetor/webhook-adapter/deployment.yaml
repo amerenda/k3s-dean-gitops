@@ -94,6 +94,18 @@ spec:
               value: "http://praetor-webhook-adapter.praetor.svc.cluster.local"
             - name: LLM_MODEL
               value: "qwen3-35b"
+            - name: LANGFUSE_HOST
+              value: "https://langfuse.amer.dev"
+            - name: LANGFUSE_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: langfuse-public-key
+            - name: LANGFUSE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: langfuse-secret-key
           livenessProbe:
             httpGet:
               path: /healthz
