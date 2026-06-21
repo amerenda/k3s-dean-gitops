@@ -100,6 +100,25 @@ data:
         return len(to_remove)
 
 
+    def _cleanup_consecutive_assistant_msgs(msgs):
+        """Remove all-but-last consecutive assistant messages.
+
+        llama.cpp returns 400 when two or more assistant messages appear back-to-back.
+        This happens when the client appends a text response and then calls again without
+        an intervening user message (e.g., a test driver that skips to a synthesis turn).
+        Keep only the last assistant message in each consecutive run.
+        """
+        to_remove = set()
+        for i in range(len(msgs) - 1):
+            if msgs[i].get("role") == "assistant" and msgs[i + 1].get("role") == "assistant":
+                to_remove.add(i)
+        if not to_remove:
+            return 0
+        for i in sorted(to_remove, reverse=True):
+            msgs.pop(i)
+        return len(to_remove)
+
+
     def _inject_synthesis_signal(msgs, tool_count):
         """Prepend a synthesis directive to the last tool result message.
 
@@ -158,8 +177,9 @@ data:
                 data.pop("tools", None)
                 data.pop("tool_choice", None)
 
-            # Stage 0: always clean orphaned tool pairs (prevents 400 format errors)
+            # Stage 0: always clean malformed sequences (prevents 400 format errors)
             _cleanup_orphaned_tool_pairs(msgs)
+            _cleanup_consecutive_assistant_msgs(msgs)
 
             # Stages 1+2: token-budget stripping (handles context overflow)
             if _estimate_tokens(msgs) < _SOFT_TOKEN_BUDGET:
