@@ -23,7 +23,6 @@ template:
                   operator: In
                   values:
                     - murderbot
-                    - archlinux
     securityContext:
       supplementalGroups: [989, 952, 968]
     initContainers:
@@ -66,6 +65,8 @@ template:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
+          - name: RUNNER_TOOL_CACHE
+            value: "/home/runner/_work/_tool"
         volumeMounts:
           - name: docker-sock
             mountPath: /var/run/docker.sock
