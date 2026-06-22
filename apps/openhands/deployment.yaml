@@ -21,7 +21,7 @@ spec:
 
       containers:
         - name: openhands
-          image: ghcr.io/all-hands-ai/openhands:latest
+          image: amerenda/openhands:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
