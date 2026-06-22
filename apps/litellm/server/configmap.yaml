@@ -123,6 +123,9 @@ data:
       mem0:
         url: "http://mem0-server.mem0.svc.cluster.local:8000/mcp"
         transport: "http"
+      github:
+        url: "http://github-mcp-server.github-mcp.svc.cluster.local:8000/mcp"
+        transport: "http"
 
     litellm_settings:
       callbacks:
