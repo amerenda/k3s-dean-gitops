@@ -5,6 +5,40 @@ metadata:
   namespace: openhands
 data:
   config.toml: |
+    [core]
+    workspace_instructions = """
+    You are an autonomous coding agent working in the amerenda infrastructure.
+
+    SECRETS
+    - All secrets live in Bitwarden Secrets Manager (BWS). Never hardcode credentials, tokens, or passwords. Never write them into git. Reference secrets by name; the infra tooling resolves them.
+    - Use bws_get_secret or bws_list_secret_names MCP tools if you need a secret value at runtime.
+
+    GIT / DEPLOYMENT
+    - Never push directly to main. Always open a PR. Every change, no matter how small.
+    - UAT manifests commit directly to k3s-dean-gitops main (ArgoCD auto-syncs).
+    - Prod manifests require a human-approved PR on a deploy/ branch.
+
+    APP TYPES
+    - Stateless service (no local GPU/storage needed) -> k3s via app-factory + ArgoCD.
+    - Stateful service (local GPU, Docker volumes, persistent state) -> Mac Mini via Komodo GitOps.
+    - When in doubt: use infra_scaffold MCP tool to generate the TOML spec; use infra_provision to create the app.
+
+    MCP TOOLS AVAILABLE
+    - infra_scaffold / infra_provision / infra_deploy_pr / infra_add_runner / infra_app_status -> provisioning, k3s manifests, runners
+    - bws_get_secret / bws_list_secret_names -> Bitwarden Secrets Manager lookups
+    - mem0 add_memory / search_memory -> search memory before starting a task; write a summary when done
+    - searxng search / read_url -> web research
+    - github tools -> read/write GitHub repos, PRs, issues
+    - kubernetes tools -> cluster introspection
+
+    WORKFLOW
+    1. Call search_memory with the task description before doing anything else.
+    2. If prior context exists (known repo stack, prior decisions), use it.
+    3. Implement, test locally, commit with a descriptive message.
+    4. Open a draft PR.
+    5. Call add_memory with a summary: repo, what changed, PR number.
+    """
+
     [mcp]
 
     # infra-mcp: k3s/Komodo provisioning, secret hygiene, app scaffolding
@@ -14,3 +48,23 @@ data:
     # bws-mcp: Bitwarden Secrets Manager proxy
     [[mcp.shttp_servers]]
     url = "http://bws-mcp-server.bws-mcp.svc.cluster.local:8000/mcp"
+
+    # mem0: persistent memory — direct connection avoids LiteLLM aggregator session-terminated bug
+    [[mcp.shttp_servers]]
+    url = "http://mem0-server.mem0.svc.cluster.local:8000/mcp"
+
+    # searxng: web search and URL reading
+    [[mcp.shttp_servers]]
+    url = "http://mcp-searxng-server.mcp-searxng.svc.cluster.local:8000/mcp"
+
+    # github-mcp: GitHub read/write operations
+    [[mcp.shttp_servers]]
+    url = "http://github-mcp-server.github-mcp.svc.cluster.local:8000/mcp"
+
+    # kubernetes-mcp: cluster introspection
+    [[mcp.shttp_servers]]
+    url = "http://kubernetes-mcp-server.mcp-kubernetes-mcp.svc.cluster.local:8000/mcp"
+
+    # praetor-mcp: dispatch Praetor agents from within a task
+    [[mcp.shttp_servers]]
+    url = "http://praetor-mcp-server.praetor-mcp.svc.cluster.local:8000/mcp"
