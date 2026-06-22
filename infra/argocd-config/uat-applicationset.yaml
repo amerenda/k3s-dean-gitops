@@ -115,6 +115,23 @@ spec:
             path: apps/phase16-test/backend-uat
             namespace: phase16-test
 
+  # --- kubernetes-ro-mcp ---
+  - matrix:
+      generators:
+      - pullRequest:
+          github:
+            owner: amerenda
+            repo: k3s-dean-gitops
+            appSecretName: argocd-deploy-bot
+            labels:
+            - deploy:kubernetes-ro-mcp
+          requeueAfterSeconds: 30
+      - list:
+          elements:
+          - app: kubernetes-ro-mcp-backend
+            path: apps/kubernetes-ro-mcp/backend-uat
+            namespace: kubernetes-ro-mcp
+
   template:
     metadata:
       name: 'uat-{{.app}}-pr{{.number}}'
