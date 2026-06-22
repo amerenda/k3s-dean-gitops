@@ -11,3 +11,4 @@ data:
   RUNTIME: "local"
   SANDBOX_USER_ID: "0"
   OPENHANDS_CONFIG_PATH: "/etc/openhands/config.toml"
+  SANDBOX_LOCAL_RUNTIME_URL: "http://localhost"
