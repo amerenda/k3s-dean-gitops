@@ -26,7 +26,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: coder-worker
-          image: amerenda/praetor-coder:sha-9bf411b
+          image: amerenda/praetor-coder:sha-04ce631
           imagePullPolicy: Always
           securityContext:
             readOnlyRootFilesystem: true
