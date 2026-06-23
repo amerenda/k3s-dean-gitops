@@ -22,7 +22,7 @@ spec:
         kubernetes.io/arch: amd64
       containers:
         - name: openhands-worker
-          image: amerenda/praetor-openhands:sha-f53ef8e
+          image: amerenda/praetor-openhands:sha-ac4acfc
           imagePullPolicy: Always
           env:
             - name: HATCHET_CLIENT_TOKEN
