@@ -12,8 +12,8 @@ data:
     _CHARS_PER_TOKEN   = 4
     _MIN_KEEP_TURNS    = 6        # always preserve at least this many user turns
 
-    _SYNTHESIS_SIGNAL_AFTER = 5   # inject "stop calling tools" into last tool result
-    _FORCE_NO_TOOLS_AFTER   = 8   # strip tools from request entirely after this many
+    _SYNTHESIS_SIGNAL_AFTER = 30  # inject "stop calling tools" into last tool result
+    _FORCE_NO_TOOLS_AFTER   = 50  # strip tools from request entirely after this many
 
 
     def _estimate_tokens(msgs):
