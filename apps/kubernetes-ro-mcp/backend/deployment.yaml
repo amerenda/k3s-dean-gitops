@@ -20,20 +20,18 @@ spec:
     spec:
       containers:
         - name: backend
-          image: amerenda/kubernetes-ro-mcp:backend-latest
+          image: flux159/mcp-server-kubernetes:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8000
+            - containerPort: 3000
           readinessProbe:
-            httpGet:
-              path: /health
-              port: 8000
+            tcpSocket:
+              port: 3000
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
-            httpGet:
-              path: /health
-              port: 8000
+            tcpSocket:
+              port: 3000
             initialDelaySeconds: 10
             periodSeconds: 30
           resources:
