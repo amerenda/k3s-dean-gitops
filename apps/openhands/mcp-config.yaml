@@ -16,19 +16,30 @@ data:
     GITHUB / GIT
     - All repos are in the GitHub org: amerenda (e.g. github.com/amerenda/k3s-dean-gitops)
     - GitHub App credentials are in env vars: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY
-    - To clone a repo, generate an installation token first:
-        python3 -c "
+    - To clone a repo, run this EXACT sequence (copy-paste it):
+
+        pip install --quiet PyJWT
+
+        python3 - <<'PYEOF'
         import jwt, time, os, urllib.request, json
-        private_key = os.environ['GITHUB_APP_PRIVATE_KEY']
+        key = os.environ['GITHUB_APP_PRIVATE_KEY'].replace('\\n', '\n')
         app_id = os.environ['GITHUB_APP_ID']
         install_id = os.environ['GITHUB_APP_INSTALLATION_ID']
         payload = {'iat': int(time.time())-60, 'exp': int(time.time())+600, 'iss': app_id}
-        j = jwt.encode(payload, private_key, algorithm='RS256')
-        req = urllib.request.Request(f'https://api.github.com/app/installations/{install_id}/access_tokens',
-            method='POST', headers={'Authorization': f'Bearer {j}', 'Accept': 'application/vnd.github+json',
-            'X-GitHub-Api-Version': '2022-11-28'})
-        r = urllib.request.urlopen(req); tok = json.load(r)['token']; print(tok)"
-        Then: git clone https://x-access-token:TOKEN@github.com/amerenda/REPO_NAME.git /workspace/REPO_NAME
+        j = jwt.encode(payload, key, algorithm='RS256')
+        req = urllib.request.Request(
+            f'https://api.github.com/app/installations/{install_id}/access_tokens',
+            method='POST',
+            headers={'Authorization': f'Bearer {j}', 'Accept': 'application/vnd.github+json',
+                     'X-GitHub-Api-Version': '2022-11-28', 'Content-Length': '0'})
+        r = urllib.request.urlopen(req)
+        tok = json.load(r)['token']
+        print(tok)
+        PYEOF
+
+        git clone https://x-access-token:TOKEN@github.com/amerenda/REPO_NAME.git /workspace/REPO_NAME
+
+    - KEY POINT: The GITHUB_APP_PRIVATE_KEY env var uses literal \n — call .replace('\\n', '\n') on it
     - Never push directly to main. Always open a PR. Every change, no matter how small.
     - UAT manifests commit directly to k3s-dean-gitops main (ArgoCD auto-syncs).
     - Prod manifests require a human-approved PR on a deploy/ branch.
