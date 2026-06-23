@@ -89,7 +89,7 @@ data:
 
     # kubernetes-mcp: cluster introspection
     [[mcp.shttp_servers]]
-    url = "http://kubernetes-mcp-server.mcp-kubernetes-mcp.svc.cluster.local:8000/mcp"
+    url = "http://kubernetes-ro-mcp-backend.kubernetes-ro-mcp.svc.cluster.local:8000/mcp"
 
     # praetor-mcp: dispatch Praetor agents from within a task
     [[mcp.shttp_servers]]
