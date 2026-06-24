@@ -13,7 +13,7 @@ rules:
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["get", "create", "update", "patch"]
-    resourceNames: ["mcp-registry"]
+    resourceNames: ["mcp-registry", "agent-registry"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
