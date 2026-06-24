@@ -82,6 +82,13 @@ spec:
                   key: coder-installation-id
             - name: SCRATCH_DIR
               value: "/scratch"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-feature-pipeline-secrets
+                  key: db-password
+            - name: PRAETOR_DB_URL
+              value: "postgresql://praetor:$(DB_PASSWORD)@agent-kb.amer.dev:5432/praetor"
           volumeMounts:
             - name: scratch
               mountPath: /scratch
@@ -91,13 +98,6 @@ spec:
             - name: metrics
               containerPort: 9095
               protocol: TCP
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: praetor-feature-pipeline-secrets
-                  key: db-password
-            - name: PRAETOR_DB_URL
-              value: "postgresql://praetor:$(DB_PASSWORD)@agent-kb.amer.dev:5432/praetor"
           resources:
             requests:
               cpu: 100m

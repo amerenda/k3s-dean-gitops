@@ -48,10 +48,6 @@ spec:
                   key: litellm-api-key
             - name: LLM_MODEL
               value: "qwen3-35b"
-          ports:
-            - name: metrics
-              containerPort: 9095
-              protocol: TCP
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -59,6 +55,10 @@ spec:
                   key: db-password
             - name: PRAETOR_DB_URL
               value: "postgresql://praetor:$(DB_PASSWORD)@agent-kb.amer.dev:5432/praetor"
+          ports:
+            - name: metrics
+              containerPort: 9095
+              protocol: TCP
           resources:
             requests:
               cpu: 200m
