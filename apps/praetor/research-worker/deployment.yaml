@@ -69,10 +69,6 @@ spec:
                 secretKeyRef:
                   name: praetor-research-secrets
                   key: langfuse-secret-key
-          ports:
-            - name: metrics
-              containerPort: 9095
-              protocol: TCP
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -80,6 +76,10 @@ spec:
                   key: db-password
             - name: PRAETOR_DB_URL
               value: "postgresql://praetor:$(DB_PASSWORD)@agent-kb.amer.dev:5432/praetor"
+          ports:
+            - name: metrics
+              containerPort: 9095
+              protocol: TCP
           resources:
             requests:
               cpu: 100m
