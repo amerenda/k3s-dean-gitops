@@ -26,7 +26,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: feature-pipeline-worker
-          image: amerenda/praetor-feature-pipeline:sha-placeholder
+          image: amerenda/praetor-feature-pipeline:sha-b1de3b3
           imagePullPolicy: Always
           securityContext:
             readOnlyRootFilesystem: true
@@ -39,7 +39,7 @@ spec:
                   name: praetor-feature-pipeline-secrets
                   key: hatchet-token
             - name: HATCHET_CLIENT_TLS_STRATEGY
-              value: "none"
+              value: "insecure"
             - name: MEM0_BASE_URL
               value: "https://mem0.amer.dev"
             - name: MEM0_API_KEY
