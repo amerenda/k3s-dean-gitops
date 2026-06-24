@@ -2717,3 +2717,37 @@ spec:
     jsonPointers:
     - /status/pendingEphemeralRunners
     - /status/currentRunners
+
+---
+# Application: praetor phase25-canary worker (agent-factory managed)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-praetor-phase25-canary-worker
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/praetor/phase25-canary-worker
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: praetor
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
