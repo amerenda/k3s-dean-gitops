@@ -73,6 +73,13 @@ spec:
             - name: metrics
               containerPort: 9095
               protocol: TCP
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-research-secrets
+                  key: db-password
+            - name: PRAETOR_DB_URL
+              value: "postgresql://praetor:$(DB_PASSWORD)@agent-kb.amer.dev:5432/praetor"
           resources:
             requests:
               cpu: 100m

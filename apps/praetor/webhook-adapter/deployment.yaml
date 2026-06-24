@@ -106,6 +106,13 @@ spec:
                 secretKeyRef:
                   name: praetor-webhook-secrets
                   key: langfuse-secret-key
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: db-password
+            - name: PRAETOR_DB_URL
+              value: "postgresql://praetor:$(DB_PASSWORD)@agent-kb.amer.dev:5432/praetor"
           livenessProbe:
             httpGet:
               path: /healthz
