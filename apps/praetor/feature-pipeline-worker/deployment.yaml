@@ -26,7 +26,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: feature-pipeline-worker
-          image: amerenda/praetor-feature-pipeline:sha-04244ae
+          image: amerenda/praetor-feature-pipeline:sha-ee8e4e8
           imagePullPolicy: Always
           securityContext:
             readOnlyRootFilesystem: true

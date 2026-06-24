@@ -22,7 +22,7 @@ spec:
         kubernetes.io/arch: amd64
       containers:
         - name: research-worker
-          image: amerenda/praetor-research:sha-04244ae
+          image: amerenda/praetor-research:sha-ee8e4e8
           imagePullPolicy: Always
           env:
             - name: HATCHET_CLIENT_TOKEN
