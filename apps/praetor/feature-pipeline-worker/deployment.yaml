@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: praetor-feature-pipeline-worker
+  namespace: praetor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: praetor-feature-pipeline-worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: praetor-feature-pipeline-worker
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: feature-pipeline-worker
+          image: amerenda/praetor-feature-pipeline:sha-placeholder
+          imagePullPolicy: Always
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+          env:
+            - name: HATCHET_CLIENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-feature-pipeline-secrets
+                  key: hatchet-token
+            - name: HATCHET_CLIENT_TLS_STRATEGY
+              value: "none"
+            - name: MEM0_BASE_URL
+              value: "https://mem0.amer.dev"
+            - name: MEM0_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-feature-pipeline-secrets
+                  key: mem0-api-key
+            - name: VIKUNJA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-feature-pipeline-secrets
+                  key: vikunja-token
+            - name: VIKUNJA_BASE_URL
+              value: "https://todo.amer.dev"
+            - name: LITELLM_BASE_URL
+              value: "https://litellm.amer.dev/v1"
+            - name: LITELLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-feature-pipeline-secrets
+                  key: litellm-api-key
+            - name: SEARXNG_URL
+              value: "https://searxng.amer.dev"
+            - name: LLM_MODEL
+              value: "qwen3-35b"
+            - name: CODER_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-feature-pipeline-secrets
+                  key: coder-app-id
+            - name: CODER_APP_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-feature-pipeline-secrets
+                  key: coder-private-key
+            - name: CODER_APP_INSTALLATION_ID
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-feature-pipeline-secrets
+                  key: coder-installation-id
+            - name: SCRATCH_DIR
+              value: "/scratch"
+          volumeMounts:
+            - name: scratch
+              mountPath: /scratch
+            - name: home
+              mountPath: /home/appuser
+          ports:
+            - name: metrics
+              containerPort: 9095
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+      volumes:
+        - name: scratch
+          emptyDir:
+            sizeLimit: 4Gi
+        - name: home
+          emptyDir: {}
