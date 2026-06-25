@@ -27,6 +27,9 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: webhook-adapter-config
           env:
             - name: VIKUNJA_WEBHOOK_SECRET
               valueFrom:
