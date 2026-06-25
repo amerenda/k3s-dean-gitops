@@ -20,6 +20,7 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/arch: amd64
+      serviceAccountName: praetor-coder
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
