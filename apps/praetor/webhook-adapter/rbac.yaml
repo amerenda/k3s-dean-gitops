@@ -10,10 +10,14 @@ metadata:
   name: praetor-webhook-configmap-rw
   namespace: praetor
 rules:
+  # create cannot use resourceNames (no name in request URL yet)
   - apiGroups: [""]
     resources: ["configmaps"]
-    verbs: ["get", "create", "update", "patch"]
+    verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
     resourceNames: ["mcp-registry", "agent-registry"]
+    verbs: ["get", "update", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
