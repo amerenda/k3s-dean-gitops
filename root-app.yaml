@@ -2763,6 +2763,12 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: praetor
+  ignoreDifferences:
+    - group: "apps"
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+
   syncPolicy:
     automated:
       prune: true
@@ -2796,6 +2802,12 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: praetor
+  ignoreDifferences:
+    - group: "apps"
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+
   syncPolicy:
     automated:
       prune: true

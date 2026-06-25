@@ -1,0 +1,22 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: praetor-echo-agent-worker-scaler
+  namespace: praetor
+spec:
+  scaleTargetRef:
+    name: praetor-echo-agent-worker
+  minReplicaCount: 0
+  maxReplicaCount: 3
+  cooldownPeriod: 120
+  pollingInterval: 15
+  triggers:
+    - type: metrics-api
+      authenticationRef:
+        name: hatchet-api-auth
+        kind: ClusterTriggerAuthentication
+      metadata:
+        targetValue: "1"
+        url: "https://hatchet.amer.dev/api/v1/tenants/707d0855-80ab-4e1f-a156-f1c4546cbf52/task-stats?taskNames=echo-agent"
+        valueLocation: "echo-agent.queued.total"
+        authMode: "bearer"

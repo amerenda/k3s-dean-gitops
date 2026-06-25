@@ -1,0 +1,11 @@
+apiVersion: keda.sh/v1alpha1
+kind: ClusterTriggerAuthentication
+metadata:
+  name: hatchet-api-auth
+  namespace: keda
+spec:
+  secretTargetRef:
+    - parameter: token
+      name: hatchet-api-secret
+      namespace: keda
+      key: token
