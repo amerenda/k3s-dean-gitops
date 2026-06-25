@@ -375,6 +375,11 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground
+  ignoreDifferences:
+    - group: "keda.sh"
+      kind: ClusterTriggerAuthentication
+      jsonPointers:
+        - /status
 ---
 # Application: Ecdysis frontend (prod)
 apiVersion: argoproj.io/v1alpha1
