@@ -380,6 +380,7 @@ spec:
       kind: ClusterTriggerAuthentication
       jsonPointers:
         - /status
+        - /metadata/finalizers
 ---
 # Application: Ecdysis frontend (prod)
 apiVersion: argoproj.io/v1alpha1
