@@ -295,6 +295,33 @@ spec:
 # PVC retained: apps/home-assistant/storage.yaml
 
 ---
+# KEDA Operator — installed via Helm chart from official repo
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-keda-installer
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/keda
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+---
 # Application: Ecdysis frontend (prod)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
