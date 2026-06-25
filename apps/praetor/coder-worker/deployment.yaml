@@ -20,6 +20,7 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/arch: amd64
+      serviceAccountName: praetor-coder
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
@@ -39,7 +40,7 @@ spec:
                   name: praetor-coder-secrets
                   key: hatchet-token
             - name: HATCHET_CLIENT_TLS_STRATEGY
-              value: "none"
+              value: "insecure"
             - name: MEM0_BASE_URL
               value: "https://mem0.amer.dev"
             - name: MEM0_API_KEY
