@@ -7,5 +7,4 @@ spec:
   secretTargetRef:
     - parameter: token
       name: hatchet-api-secret
-      namespace: keda
       key: token
