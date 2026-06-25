@@ -1,0 +1,52 @@
+---
+# Infrastructure: KEDA (Kubernetes Event Driven Autoscaler)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-keda
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://kedacore.github.io/charts
+    chart: keda
+    targetRevision: "2.16.0"
+    helm:
+      values: |
+        watchNamespace: "praetor"
+        resources:
+          operator:
+            requests:
+              memory: 64Mi
+              cpu: 10m
+            limits:
+              memory: 128Mi
+              cpu: 100m
+          metricServer:
+            requests:
+              memory: 64Mi
+              cpu: 10m
+            limits:
+              memory: 128Mi
+              cpu: 100m
+          webhooks:
+            requests:
+              memory: 32Mi
+              cpu: 5m
+            limits:
+              memory: 64Mi
+              cpu: 50m
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: keda
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
