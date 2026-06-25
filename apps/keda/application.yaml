@@ -23,14 +23,23 @@ spec:
             requests:
               memory: 64Mi
               cpu: 10m
+            limits:
+              memory: 128Mi
+              cpu: 100m
           metricServer:
             requests:
               memory: 64Mi
               cpu: 10m
+            limits:
+              memory: 128Mi
+              cpu: 100m
           webhooks:
             requests:
               memory: 32Mi
               cpu: 5m
+            limits:
+              memory: 64Mi
+              cpu: 50m
   destination:
     server: https://kubernetes.default.svc
     namespace: keda
