@@ -4,7 +4,7 @@ metadata:
   name: praetor-phase25-canary-worker
   namespace: praetor
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: praetor-phase25-canary-worker

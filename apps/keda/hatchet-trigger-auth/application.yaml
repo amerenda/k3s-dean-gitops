@@ -1,0 +1,27 @@
+---
+# KEDA Trigger Authentication — references ExternalSecret for Hatchet API JWT
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-keda-hatchet-trigger-auth
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/keda/hatchet-trigger-auth
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: keda
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground

@@ -4,7 +4,7 @@ metadata:
   name: praetor-echo-agent-worker
   namespace: praetor
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: praetor-echo-agent-worker
