@@ -8,10 +8,16 @@ data:
     server {
       listen 8080;
       location / {
+        # Rewrite Host header to "localhost" so the MCP server accepts the request.
+        # Without this, the FQDN from cluster DNS causes host validation failure.
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host localhost;
+
+        # HTTP/1.1 + empty Connection header = keep-alive to upstream
         proxy_http_version 1.1;
         proxy_set_header Connection "";
+
+        # Accommodate long-running kubernetes tool calls (list/watch, logs)
         proxy_read_timeout 300s;
       }
     }

@@ -132,4 +132,5 @@ data:
 
     litellm_settings:
       callbacks:
-        - custom_hooks.tool_strip_hook.proxy_handler_instan
+        - custom_hooks.tool_strip_hook.proxy_handler_instance
+        - prometheus
