@@ -42,10 +42,12 @@ data:
       # coder is an alias for qwen3-35b — lets agents and UIs pick
       # a coding-optimised endpoint without hardcoding the model name.
       # Swap the backend here when a dedicated coding model is added.
+      # Routes through port 8089 (overflow proxy) not 8088 (direct) so that
+      # context overflows are caught, old messages stripped, and the call retried.
       - model_name: coder
         litellm_params:
           model: openai/qwen3-35b
-          api_base: http://10.100.20.19:8088/v1
+          api_base: http://10.100.20.19:8089/v1
           api_key: none
           timeout: 600
           extra_body:
