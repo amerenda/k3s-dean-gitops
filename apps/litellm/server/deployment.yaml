@@ -20,8 +20,6 @@ spec:
       annotations:
         configmap.reloader.stakater.com/reload: "litellm-config,litellm-custom-hooks"
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: murderbot
       containers:
       - name: server
         image: ghcr.io/berriai/litellm:main-stable
