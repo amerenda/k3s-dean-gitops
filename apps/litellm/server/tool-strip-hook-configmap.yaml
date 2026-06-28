@@ -341,3 +341,64 @@ data:
 
 
     proxy_handler_instance = ToolStripHook()
+
+
+    # ── Monkey-patch: fix _get_mcp_servers_in_path ─────────────────────────
+    # LiteLLM bug: _get_mcp_servers_in_path("/mcp/tools/list") returns
+    # ["tools/list"], treating the standard MCP method keyword "tools" as a
+    # server name.  The fail-closed filter in _get_allowed_mcp_servers_from_
+    # mcp_server_names then finds no server named "tools/list" and returns [],
+    # so every tools/list call gets 0 tools — both the stateless shortcut and
+    # session-based paths.
+    #
+    # Fix: return None (= "no server scope") when the first path segment after
+    # /mcp/ is a standard MCP protocol keyword.
+    try:
+        import re as _re
+        import litellm.proxy._experimental.mcp_server.server as _mcp_srv
+
+        _STANDARD_MCP_METHODS = frozenset([
+            "tools", "resources", "prompts", "logging", "ping",
+            "roots", "sampling", "completion", "initialize", "initialized",
+        ])
+
+        def _patched_get_mcp_servers_in_path(path: str):
+            """Patched: return None for standard MCP protocol endpoints."""
+            import re as _re2
+            segments = [s for s in path.split("/") if s]
+            if len(segments) >= 2 and segments[1] == "mcp" and segments[0] != "mcp":
+                return [segments[0]]
+
+            mcp_path_match = _re2.match(r"^/mcp/([^?#]+)(?:\?.*)?(?:#.*)?$", path)
+            if mcp_path_match:
+                servers_and_path = mcp_path_match.group(1)
+                if servers_and_path:
+                    # Standard MCP method path — not a scoped server endpoint.
+                    first_segment = servers_and_path.split("/")[0]
+                    if first_segment in _STANDARD_MCP_METHODS:
+                        return None
+
+                    if "," in servers_and_path:
+                        path_match = _re2.search(r"/([^/,]+(?:/[^/,]+)*)$", servers_and_path)
+                        if path_match:
+                            path_part = "/" + path_match.group(1)
+                            servers_part = servers_and_path[: -len(path_part)]
+                            return [s.strip() for s in servers_part.split(",") if s.strip()]
+                        return [s.strip() for s in servers_and_path.split(",") if s.strip()]
+                    else:
+                        single = _re2.match(r"^([^/]+(?:/[^/]+)?)(?:/.*)?$", servers_and_path)
+                        if single:
+                            return [single.group(1)]
+                        return [servers_and_path]
+            return None
+
+        if hasattr(_mcp_srv, "_get_mcp_servers_in_path"):
+            _mcp_srv._get_mcp_servers_in_path = _patched_get_mcp_servers_in_path
+            print("[tool_strip_hook] Patched _get_mcp_servers_in_path (standard method keywords fix)",
+                  file=_sys.stderr, flush=True)
+        else:
+            print("[tool_strip_hook] WARNING: _get_mcp_servers_in_path not found — patch skipped",
+                  file=_sys.stderr, flush=True)
+    except Exception as _patch_err:
+        print(f"[tool_strip_hook] WARNING: monkey-patch failed: {_patch_err}",
+              file=_sys.stderr, flush=True)
