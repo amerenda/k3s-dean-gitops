@@ -151,6 +151,28 @@ data:
                 break
 
 
+    import sys as _sys
+    import json as _json
+
+
+    def _log_msgs(label, msgs):
+        """Print a compact message summary to stderr for debugging."""
+        print(f"[tool_strip_hook] {label} ({len(msgs)} msgs):", file=_sys.stderr, flush=True)
+        for i, m in enumerate(msgs):
+            role = m.get("role", "?")
+            content = m.get("content")
+            tc = m.get("tool_calls")
+            tc_id = m.get("tool_call_id")
+            tc_ids = [t.get("id", "?") for t in (tc or [])]
+            print(
+                f"  [{i}] {role}"
+                f" content={repr(str(content or ''))[:40]}"
+                f"{' tc_ids='+str(tc_ids) if tc else ''}"
+                f"{' tool_call_id='+str(tc_id) if tc_id else ''}",
+                file=_sys.stderr, flush=True,
+            )
+
+
     class ToolStripHook(CustomLogger):
         """
         Two-stage context reducer with orphan cleanup, plus synthesis enforcement.
@@ -182,8 +204,19 @@ data:
             if not msgs:
                 return data
 
+            n_tools = len(data.get("tools") or [])
+
             # Stage -2: normalise null content in assistant messages (must run first)
+            null_fixed = sum(
+                1 for m in msgs
+                if m.get("role") == "assistant" and m.get("content") is None
+            )
             _normalize_null_content(msgs)
+            if null_fixed:
+                print(
+                    f"[tool_strip_hook] WARN: fixed {null_fixed} assistant msg(s) with content=None",
+                    file=_sys.stderr, flush=True,
+                )
 
             # Stages -1 and -1b: synthesis enforcement
             tool_msg_count = sum(1 for m in msgs if m.get("role") == "tool")
@@ -194,8 +227,19 @@ data:
                 data.pop("tool_choice", None)
 
             # Stage 0: always clean malformed sequences (prevents 400 format errors)
+            n_before = len(msgs)
             _cleanup_orphaned_tool_pairs(msgs)
+            n_orphan = n_before - len(msgs)
+            n_before2 = len(msgs)
             _cleanup_consecutive_assistant_msgs(msgs)
+            n_consec = n_before2 - len(msgs)
+            if n_orphan or n_consec:
+                print(
+                    f"[tool_strip_hook] WARN: stage0 removed {n_orphan} orphan + {n_consec} consecutive "
+                    f"msgs. Input was {n_before} msgs, now {len(msgs)} msgs (tools={n_tools})",
+                    file=_sys.stderr, flush=True,
+                )
+                _log_msgs("after-stage0", msgs)
 
             # Stages 1+2: token-budget stripping (handles context overflow)
             if _estimate_tokens(msgs) < _SOFT_TOKEN_BUDGET:
@@ -234,33 +278,41 @@ data:
         async def async_post_call_failure_hook(
             self, request_data, original_exception, user_api_key_dict, traceback_str=None
         ):
-            """Log the exact message list whenever llama.cpp returns 400.
+            """Log the full request whenever llama.cpp returns 400.
 
-            This is the only way to see what the hook sent to the backend when
-            production failures occur — otherwise the bad request is invisible
-            because LiteLLM retries silently and tests see a 200 OK.
+            Dumps messages, tool names, and model so the exact failing request
+            can be identified and replayed for debugging.
             """
-            import sys as _sys
             exc_str = str(original_exception)
             if "400" not in exc_str and "BadRequest" not in exc_str:
                 return None
 
             msgs = request_data.get("messages", [])
+            tools = request_data.get("tools") or []
+            model = request_data.get("model", "?")
+            tool_names = [(t.get("function") or {}).get("name", "?") for t in tools]
+
             print(
-                f"[tool_strip_hook] 400 FAILURE — {len(msgs)} messages in request:",
+                f"[tool_strip_hook] 400 FAILURE model={model} "
+                f"msgs={len(msgs)} tools={len(tools)}: {tool_names[:5]}{'...' if len(tool_names) > 5 else ''}",
                 file=_sys.stderr, flush=True,
             )
-            for i, m in enumerate(msgs):
-                role = m.get("role", "?")
-                content = m.get("content")
-                tc = m.get("tool_calls")
-                tc_id = m.get("tool_call_id")
+            _log_msgs("400-request-messages", msgs)
+
+            # Dump compact JSON so the request can be replayed
+            try:
+                compact = _json.dumps({
+                    "model": model,
+                    "messages": msgs,
+                    "tools": tools[:3],  # first 3 tool defs
+                    "n_tools_total": len(tools),
+                }, separators=(",", ":"))
                 print(
-                    f"  msg[{i}] role={role} content={repr(content)[:60]}"
-                    f"{' tool_calls='+str(len(tc)) if tc else ''}"
-                    f"{' tool_call_id='+str(tc_id) if tc_id else ''}",
+                    f"[tool_strip_hook] 400-REPLAY-HINT: {compact[:2000]}",
                     file=_sys.stderr, flush=True,
                 )
+            except Exception:
+                pass
             return None
 
 
