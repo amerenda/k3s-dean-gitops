@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-home-assistant-server
+  namespace: mcp-mcp-home-assistant
+spec:
+  selector:
+    app: mcp-home-assistant-server
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
