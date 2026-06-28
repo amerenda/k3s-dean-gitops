@@ -315,5 +315,29 @@ data:
                 pass
             return None
 
+        async def async_log_pre_api_call(self, model, messages, kwargs):
+            """Log the FINAL request just before it leaves LiteLLM to the backend.
+
+            This fires AFTER LiteLLM's internal transforms (validate_and_fix_openai_messages,
+            cleanup_none_field_in_message, etc.) so it shows exactly what llama.cpp receives.
+            Only logged when there are tools, to avoid noise.
+            """
+            tools = kwargs.get("tools") or []
+            if not tools:
+                return
+            tool_names = [(t.get("function") or {}).get("name", "?") for t in tools]
+            print(
+                f"[tool_strip_hook] PRE-API model={model} msgs={len(messages)} tools={len(tools)}: "
+                f"{tool_names[:5]}{'...' if len(tool_names) > 5 else ''}",
+                file=_sys.stderr, flush=True,
+            )
+            # Dump first tool schema to detect anyOf / additionalProperties issues
+            if tools:
+                try:
+                    first = _json.dumps(tools[0], separators=(",", ":"))
+                    print(f"[tool_strip_hook] PRE-API first-tool: {first[:500]}", file=_sys.stderr, flush=True)
+                except Exception:
+                    pass
+
 
     proxy_handler_instance = ToolStripHook()
