@@ -24,6 +24,19 @@ data:
         return chars // _CHARS_PER_TOKEN
 
 
+    def _normalize_null_content(msgs):
+        """Normalize content=None to content='' in assistant messages.
+
+        When qwen3-35b-think produces only a thinking block (no text, no tool calls),
+        it returns content=null. OWU stores this verbatim and sends it back on the next
+        turn. llama.cpp rejects it with 400: 'Assistant message must contain either
+        content or tool_calls'.
+        """
+        for msg in msgs:
+            if msg.get("role") == "assistant" and msg.get("content") is None:
+                msg["content"] = ""
+
+
     def _cleanup_orphaned_tool_pairs(msgs):
         """
         Remove malformed tool call groups before they reach llama.cpp.
@@ -168,6 +181,9 @@ data:
             msgs = data.get("messages", [])
             if not msgs:
                 return data
+
+            # Stage -2: normalise null content in assistant messages (must run first)
+            _normalize_null_content(msgs)
 
             # Stages -1 and -1b: synthesis enforcement
             tool_msg_count = sum(1 for m in msgs if m.get("role") == "tool")
