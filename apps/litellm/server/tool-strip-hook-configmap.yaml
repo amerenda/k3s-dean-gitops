@@ -182,8 +182,24 @@ data:
             if not msgs:
                 return data
 
+            # DEBUG: log any assistant messages with None or missing content
+            import sys as _sys
+            for _i, _m in enumerate(msgs):
+                if _m.get("role") == "assistant":
+                    _c = _m.get("content")
+                    _tc = _m.get("tool_calls")
+                    if _c is None and not _tc:
+                        print(f"[tool_strip_hook] WARN msg[{_i}]: content=None, no tool_calls, type={type(_m).__name__}", file=_sys.stderr, flush=True)
+                    elif _c is None:
+                        print(f"[tool_strip_hook] INFO msg[{_i}]: content=None but has tool_calls", file=_sys.stderr, flush=True)
+
             # Stage -2: normalise null content in assistant messages (must run first)
             _normalize_null_content(msgs)
+
+            # DEBUG: confirm normalization applied
+            for _i, _m in enumerate(msgs):
+                if _m.get("role") == "assistant" and _m.get("content") == "":
+                    print(f"[tool_strip_hook] FIXED msg[{_i}]: content was None, now ''", file=_sys.stderr, flush=True)
 
             # Stages -1 and -1b: synthesis enforcement
             tool_msg_count = sum(1 for m in msgs if m.get("role") == "tool")
