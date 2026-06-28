@@ -10,7 +10,7 @@ data:
       - model_name: qwen3-35b
         litellm_params:
           model: openai/qwen3-35b
-          api_base: http://10.100.20.19:8088/v1
+          api_base: http://10.100.20.19:8089/v1
           api_key: none
           timeout: 600
           extra_body:
@@ -28,7 +28,7 @@ data:
       - model_name: qwen3-35b-think
         litellm_params:
           model: openai/qwen3-35b
-          api_base: http://10.100.20.19:8088/v1
+          api_base: http://10.100.20.19:8089/v1
           api_key: none
           timeout: 600
           extra_body:
