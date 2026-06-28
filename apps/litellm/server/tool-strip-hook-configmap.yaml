@@ -231,5 +231,37 @@ data:
             data["messages"] = msgs
             return data
 
+        async def async_post_call_failure_hook(
+            self, request_data, original_exception, user_api_key_dict, traceback_str=None
+        ):
+            """Log the exact message list whenever llama.cpp returns 400.
+
+            This is the only way to see what the hook sent to the backend when
+            production failures occur — otherwise the bad request is invisible
+            because LiteLLM retries silently and tests see a 200 OK.
+            """
+            import sys as _sys
+            exc_str = str(original_exception)
+            if "400" not in exc_str and "BadRequest" not in exc_str:
+                return None
+
+            msgs = request_data.get("messages", [])
+            print(
+                f"[tool_strip_hook] 400 FAILURE — {len(msgs)} messages in request:",
+                file=_sys.stderr, flush=True,
+            )
+            for i, m in enumerate(msgs):
+                role = m.get("role", "?")
+                content = m.get("content")
+                tc = m.get("tool_calls")
+                tc_id = m.get("tool_call_id")
+                print(
+                    f"  msg[{i}] role={role} content={repr(content)[:60]}"
+                    f"{' tool_calls='+str(len(tc)) if tc else ''}"
+                    f"{' tool_call_id='+str(tc_id) if tc_id else ''}",
+                    file=_sys.stderr, flush=True,
+                )
+            return None
+
 
     proxy_handler_instance = ToolStripHook()
