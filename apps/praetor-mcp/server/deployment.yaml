@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: amerenda/praetor-mcp:sha-4f9efd5
+          image: amerenda/praetor-mcp:sha-222c12c
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
