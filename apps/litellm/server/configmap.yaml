@@ -56,6 +56,25 @@ data:
           max_output_tokens: 8192
           supports_function_calling: true
 
+      # qwen36-unrestricted: abliterated Qwen3.6-35B-A3B (llmfan46, Heretic v1.3.0, MTP-preserved).
+      # Points to the same :8088 endpoint as qwen3-35b-think — swap the running model before use:
+      #   docker stop llama-server
+      #   docker run ... -e MODEL=.../Qwen3.6-35B-A3B-uncensored-Q4_K_M.gguf ...
+      # See ~/claude/manual_runs/swap-to-unrestricted-model.sh
+      - model_name: qwen36-unrestricted
+        litellm_params:
+          model: openai/qwen3-35b
+          api_base: http://10.100.20.19:8088/v1
+          api_key: none
+          timeout: 600
+          extra_body:
+            chat_template_kwargs:
+              enable_thinking: true
+        model_info:
+          max_input_tokens: 131072
+          max_output_tokens: 8192
+          supports_function_calling: true
+
       # --- archlinux (RX 9070 XT, 16GB VRAM, Ollama) ---
       - model_name: qwen3-14b
         litellm_params:
