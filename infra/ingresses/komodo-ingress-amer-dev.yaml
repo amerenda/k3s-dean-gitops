@@ -1,4 +1,18 @@
 ---
+# Force HTTP/1.1 for the Komodo ingress so that the Komodo Periphery's
+# outbound WebSocket upgrade (/ws/periphery) works. Traefik's default TLS
+# negotiates HTTP/2 via ALPN; HTTP/2 does not support the standard
+# "Upgrade: websocket" header (RFC 6455 / HTTP/1.1 only). With h2 negotiated,
+# the periphery's WS connect gets a 400 and the server stays NotOk.
+apiVersion: traefik.io/v1alpha1
+kind: TLSOption
+metadata:
+  name: komodo-no-h2
+  namespace: default
+spec:
+  alpnProtocols:
+    - http/1.1
+---
 # Service + Endpoints for Komodo running on Mac Mini (external to k3s)
 apiVersion: v1
 kind: Service
@@ -37,6 +51,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.tls.options: default-komodo-no-h2@kubernetescrd
     cert-manager.io/cluster-issuer: letsencrypt-prod
     external-dns.alpha.kubernetes.io/hostname: komodo.amer.dev
     external-dns.alpha.kubernetes.io/ttl: "300"
