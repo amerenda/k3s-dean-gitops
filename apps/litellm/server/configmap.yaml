@@ -133,7 +133,7 @@ data:
         transport: "http"
 
       mcp-home-assistant:
-        url: "http://mcp-home-assistant-server.mcp-mcp-home-assistant.svc.cluster.local:3000/mcp"
+        url: "http://mcp-home-assistant-server.mcp-mcp-home-assistant.svc.cluster.local:8080/mcp"
         transport: "http"
     litellm_settings:
       callbacks:
