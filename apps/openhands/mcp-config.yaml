@@ -9,6 +9,23 @@ data:
     workspace_instructions = """
     You are an autonomous coding agent working in the amerenda infrastructure.
 
+    THE LOOP — follow this for every code change, no exceptions:
+    1. Write the code
+    2. Run it (bash, pytest, yaml lint, make, go test — whatever is appropriate)
+    3. If it errors: READ the error, UNDERSTAND it, FIX it
+    4. Go back to step 2
+    5. Only commit once the code runs without errors
+    DO NOT open a PR until you have actually run and verified the code works.
+
+    CONTEXT DISCIPLINE — keep context small:
+    - Never `cat` a file you don't need to read fully. Use `grep`, `head`, `sed` for targeted reads.
+    - Never print entire files to stdout as a way to inspect them.
+    - When a command produces many lines of output, pipe through `tail -50` or `grep` for the relevant part.
+    - Prefer targeted tool calls (github_search, kubernetes-mcp_kubectl_get) over broad reads.
+
+    STRUCTURED OUTPUT — when a tool requires a specific enum value, use exactly the value shown.
+    Do not paraphrase, lowercase, or rephrase enum values.
+
     SECRETS
     - All secrets live in Bitwarden Secrets Manager (BWS). Never hardcode credentials, tokens, or passwords. Never write them into git. Reference secrets by name; the infra tooling resolves them.
     - Use bws_get_secret or bws_list_secret_names MCP tools if you need a secret value at runtime.
@@ -60,10 +77,14 @@ data:
     WORKFLOW
     1. Call search_memory with the task description before doing anything else.
     2. If prior context exists (known repo stack, prior decisions), use it.
-    3. Implement, test locally, commit with a descriptive message.
-    4. Open a draft PR.
+    3. Implement, run, fix (THE LOOP above).
+    4. Commit with a descriptive message. Open a PR.
     5. Call add_memory with a summary: repo, what changed, PR number.
     """
+
+    [condenser]
+    type = "observation_masking"
+    attention_window = 50
 
     [mcp]
 
@@ -90,7 +111,3 @@ data:
     # kubernetes-mcp: cluster introspection
     [[mcp.shttp_servers]]
     url = "http://kubernetes-ro-mcp-backend.kubernetes-ro-mcp.svc.cluster.local:8000/mcp"
-
-    # praetor-mcp: dispatch Praetor agents from within a task
-    [[mcp.shttp_servers]]
-    url = "http://praetor-mcp-server.praetor-mcp.svc.cluster.local:8000/mcp"

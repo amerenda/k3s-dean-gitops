@@ -155,6 +155,7 @@ data:
         allow_all_keys: true
 
     litellm_settings:
+      drop_params: true
       callbacks:
         - custom_hooks.tool_strip_hook.proxy_handler_instance
         - prometheus
