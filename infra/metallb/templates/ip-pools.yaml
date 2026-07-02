@@ -25,6 +25,8 @@ spec:
 
 ---
 # L2 Advertisement for Load Balancer Pool
+# rpi5-0 excluded: bfdd crash-loops there (8k+ restarts), causing VIP flapping on any
+# node that wins the L2 election. rpi5-1/rpi4-0/archlinux/murderbot are stable.
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
 metadata:
@@ -33,9 +35,16 @@ metadata:
 spec:
   ipAddressPools:
   - loadbalancer-pool
+  nodeSelectors:
+  - matchExpressions:
+    - key: kubernetes.io/hostname
+      operator: NotIn
+      values:
+      - rpi5-0
 
 ---
 # L2 Advertisement for DNS Pool
+# rpi5-0 excluded: same bfdd crash-loop issue; BIND9 VIP outages = cluster-wide DNS failure.
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
 metadata:
@@ -44,3 +53,9 @@ metadata:
 spec:
   ipAddressPools:
   - dns-pool
+  nodeSelectors:
+  - matchExpressions:
+    - key: kubernetes.io/hostname
+      operator: NotIn
+      values:
+      - rpi5-0
