@@ -70,7 +70,9 @@ spec:
           - default.svc.cluster.local
           - svc.cluster.local
           - cluster.local
-      # Prefer spreading replicas across nodes, but allow scheduling to proceed during updates
+      # Primary: murderbot + archlinux (amd64, better WireGuard throughput).
+      # Fallback: rpi5-0 or rpi5-1 only if both amd64 nodes are unavailable.
+      # rpi4-0 excluded (USB-GbE bottleneck).
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -83,6 +85,25 @@ spec:
                   values:
                   - tailscale
               topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - murderbot
+                - archlinux
+                - rpi5-0
+                - rpi5-1
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            preference:
+              matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
