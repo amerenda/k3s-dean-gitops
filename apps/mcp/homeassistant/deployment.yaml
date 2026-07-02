@@ -22,16 +22,6 @@ spec:
           env:
             - name: HOMEASSISTANT_URL
               value: 'https://ha.amer.dev'
-            - name: HOMEASSISTANT_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: homeassistant-secrets
-                  key: homeassistant_token
-
-          args:
-            - fastmcp
-            - run
-            - fastmcp-http.json
 
           readinessProbe:
             tcpSocket:
