@@ -4,7 +4,7 @@ metadata:
   name: mcp-home-assistant-server
   namespace: mcp-mcp-home-assistant
 spec:
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels:
       app: mcp-home-assistant-server
@@ -15,10 +15,10 @@ spec:
     spec:
       containers:
         - name: server
-          image: ghcr.io/nerdyspork/mcp-server-home-assistant:latest
+          image: ghcr.io/home-assistant-mcp/mcp-server-homeassistant:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 3000
+            - containerPort: 8080
           env:
             - name: HA_URL
               value: 'http://homeassistant.local:8123'
@@ -27,7 +27,7 @@ spec:
 
           readinessProbe:
             tcpSocket:
-              port: 3000
+              port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
           resources:
