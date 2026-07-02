@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: owui-bootstrap
+  namespace: praetor
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: owui-bootstrap
+          image: amerenda/praetor-webhook:sha-203fade
+          imagePullPolicy: Always
+          command: ["python3", "scripts/register_owui_tool.py"]
+          env:
+            - name: OWUI_BASE_URL
+              value: "https://bot.amer.dev"
+            - name: OWUI_ADMIN_EMAIL
+              value: "alex@amer.dev"
+            - name: OWUI_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: owui-admin-password
+            - name: LANGFUSE_HOST
+              value: "https://langfuse.amer.dev"
+            - name: LANGFUSE_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: langfuse-public-key
+            - name: LANGFUSE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: praetor-webhook-secrets
+                  key: langfuse-secret-key
