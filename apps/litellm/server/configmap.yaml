@@ -154,6 +154,9 @@ data:
         transport: "http"
         allow_all_keys: true
 
+      homeassistant:
+        url: "http://homeassistant-server.mcp-homeassistant.svc.cluster.local:8086/mcp"
+        transport: "http"
     litellm_settings:
       drop_params: true
       callbacks:
