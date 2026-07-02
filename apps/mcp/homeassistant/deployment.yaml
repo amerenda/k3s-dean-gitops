@@ -19,6 +19,10 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8086
+          args:
+            - fastmcp
+            - run
+            - fastmcp-http.json
           env:
             - name: HOMEASSISTANT_URL
               value: 'https://ha.amer.dev'
