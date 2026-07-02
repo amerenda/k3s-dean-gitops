@@ -7,6 +7,6 @@ spec:
   selector:
     app: mcp-home-assistant-server
   ports:
-    - port: 3000
-      targetPort: 3000
+    - port: 8080
+      targetPort: 8080
       protocol: TCP
