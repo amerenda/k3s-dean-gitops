@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homeassistant-server
+  namespace: mcp-homeassistant
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homeassistant-server
+  template:
+    metadata:
+      labels:
+        app: homeassistant-server
+    spec:
+      containers:
+        - name: server
+          image: ghcr.io/homeassistant-ai/ha-mcp:4.12.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8086
+          env:
+            - name: HOMEASSISTANT_URL
+              value: 'https://ha.amer.dev'
+            - name: HOMEASSISTANT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: homeassistant-secrets
+                  key: homeassistant_token
+
+          args:
+            - fastmcp
+            - run
+            - fastmcp-http.json
+
+          readinessProbe:
+            tcpSocket:
+              port: 8086
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
