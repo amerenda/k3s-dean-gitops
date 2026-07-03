@@ -12,8 +12,9 @@ data:
     _CHARS_PER_TOKEN   = 4
     _MIN_KEEP_TURNS    = 6        # always preserve at least this many user turns
 
-    _SYNTHESIS_SIGNAL_AFTER = 30  # inject "stop calling tools" into last tool result
-    _FORCE_NO_TOOLS_AFTER   = 50  # strip tools from request entirely after this many
+    _SYNTHESIS_SIGNAL_AFTER = 12  # inject "stop calling tools" into last tool result
+    _FORCE_NO_TOOLS_AFTER   = 18  # strip tools from request entirely after this many
+    _EARLY_SYNTHESIS_AFTER  = 8   # early synthesis if last msg is a tool result (loop detection)
 
 
     def _estimate_tokens(msgs):
@@ -144,11 +145,20 @@ data:
                 content = msgs[i].get("content") or ""
                 if isinstance(content, str) and "[STOP:" not in content:
                     signal = (
-                        f"[STOP: {tool_count} tool calls made — sufficient information gathered. "
-                        "DO NOT call any more tools. Write your final synthesized answer now.]\n\n"
+                        f"[STOP: {tool_count} tool calls made.]\n"
+                        "SYSTEM OVERRIDE: You have gathered sufficient information. "
+                        "YOU MUST STOP calling tools immediately. "
+                        "DO NOT call any more tools under any circumstances. "
+                        "Write your complete final answer to the user RIGHT NOW using only what you already know.\n\n"
                     )
                     msgs[i]["content"] = signal + content
                 break
+
+
+    def _last_msg_is_tool_result(msgs):
+        """Return True if the last non-system message is a tool result (loop detection)."""
+        non_sys = [m for m in msgs if m.get("role") != "system"]
+        return bool(non_sys) and non_sys[-1].get("role") == "tool"
 
 
     import sys as _sys
@@ -177,8 +187,18 @@ data:
         """
         Two-stage context reducer with orphan cleanup, plus synthesis enforcement.
 
+        Stage -3 (early loop detection, _EARLY_SYNTHESIS_AFTER tool calls):
+        If the last non-system message is a tool result AND the model has already
+        called _EARLY_SYNTHESIS_AFTER or more tools, inject synthesis signal and
+        disable thinking. Catches loops before they hit the normal threshold.
+
+        Stage -2b (disable thinking mid-loop):
+        When tool_msg_count > 0 AND many tools are present (>20), strip the
+        thinking/extra_body.thinking key so the model doesn't burn its reasoning
+        budget deciding which tool to call next instead of synthesizing.
+
         Stage -1 (synthesis signal, after _SYNTHESIS_SIGNAL_AFTER tool calls):
-        Appends a hard stop directive to the last tool result so the model cannot
+        Prepends a hard stop directive to the last tool result so the model cannot
         reason its way past the system-prompt tool-call limit.
 
         Stage -1b (force no tools, after _FORCE_NO_TOOLS_AFTER tool calls):
@@ -218,10 +238,33 @@ data:
                     file=_sys.stderr, flush=True,
                 )
 
-            # Stages -1 and -1b: synthesis enforcement
+            # Synthesis enforcement stages
             tool_msg_count = sum(1 for m in msgs if m.get("role") == "tool")
+            n_tools = len(data.get("tools") or [])
+
+            # Stage -3: early loop detection — model is stuck calling tools, last msg is a result
+            if tool_msg_count >= _EARLY_SYNTHESIS_AFTER and _last_msg_is_tool_result(msgs):
+                _inject_synthesis_signal(msgs, tool_msg_count)
+                print(
+                    f"[tool_strip_hook] LOOP-DETECT: {tool_msg_count} tool msgs, last is tool result — forcing synthesis",
+                    file=_sys.stderr, flush=True,
+                )
+
+            # Stage -2b: disable thinking mid-loop (thinking budget wasted on "which tool next")
+            if tool_msg_count > 0 and n_tools > 20:
+                extra = data.setdefault("extra_body", {})
+                if "thinking" in extra:
+                    extra.pop("thinking")
+                    print(
+                        f"[tool_strip_hook] THINKING-STRIP: disabled thinking mid-loop ({tool_msg_count} tool msgs, {n_tools} tools)",
+                        file=_sys.stderr, flush=True,
+                    )
+
+            # Stage -1: synthesis signal after threshold
             if tool_msg_count >= _SYNTHESIS_SIGNAL_AFTER:
                 _inject_synthesis_signal(msgs, tool_msg_count)
+
+            # Stage -1b: force no tools after hard threshold
             if tool_msg_count >= _FORCE_NO_TOOLS_AFTER:
                 data.pop("tools", None)
                 data.pop("tool_choice", None)
