@@ -61,6 +61,38 @@ data:
           max_output_tokens: 8192
           supports_function_calling: true
 
+      # qwen3.6-27b: dense 27B, no MTP, no thinking — faster TTFT for simple queries
+      - model_name: qwen3.6-27b
+        litellm_params:
+          model: openai/qwen3.6-27b
+          api_base: http://10.100.20.19:8088/v1
+          api_key: none
+          timeout: 600
+          extra_body:
+            chat_template_kwargs:
+              enable_thinking: false
+        model_info:
+          max_input_tokens: 131072
+          max_output_tokens: 8192
+          supports_function_calling: true
+
+      # qwen3.6-27b-think: thinking variant for OWU (murderbot-v1 preset)
+      - model_name: qwen3.6-27b-think
+        litellm_params:
+          model: openai/qwen3.6-27b
+          api_base: http://10.100.20.19:8088/v1
+          api_key: none
+          timeout: 600
+          extra_body:
+            thinking:
+              type: enabled
+              budget_tokens: 8192
+            parallel_tool_calls: false
+        model_info:
+          max_input_tokens: 131072
+          max_output_tokens: 8192
+          supports_function_calling: true
+
       # qwen36-unrestricted: abliterated Qwen3.6-35B-A3B (llmfan46, Heretic v1.3.0, MTP-preserved).
       # Points to the same :8088 endpoint as qwen3-35b-think — swap the running model before use:
       #   docker stop llama-server
