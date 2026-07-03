@@ -25,6 +25,8 @@ data:
       # Model reasons about when to call tools; thinking is stripped from output
       # (server default preserve_thinking=false) so users see only real content.
       # Do NOT use for Claude Code / opencode (thinking adds ~1-3s TTFT latency).
+      # NOTE: uses thinking={budget_tokens:8192} not chat_template_kwargs.enable_thinking.
+      # enable_thinking:true without a budget causes Jinja template overflow with 60+ tools (400).
       - model_name: qwen3-35b-think
         litellm_params:
           model: openai/qwen3-35b
@@ -32,8 +34,9 @@ data:
           api_key: none
           timeout: 600
           extra_body:
-            chat_template_kwargs:
-              enable_thinking: true
+            thinking:
+              type: enabled
+              budget_tokens: 8192
         model_info:
           max_input_tokens: 131072
           max_output_tokens: 8192
@@ -68,8 +71,9 @@ data:
           api_key: none
           timeout: 600
           extra_body:
-            chat_template_kwargs:
-              enable_thinking: true
+            thinking:
+              type: enabled
+              budget_tokens: 8192
         model_info:
           max_input_tokens: 131072
           max_output_tokens: 8192
