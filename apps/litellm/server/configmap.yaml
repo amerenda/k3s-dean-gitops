@@ -61,10 +61,11 @@ data:
           max_output_tokens: 8192
           supports_function_calling: true
 
-      # qwen3.6-27b: dense 27B, no MTP, no thinking — faster TTFT for simple queries
-      - model_name: qwen3.6-27b
+      # qwen36-35b / qwen36-35b-think: named aliases for the 35B MoE.
+      # Switching back to 35B requires only a model-switcher call, not a config change.
+      - model_name: qwen36-35b
         litellm_params:
-          model: openai/qwen3.6-27b
+          model: openai/qwen36-35b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
@@ -76,10 +77,41 @@ data:
           max_output_tokens: 8192
           supports_function_calling: true
 
-      # qwen3.6-27b-think: thinking variant for OWU (murderbot-v1 preset)
-      - model_name: qwen3.6-27b-think
+      - model_name: qwen36-35b-think
         litellm_params:
-          model: openai/qwen3.6-27b
+          model: openai/qwen36-35b
+          api_base: http://10.100.20.19:8088/v1
+          api_key: none
+          timeout: 600
+          extra_body:
+            thinking:
+              type: enabled
+              budget_tokens: 8192
+            parallel_tool_calls: false
+        model_info:
+          max_input_tokens: 131072
+          max_output_tokens: 8192
+          supports_function_calling: true
+
+      # qwen36-27b: dense 27B, no MTP, no thinking — faster TTFT for simple queries
+      - model_name: qwen36-27b
+        litellm_params:
+          model: openai/qwen36-27b
+          api_base: http://10.100.20.19:8088/v1
+          api_key: none
+          timeout: 600
+          extra_body:
+            chat_template_kwargs:
+              enable_thinking: false
+        model_info:
+          max_input_tokens: 131072
+          max_output_tokens: 8192
+          supports_function_calling: true
+
+      # qwen36-27b-think: thinking variant for OWU (murderbot-v1 preset)
+      - model_name: qwen36-27b-think
+        litellm_params:
+          model: openai/qwen36-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
