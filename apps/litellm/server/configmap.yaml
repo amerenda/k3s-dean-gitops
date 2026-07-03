@@ -27,6 +27,7 @@ data:
       # Do NOT use for Claude Code / opencode (thinking adds ~1-3s TTFT latency).
       # NOTE: uses thinking={budget_tokens:8192} not chat_template_kwargs.enable_thinking.
       # enable_thinking:true without a budget causes Jinja template overflow with 60+ tools (400).
+      # parallel_tool_calls:false forces one tool per turn, reducing runaway loops.
       - model_name: qwen3-35b-think
         litellm_params:
           model: openai/qwen3-35b
@@ -37,6 +38,7 @@ data:
             thinking:
               type: enabled
               budget_tokens: 8192
+            parallel_tool_calls: false
         model_info:
           max_input_tokens: 131072
           max_output_tokens: 8192
