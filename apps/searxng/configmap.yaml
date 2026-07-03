@@ -38,11 +38,11 @@ data:
       - name: bing
         engine: bing
         shortcut: b
-        disabled: true
+        disabled: false
       - name: duckduckgo
         engine: duckduckgo
         shortcut: ddg
-        disabled: true
+        disabled: false
       - name: wikipedia
         engine: wikipedia
         shortcut: wp
