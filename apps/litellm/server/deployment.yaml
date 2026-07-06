@@ -25,7 +25,7 @@ spec:
       containers:
       - name: server
         image: ghcr.io/berriai/litellm:main-stable
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 4000
         env:
