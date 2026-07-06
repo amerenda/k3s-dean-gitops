@@ -25,10 +25,10 @@ spec:
         - name: nvidia-device-plugin-ctr
           image: nvcr.io/nvidia/k8s-device-plugin:v0.17.0
           args:
-            - --config-file=/etc/nvidia-device-plugin/config.yaml
+            - --mig-strategy=none
+            - --fail-on-init-error=false
+            - --device-discovery-strategy=nvml
           env:
-            - name: FAIL_ON_INIT_ERROR
-              value: "false"
             - name: NVIDIA_VISIBLE_DEVICES
               value: void
           securityContext:
@@ -36,12 +36,7 @@ spec:
           volumeMounts:
             - name: device-plugin
               mountPath: /var/lib/kubelet/device-plugins
-            - name: plugin-config
-              mountPath: /etc/nvidia-device-plugin
       volumes:
         - name: device-plugin
           hostPath:
             path: /var/lib/kubelet/device-plugins
-        - name: plugin-config
-          configMap:
-            name: nvidia-device-plugin-config
