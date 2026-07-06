@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litellm-migration-override
+  namespace: litellm
+data:
+  prisma_migration.py: |
+    # Override of /app/litellm/proxy/prisma_migration.py
+    #
+    # The original runs `prisma generate` (Node.js Prisma CLI) on every startup.
+    # On Wolfi Linux (the LiteLLM base image), Node.js startup overhead makes this
+    # take ~10 minutes despite the Prisma Python client already being pre-built in
+    # the image at /app/.venv/lib/python3.13/site-packages/prisma/.
+    #
+    # Fix: skip prisma generate. The client is baked into the image by the upstream
+    # build; re-running it at runtime is redundant and adds 10 minutes to every restart.
+    # Run `prisma generate` manually and rebuild if the schema changes.
+
+    import os
+    import sys
+
+    sys.path.insert(0, os.path.abspath("./"))
+
+    from litellm._logging import verbose_proxy_logger
+    from litellm.proxy.proxy_cli import run_server
+
+    run_server(["--skip_server_startup"], standalone_mode=False)
+
+    verbose_proxy_logger.info("Skipping 'prisma generate' — Prisma client pre-built in image.")
+    verbose_proxy_logger.info("To regenerate: exec into container and run 'prisma generate'.")
