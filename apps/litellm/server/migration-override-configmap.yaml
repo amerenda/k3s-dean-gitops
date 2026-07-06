@@ -32,6 +32,7 @@ data:
         ["prisma", "migrate", "deploy"],
         capture_output=True, text=True,
         cwd="/app",
+        timeout=120,  # Fail fast if DB is unreachable (max 2 min vs 10.5 min probe)
     )
     verbose_proxy_logger.info(f"prisma migrate deploy stdout: {result.stdout}")
     if result.returncode != 0:
