@@ -18,7 +18,7 @@ spec:
       labels:
         app: litellm-server
       annotations:
-        configmap.reloader.stakater.com/reload: "litellm-config,litellm-custom-hooks"
+        configmap.reloader.stakater.com/reload: "litellm-config,litellm-custom-hooks,litellm-migration-override"
     spec:
       nodeSelector:
         kubernetes.io/hostname: murderbot
@@ -83,6 +83,10 @@ spec:
         - name: custom-hooks
           mountPath: /app/custom_hooks
           readOnly: true
+        - name: migration-override
+          mountPath: /app/litellm/proxy/prisma_migration.py
+          subPath: prisma_migration.py
+          readOnly: true
       volumes:
       - name: litellm-config
         configMap:
@@ -90,3 +94,6 @@ spec:
       - name: custom-hooks
         configMap:
           name: litellm-custom-hooks
+      - name: migration-override
+        configMap:
+          name: litellm-migration-override
