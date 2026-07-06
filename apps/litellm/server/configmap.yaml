@@ -108,7 +108,10 @@ data:
           max_output_tokens: 8192
           supports_function_calling: true
 
-      # qwen36-27b-think: thinking variant for OWU (murderbot-v1 preset)
+      # qwen36-27b-think: OWU murderbot-v1 preset — thinking disabled.
+      # The 27B dense model's max_tokens budget is shared between thinking and
+      # output; with thinking enabled, synthesis turns return empty content.
+      # Disabling thinking here fixes the synthesis bug without any proxy hook.
       - model_name: qwen36-27b-think
         litellm_params:
           model: openai/qwen36-27b
@@ -116,9 +119,8 @@ data:
           api_key: none
           timeout: 600
           extra_body:
-            thinking:
-              type: enabled
-              budget_tokens: 8192
+            chat_template_kwargs:
+              enable_thinking: false
             parallel_tool_calls: false
         model_info:
           max_input_tokens: 131072
@@ -230,5 +232,4 @@ data:
     litellm_settings:
       drop_params: true
       callbacks:
-        - custom_hooks.tool_strip_hook.proxy_handler_instance
         - prometheus
