@@ -2917,6 +2917,108 @@ spec:
         maxDuration: 3m
 
 ---
+# Application: tdarr (shared resources — namespace, pvc, externalsecret, ingress)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-tdarr
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/tdarr
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tdarr
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Application: tdarr server
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-tdarr-server
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/tdarr/server
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tdarr
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+# Application: tdarr nodes (murderbot nvidia + archlinux amd)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-tdarr-nodes
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/tdarr/nodes
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tdarr
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
 # Application: homeassistant MCP server (registered via MCP factory)
 apiVersion: argoproj.io/v1alpha1
 kind: Application

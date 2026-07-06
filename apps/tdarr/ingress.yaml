@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tdarr
+  namespace: tdarr
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [tdarr.media.amer.dev]
+      secretName: tdarr-tls
+  rules:
+    - host: tdarr.media.amer.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: tdarr-server
+                port:
+                  number: 8265
