@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tdarr-node-amd
+  namespace: tdarr
+  annotations:
+    # NFS not set up yet. To enable:
+    # 1. Set up NFS: murderbot exports /mnt/storage, archlinux mounts it
+    # 2. Replace emptyDir volumes below with NFS volumes (see plan)
+    # 3. Set replicas: 1
+    nfs-status: "pending"
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: tdarr-node-amd
+  template:
+    metadata:
+      labels:
+        app: tdarr-node-amd
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: archlinux
+      containers:
+        - name: tdarr-node
+          image: ghcr.io/haveagitgat/tdarr_node:2.82.02
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              amd.com/gpu: 1
+          env:
+            - name: TZ
+              value: America/New_York
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: UMASK_SET
+              value: "002"
+            - name: nodeName
+              value: "archlinux-amd"
+            - name: serverIP
+              value: tdarr-server.tdarr.svc.cluster.local
+            - name: serverPort
+              value: "8266"
+            - name: inContainer
+              value: "true"
+            - name: ffmpegVersion
+              value: "7"
+            - name: transcodegpuWorkers
+              value: "1"
+            - name: transcodecpuWorkers
+              value: "2"
+            - name: healthcheckgpuWorkers
+              value: "1"
+            - name: healthcheckcpuWorkers
+              value: "1"
+            - name: apiKey
+              valueFrom:
+                secretKeyRef:
+                  name: tdarr-api-key
+                  key: TDARR_API_KEY
+          volumeMounts:
+            - name: movies
+              mountPath: /movies
+            - name: tv
+              mountPath: /tv
+            - name: transcode-cache
+              mountPath: /temp
+      volumes:
+        # PLACEHOLDER — replace with NFS volumes when ready:
+        # - name: movies
+        #   nfs:
+        #     server: 10.100.20.10   # murderbot IP (confirm before enabling)
+        #     path: /mnt/storage/movies
+        # - name: tv
+        #   nfs:
+        #     server: 10.100.20.10
+        #     path: /mnt/storage/tv
+        - name: movies
+          emptyDir: {}
+        - name: tv
+          emptyDir: {}
+        - name: transcode-cache
+          hostPath:
+            path: /tmp/tdarr-cache
+            type: DirectoryOrCreate

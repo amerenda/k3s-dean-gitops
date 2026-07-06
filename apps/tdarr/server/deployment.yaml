@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tdarr-server
+  namespace: tdarr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tdarr-server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: tdarr-server
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: murderbot
+      containers:
+        - name: tdarr-server
+          image: ghcr.io/haveagitgat/tdarr:2.82.02
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8265
+            - containerPort: 8266
+          env:
+            - name: TZ
+              value: America/New_York
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: UMASK_SET
+              value: "002"
+            - name: serverIP
+              value: "0.0.0.0"
+            - name: serverPort
+              value: "8266"
+            - name: webUIPort
+              value: "8265"
+            - name: internalNode
+              value: "false"
+            - name: inContainer
+              value: "true"
+            - name: ffmpegVersion
+              value: "7"
+            - name: auth
+              value: "false"
+            - name: openBrowser
+              value: "false"
+            - name: maxLogSizeMB
+              value: "10"
+          volumeMounts:
+            - name: server-data
+              mountPath: /app/server
+            - name: configs
+              mountPath: /app/configs
+            - name: logs
+              mountPath: /app/logs
+            - name: movies
+              mountPath: /movies
+              readOnly: false
+            - name: tv
+              mountPath: /tv
+              readOnly: false
+            - name: transcode-cache
+              mountPath: /temp
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+      volumes:
+        - name: server-data
+          persistentVolumeClaim:
+            claimName: tdarr-server-data
+        - name: configs
+          hostPath:
+            path: /mnt/storage/media/config/tdarr/configs
+            type: DirectoryOrCreate
+        - name: logs
+          hostPath:
+            path: /mnt/storage/media/config/tdarr/logs
+            type: DirectoryOrCreate
+        - name: movies
+          hostPath:
+            path: /mnt/storage/movies
+            type: Directory
+        - name: tv
+          hostPath:
+            path: /mnt/storage/tv
+            type: Directory
+        - name: transcode-cache
+          hostPath:
+            path: /mnt/storage/cache/tdarr
+            type: DirectoryOrCreate
