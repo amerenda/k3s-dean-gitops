@@ -7,17 +7,17 @@ data:
   prisma_migration.py: |
     # Override of /app/litellm/proxy/prisma_migration.py
     #
-    # Root cause of slow startup: the original script calls
-    # run_server(["--skip_server_startup"]) which internally runs `prisma generate`
-    # (Node.js Prisma CLI). On Wolfi Linux, Node.js startup overhead makes this
-    # take ~10 minutes per restart. `prisma --version` alone takes 22 seconds.
+    # Startup time breakdown (measured, cold container):
+    #   - Python imports 3044 modules (litellm.proxy.proxy_server): ~2-7 min
+    #     (varies with overlay FS page cache warmth; unavoidable without custom image)
+    #   - subprocess.run(["prisma"]) binary existence check: ~10s (Node.js startup)
+    #   - prisma migrate deploy: ~17s
+    #   - uvicorn lifespan: ~8s
+    #   Total: ~8 minutes observed
     #
-    # The Prisma Python client is pre-built in the image at:
-    #   /app/.venv/lib/python3.13/site-packages/prisma/
-    # so prisma generate is redundant and safe to skip.
-    #
-    # This override runs `prisma migrate deploy` directly (17 seconds) and skips
-    # both prisma generate calls, reducing startup from ~10 min to ~30 seconds.
+    # The original script called run_server(["--skip_server_startup"]) which
+    # internally ran `prisma generate` (Node.js), adding ~2 extra minutes.
+    # This override skips that, running prisma migrate deploy directly.
 
     import os
     import subprocess

@@ -41,6 +41,8 @@ spec:
               key: database-url
         - name: MCP_TOOL_PREFIX_SEPARATOR
           value: "_"
+        - name: LITELLM_LOCAL_MODEL_COST_MAP
+          value: "true"
         startupProbe:
           httpGet:
             path: /health/readiness
@@ -48,7 +50,7 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 15
           timeoutSeconds: 10
-          failureThreshold: 46
+          failureThreshold: 40
         readinessProbe:
           httpGet:
             path: /health/readiness
