@@ -21,13 +21,10 @@ data:
           max_output_tokens: 8192
           supports_function_calling: true
 
-      # qwen3-35b-think: thinking-enabled variant for OpenWebUI interactive chat.
-      # Model reasons about when to call tools; thinking is stripped from output
-      # (server default preserve_thinking=false) so users see only real content.
-      # Do NOT use for Claude Code / opencode (thinking adds ~1-3s TTFT latency).
-      # NOTE: uses thinking={budget_tokens:8192} not chat_template_kwargs.enable_thinking.
-      # enable_thinking:true without a budget causes Jinja template overflow with 60+ tools (400).
-      # parallel_tool_calls:false forces one tool per turn, reducing runaway loops.
+      # qwen3-35b-think: OWU interactive chat variant (murderbot-v0).
+      # Thinking disabled: with the 27B dense model running, thinking causes the model
+      # to loop indefinitely on tool calls and ignore "stop after N calls" instructions.
+      # Re-enable with budget_tokens when switching back to the actual 35B MoE model.
       - model_name: qwen3-35b-think
         litellm_params:
           model: openai/qwen3-35b
@@ -35,9 +32,8 @@ data:
           api_key: none
           timeout: 600
           extra_body:
-            thinking:
-              type: enabled
-              budget_tokens: 8192
+            chat_template_kwargs:
+              enable_thinking: false
             parallel_tool_calls: false
         model_info:
           max_input_tokens: 131072
@@ -84,9 +80,8 @@ data:
           api_key: none
           timeout: 600
           extra_body:
-            thinking:
-              type: enabled
-              budget_tokens: 8192
+            chat_template_kwargs:
+              enable_thinking: false
             parallel_tool_calls: false
         model_info:
           max_input_tokens: 131072
