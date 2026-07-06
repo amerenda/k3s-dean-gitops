@@ -31,21 +31,27 @@ spec:
           env:
             - name: NVIDIA_VISIBLE_DEVICES
               value: void
-            - name: LD_LIBRARY_PATH
-              value: /usr/local/nvidia/lib:/usr/local/nvidia/lib64:/host-lib
           securityContext:
             privileged: true
           volumeMounts:
             - name: device-plugin
               mountPath: /var/lib/kubelet/device-plugins
-            - name: nvidia-libs
-              mountPath: /host-lib
+            # Mount ONLY the nvml library — not the whole lib dir (glibc conflict)
+            - name: nvidia-ml-lib
+              mountPath: /usr/local/nvidia/lib64/libnvidia-ml.so.1
+              readOnly: true
+            - name: nvidia-ml-versioned
+              mountPath: /usr/local/nvidia/lib64/libnvidia-ml.so.595.58.03
               readOnly: true
       volumes:
         - name: device-plugin
           hostPath:
             path: /var/lib/kubelet/device-plugins
-        - name: nvidia-libs
+        - name: nvidia-ml-lib
           hostPath:
-            path: /usr/lib/x86_64-linux-gnu
-            type: Directory
+            path: /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1
+            type: File
+        - name: nvidia-ml-versioned
+          hostPath:
+            path: /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.595.58.03
+            type: File
