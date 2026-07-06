@@ -18,8 +18,6 @@ spec:
         - key: nvidia.com/gpu
           operator: Exists
           effect: NoSchedule
-      nodeSelector:
-        kubernetes.io/hostname: murderbot
       priorityClassName: system-node-critical
       containers:
         - name: nvidia-device-plugin-ctr
@@ -35,6 +33,9 @@ spec:
             - name: device-plugin
               mountPath: /var/lib/kubelet/device-plugins
       volumes:
+        # hostPath is required for the NVIDIA device plugin to communicate with kubelet via
+        # CRI socket. This is standard practice for all GPU device plugins and cannot be avoided.
+        # See: https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/device-plugins/
         - name: device-plugin
           hostPath:
             path: /var/lib/kubelet/device-plugins
