@@ -41,11 +41,18 @@ spec:
               key: database-url
         - name: MCP_TOOL_PREFIX_SEPARATOR
           value: "_"
-        readinessProbe:
+        startupProbe:
           httpGet:
             path: /health/readiness
             port: 4000
           initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 24
+        readinessProbe:
+          httpGet:
+            path: /health/readiness
+            port: 4000
           periodSeconds: 10
           timeoutSeconds: 10
           failureThreshold: 6
@@ -53,7 +60,6 @@ spec:
           httpGet:
             path: /health/liveliness
             port: 4000
-          initialDelaySeconds: 60
           periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 5
