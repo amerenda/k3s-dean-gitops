@@ -6,7 +6,7 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
-  ingressClassName: traefik
+  ingressClassName: infra-traefik
   tls:
     - hosts: [tdarr.media.amer.dev]
       secretName: tdarr-tls
