@@ -150,8 +150,11 @@ data:
         litellm_params:
           model: ollama/qwen3:14b
           api_base: http://10.100.20.25:11434
+          timeout: 300
           extra_body:
             think: false
+            options:
+              num_ctx: 32768
         model_info:
           max_input_tokens: 32768
           max_output_tokens: 4096
@@ -161,8 +164,11 @@ data:
         litellm_params:
           model: ollama/qwen3:14b
           api_base: http://10.100.20.25:11434
+          timeout: 300
           extra_body:
             think: false
+            options:
+              num_ctx: 32768
         model_info:
           max_input_tokens: 32768
           max_output_tokens: 4096
@@ -172,8 +178,11 @@ data:
         litellm_params:
           model: ollama/qwen3:14b
           api_base: http://10.100.20.25:11434
+          timeout: 300
           extra_body:
             think: false
+            options:
+              num_ctx: 32768
         model_info:
           max_input_tokens: 32768
           max_output_tokens: 4096
