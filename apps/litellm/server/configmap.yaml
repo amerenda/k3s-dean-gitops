@@ -143,10 +143,10 @@ data:
           supports_function_calling: true
 
       # --- archlinux (RX 9070 XT, 16GB VRAM, Ollama — qwen3:14b at ~51 t/s) ---
+      # Base model names use -base suffix so OWU only shows the configured presets
+      # (archlinux-v0-custom → archlinux-v0, archlinux-uncensored-v0-custom → archlinux-uncensored-v0).
 
-      # archlinux-v0: gated conversational assistant (same weights as archlinux-uncensored-v0,
-      # content policy enforced via system prompt in OWU preset)
-      - model_name: archlinux-v0
+      - model_name: archlinux-v0-base
         litellm_params:
           model: ollama/qwen3:14b
           api_base: http://10.100.20.25:11434
@@ -157,8 +157,7 @@ data:
           max_output_tokens: 4096
           supports_function_calling: true
 
-      # archlinux-uncensored-v0: ungated — system prompt sets capability/tool expectations only
-      - model_name: archlinux-uncensored-v0
+      - model_name: archlinux-uncensored-v0-base
         litellm_params:
           model: ollama/qwen3:14b
           api_base: http://10.100.20.25:11434
