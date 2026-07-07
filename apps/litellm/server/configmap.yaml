@@ -6,25 +6,19 @@ metadata:
 data:
   config.yaml: |
     model_list:
-      # --- murderbot (RTX 4000, 24GB, llama.cpp — always hot) ---
+      # --- murderbot (RTX PRO 4000, 24GB, vLLM/nvidia/Qwen3.6-27B-NVFP4 — always hot) ---
       - model_name: qwen3-35b
         litellm_params:
           model: openai/qwen3-35b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
-          extra_body:
-            chat_template_kwargs:
-              enable_thinking: false
         model_info:
-          max_input_tokens: 131072
+          max_input_tokens: 32768
           max_output_tokens: 8192
           supports_function_calling: true
 
       # qwen3-35b-think: OWU interactive chat variant (murderbot-v0).
-      # Thinking disabled: with the 27B dense model running, thinking causes the model
-      # to loop indefinitely on tool calls and ignore "stop after N calls" instructions.
-      # Re-enable with budget_tokens when switching back to the actual 35B MoE model.
       - model_name: qwen3-35b-think
         litellm_params:
           model: openai/qwen3-35b
@@ -32,44 +26,33 @@ data:
           api_key: none
           timeout: 600
           extra_body:
-            chat_template_kwargs:
-              enable_thinking: false
             parallel_tool_calls: false
         model_info:
-          max_input_tokens: 131072
+          max_input_tokens: 32768
           max_output_tokens: 8192
           supports_function_calling: true
 
-      # coder is an alias for qwen3-35b — lets agents and UIs pick
-      # a coding-optimised endpoint without hardcoding the model name.
-      # Swap the backend here when a dedicated coding model is added.
+      # coder: coding-optimised alias for qwen3-35b endpoint.
       - model_name: coder
         litellm_params:
           model: openai/qwen3-35b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
-          extra_body:
-            chat_template_kwargs:
-              enable_thinking: false
         model_info:
-          max_input_tokens: 131072
+          max_input_tokens: 32768
           max_output_tokens: 8192
           supports_function_calling: true
 
-      # qwen36-35b / qwen36-35b-think: named aliases for the 35B MoE.
-      # Switching back to 35B requires only a model-switcher call, not a config change.
+      # qwen36-35b / qwen36-35b-think: named aliases for backward compat.
       - model_name: qwen36-35b
         litellm_params:
           model: openai/qwen36-35b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
-          extra_body:
-            chat_template_kwargs:
-              enable_thinking: false
         model_info:
-          max_input_tokens: 131072
+          max_input_tokens: 32768
           max_output_tokens: 8192
           supports_function_calling: true
 
@@ -80,33 +63,25 @@ data:
           api_key: none
           timeout: 600
           extra_body:
-            chat_template_kwargs:
-              enable_thinking: false
             parallel_tool_calls: false
         model_info:
-          max_input_tokens: 131072
+          max_input_tokens: 32768
           max_output_tokens: 8192
           supports_function_calling: true
 
-      # qwen36-27b: dense 27B, no MTP, no thinking — faster TTFT for simple queries
+      # qwen36-27b: dense 27B NVFP4 — primary murderbot model.
       - model_name: qwen36-27b
         litellm_params:
           model: openai/qwen36-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
-          extra_body:
-            chat_template_kwargs:
-              enable_thinking: false
         model_info:
-          max_input_tokens: 131072
+          max_input_tokens: 32768
           max_output_tokens: 8192
           supports_function_calling: true
 
-      # qwen36-27b-think: OWU murderbot-v1 preset — thinking disabled.
-      # The 27B dense model's max_tokens budget is shared between thinking and
-      # output; with thinking enabled, synthesis turns return empty content.
-      # Disabling thinking here fixes the synthesis bug without any proxy hook.
+      # qwen36-27b-think: OWU murderbot-v1 preset.
       - model_name: qwen36-27b-think
         litellm_params:
           model: openai/qwen36-27b
@@ -114,31 +89,21 @@ data:
           api_key: none
           timeout: 600
           extra_body:
-            chat_template_kwargs:
-              enable_thinking: false
             parallel_tool_calls: false
         model_info:
-          max_input_tokens: 131072
+          max_input_tokens: 32768
           max_output_tokens: 8192
           supports_function_calling: true
 
-      # qwen36-unrestricted: abliterated Qwen3.6-35B-A3B (llmfan46, Heretic v1.3.0, MTP-preserved).
-      # Points to the same :8088 endpoint as qwen3-35b-think — swap the running model before use:
-      #   docker stop llama-server
-      #   docker run ... -e MODEL=.../Qwen3.6-35B-A3B-uncensored-Q4_K_M.gguf ...
-      # See ~/claude/manual_runs/swap-to-unrestricted-model.sh
+      # qwen36-unrestricted: abliterated model alias — swap running model via model-switcher before use.
       - model_name: qwen36-unrestricted
         litellm_params:
           model: openai/qwen3-35b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
-          extra_body:
-            thinking:
-              type: enabled
-              budget_tokens: 8192
         model_info:
-          max_input_tokens: 131072
+          max_input_tokens: 32768
           max_output_tokens: 8192
           supports_function_calling: true
 
