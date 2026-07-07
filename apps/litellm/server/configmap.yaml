@@ -142,7 +142,33 @@ data:
           max_output_tokens: 8192
           supports_function_calling: true
 
-      # --- archlinux (RX 9070 XT, 16GB VRAM, Ollama) ---
+      # --- archlinux (RX 9070 XT, 16GB VRAM, Ollama — qwen3:14b at ~51 t/s) ---
+
+      # archlinux-v0: gated conversational assistant (same weights as archlinux-uncensored-v0,
+      # content policy enforced via system prompt in OWU preset)
+      - model_name: archlinux-v0
+        litellm_params:
+          model: ollama/qwen3:14b
+          api_base: http://10.100.20.25:11434
+          extra_body:
+            think: false
+        model_info:
+          max_input_tokens: 32768
+          max_output_tokens: 4096
+          supports_function_calling: true
+
+      # archlinux-uncensored-v0: ungated — system prompt sets capability/tool expectations only
+      - model_name: archlinux-uncensored-v0
+        litellm_params:
+          model: ollama/qwen3:14b
+          api_base: http://10.100.20.25:11434
+          extra_body:
+            think: false
+        model_info:
+          max_input_tokens: 32768
+          max_output_tokens: 4096
+          supports_function_calling: true
+
       - model_name: qwen3-14b
         litellm_params:
           model: ollama/qwen3:14b
