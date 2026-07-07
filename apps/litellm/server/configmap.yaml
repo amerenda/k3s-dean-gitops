@@ -255,9 +255,11 @@ data:
         transport: "http"
         allow_all_keys: true
 
-      homeassistant:
-        url: "http://homeassistant-server.mcp-homeassistant.svc.cluster.local:8086/mcp"
-        transport: "http"
+      # homeassistant: removed from LiteLLM MCP — 89 HA tools added ~36K tokens to every
+      # model request via server:mcp:lm, causing prompt processing timeouts (30-60s) and
+      # intermittent 400s from the llama.cpp jinja template renderer. Total tool count drops
+      # from 123 to 34; prompt token overhead drops from ~36K to ~6K.
+      # HA tools remain accessible via the mcp-bridge OpenAPI endpoint in OWU.
     litellm_settings:
       drop_params: true
       callbacks:
