@@ -4,7 +4,7 @@ metadata:
   name: openhands-config
   namespace: openhands
 data:
-  LLM_MODEL: "openai/qwen3-35b"
+  LLM_MODEL: "openai/coder"
   LLM_BASE_URL: "http://litellm-server.litellm.svc.cluster.local:4000/v1"
   WORKSPACE_BASE: "/workspace"
   WORKSPACE_MOUNT_PATH: "/workspace"
