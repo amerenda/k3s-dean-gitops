@@ -95,6 +95,35 @@ data:
           max_output_tokens: 8192
           supports_function_calling: true
 
+      # murderbot-v1-base: canonical preset name for qwen36-27b (censored).
+      - model_name: murderbot-v1-base
+        litellm_params:
+          model: openai/qwen36-27b
+          api_base: http://10.100.20.19:8088/v1
+          api_key: none
+          timeout: 600
+          extra_body:
+            parallel_tool_calls: false
+        model_info:
+          max_input_tokens: 14336
+          max_output_tokens: 2048
+          supports_function_calling: true
+
+      # murderbot-uncensored-v1-base: abliterated model alias.
+      # Requires swapping the running model to the unrestricted variant via model-switcher before use.
+      - model_name: murderbot-uncensored-v1-base
+        litellm_params:
+          model: openai/qwen36-27b
+          api_base: http://10.100.20.19:8088/v1
+          api_key: none
+          timeout: 600
+          extra_body:
+            parallel_tool_calls: false
+        model_info:
+          max_input_tokens: 14336
+          max_output_tokens: 2048
+          supports_function_calling: true
+
       # qwen36-unrestricted: abliterated model alias — swap running model via model-switcher before use.
       - model_name: qwen36-unrestricted
         litellm_params:
