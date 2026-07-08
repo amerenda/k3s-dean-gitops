@@ -13,9 +13,6 @@ data:
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
-          extra_body:
-            chat_template_kwargs:
-              enable_thinking: false
         model_info:
           max_input_tokens: 16384
           max_output_tokens: 8192
@@ -54,9 +51,6 @@ data:
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
-          extra_body:
-            chat_template_kwargs:
-              enable_thinking: false
         model_info:
           max_input_tokens: 16384
           max_output_tokens: 8192
@@ -75,16 +69,13 @@ data:
           max_output_tokens: 8192
           supports_function_calling: true
 
-      # qwen36-27b: dense 27B NVFP4 — primary murderbot model (no-think for efficiency).
+      # qwen36-27b: dense 27B NVFP4 — primary murderbot model.
       - model_name: qwen36-27b
         litellm_params:
           model: openai/qwen36-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
-          extra_body:
-            chat_template_kwargs:
-              enable_thinking: false
         model_info:
           max_input_tokens: 16384
           max_output_tokens: 8192
@@ -111,9 +102,6 @@ data:
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
-          extra_body:
-            chat_template_kwargs:
-              enable_thinking: false
         model_info:
           max_input_tokens: 16384
           max_output_tokens: 8192
