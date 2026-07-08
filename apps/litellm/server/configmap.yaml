@@ -9,7 +9,7 @@ data:
       # --- murderbot (RTX PRO 4000, 24GB, vLLM/nvidia/Qwen3.6-27B-NVFP4 — always hot) ---
       - model_name: qwen3-35b
         litellm_params:
-          model: openai/qwen3-35b
+          model: openai/qwen36-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
@@ -21,7 +21,7 @@ data:
       # qwen3-35b-think: OWU interactive chat variant (murderbot-v0).
       - model_name: qwen3-35b-think
         litellm_params:
-          model: openai/qwen3-35b
+          model: openai/qwen36-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
@@ -35,7 +35,7 @@ data:
       # coder: coding-optimised alias for qwen3-35b endpoint.
       - model_name: coder
         litellm_params:
-          model: openai/qwen3-35b
+          model: openai/qwen36-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
@@ -47,7 +47,7 @@ data:
       # qwen36-35b / qwen36-35b-think: named aliases for backward compat.
       - model_name: qwen36-35b
         litellm_params:
-          model: openai/qwen36-35b
+          model: openai/qwen36-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
@@ -58,7 +58,7 @@ data:
 
       - model_name: qwen36-35b-think
         litellm_params:
-          model: openai/qwen36-35b
+          model: openai/qwen36-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
@@ -98,7 +98,7 @@ data:
       # qwen36-unrestricted: abliterated model alias — swap running model via model-switcher before use.
       - model_name: qwen36-unrestricted
         litellm_params:
-          model: openai/qwen3-35b
+          model: openai/qwen36-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
