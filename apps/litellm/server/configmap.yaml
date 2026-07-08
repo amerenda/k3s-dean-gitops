@@ -231,7 +231,7 @@ data:
         BadRequestErrorRetries: 3
 
     mcp_servers:
-      web:
+      searxng:
         url: "http://mcp-searxng-server.mcp-searxng.svc.cluster.local:8000/mcp"
         transport: "http"
         allow_all_keys: true
