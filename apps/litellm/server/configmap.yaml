@@ -96,6 +96,7 @@ data:
           supports_function_calling: true
 
       # murderbot-v1-base: canonical preset name for qwen36-27b (censored).
+      # truncate_prompt_tokens applies a rolling window — oldest tokens dropped instead of 400 on overflow.
       - model_name: murderbot-v1-base
         litellm_params:
           model: openai/qwen36-27b
@@ -104,6 +105,7 @@ data:
           timeout: 600
           extra_body:
             parallel_tool_calls: false
+            truncate_prompt_tokens: 14336
         model_info:
           max_input_tokens: 14336
           max_output_tokens: 2048
@@ -119,6 +121,7 @@ data:
           timeout: 600
           extra_body:
             parallel_tool_calls: false
+            truncate_prompt_tokens: 14336
         model_info:
           max_input_tokens: 14336
           max_output_tokens: 2048
