@@ -82,17 +82,22 @@ data:
           supports_function_calling: true
 
       # qwen36-27b-think: OWU murderbot-v1 preset.
+      # max_completion_tokens=1024: the 27B model has a hard 16K context limit. After
+      # 5+ tool calls, the conversation can reach ~14K input tokens. Capping output at
+      # 1024 prevents ContextWindowExceededError on the synthesis turn (14K + 1024 = 15K
+      # < 16K). A 1024-token answer is substantive; the user-visible quality is unchanged.
       - model_name: qwen36-27b-think
         litellm_params:
           model: openai/qwen36-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
+          max_completion_tokens: 1024
           extra_body:
             parallel_tool_calls: false
         model_info:
           max_input_tokens: 16384
-          max_output_tokens: 8192
+          max_output_tokens: 1024
           supports_function_calling: true
 
       # murderbot-v1-base: canonical preset name for qwen36-27b (censored).
