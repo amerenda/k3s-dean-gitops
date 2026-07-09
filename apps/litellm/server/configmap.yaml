@@ -7,6 +7,41 @@ data:
   config.yaml: |
     model_list:
       # --- murderbot (RTX PRO 4000, 24GB, vLLM/nvidia/Qwen3.6-27B-NVFP4 — always hot) ---
+
+      # coder: used by OpenHands and praetor-coder-worker.
+      # parallel_tool_calls=false: coding agents must execute tools sequentially (read → edit → verify);
+      # parallel calls cause race conditions on file state.
+      # No max_completion_tokens: OpenHands controls output via LLM_MAX_OUTPUT_TOKENS=4096.
+      # No truncate_prompt_tokens: OpenHands manages context via its memory condenser.
+      - model_name: coder
+        litellm_params:
+          model: openai/qwen36-27b
+          api_base: http://10.100.20.19:8088/v1
+          api_key: none
+          timeout: 600
+          extra_body:
+            parallel_tool_calls: false
+        model_info:
+          max_input_tokens: 16384
+          max_output_tokens: 4096
+          supports_function_calling: true
+
+      # qwen3-35b: alias used by praetor pipeline/feature-pipeline/webhook-adapter workers.
+      # truncate_prompt_tokens: rolling window prevents 400s when orchestration context grows large.
+      - model_name: qwen3-35b
+        litellm_params:
+          model: openai/qwen36-27b
+          api_base: http://10.100.20.19:8088/v1
+          api_key: none
+          timeout: 600
+          extra_body:
+            parallel_tool_calls: false
+            truncate_prompt_tokens: 14336
+        model_info:
+          max_input_tokens: 14336
+          max_output_tokens: 2048
+          supports_function_calling: true
+
       # murderbot-v1-base: canonical preset name for qwen36-27b (censored).
       # truncate_prompt_tokens applies a rolling window — oldest tokens dropped instead of 400 on overflow.
       - model_name: murderbot-v1-base
