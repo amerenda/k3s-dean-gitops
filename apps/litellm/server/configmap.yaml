@@ -43,7 +43,10 @@ data:
           supports_function_calling: true
 
       # murderbot-v1-base: canonical preset name for qwen36-27b (censored).
-      # truncate_prompt_tokens applies a rolling window — oldest tokens dropped instead of 400 on overflow.
+      # Budget split: 8192 input (truncate rolling window) + 8192 output = 16384 total context.
+      # vLLM shares max_tokens between thinking and visible content — with max_output_tokens=2048,
+      # the model exhausted the entire budget on thinking and produced 0 visible content.
+      # 8192 output tokens: ~2000–3000 for thinking, 5000–6000 remaining for visible response.
       - model_name: murderbot-v1-base
         litellm_params:
           model: openai/qwen36-27b
@@ -52,10 +55,10 @@ data:
           timeout: 600
           extra_body:
             parallel_tool_calls: false
-            truncate_prompt_tokens: 14336
+            truncate_prompt_tokens: 8192
         model_info:
-          max_input_tokens: 14336
-          max_output_tokens: 2048
+          max_input_tokens: 8192
+          max_output_tokens: 8192
           supports_function_calling: true
 
       # murderbot-uncensored-v1-base: abliterated model alias.
@@ -68,10 +71,10 @@ data:
           timeout: 600
           extra_body:
             parallel_tool_calls: false
-            truncate_prompt_tokens: 14336
+            truncate_prompt_tokens: 8192
         model_info:
-          max_input_tokens: 14336
-          max_output_tokens: 2048
+          max_input_tokens: 8192
+          max_output_tokens: 8192
           supports_function_calling: true
 
       # --- archlinux (RX 9070 XT, 16GB VRAM, Ollama — qwen3:14b at ~51 t/s) ---
