@@ -1,0 +1,135 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secure-search-mcp-server
+  namespace: secure-search-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: secure-search-mcp-server
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: secure-search-mcp-server
+    spec:
+      # gluetun controls the pod's network namespace — all containers route via VPN
+      initContainers:
+        # Block until gluetun's VPN tunnel is established before starting the MCP server.
+        # This prevents any window where the MCP could accept connections before the VPN is up.
+        - name: wait-for-vpn
+          image: curlimages/curl:latest
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for NordVPN tunnel via gluetun..."
+              until curl -sf http://localhost:9999/v1/openvpn/status | grep -q '"running"'; do
+                echo "VPN not ready, retrying in 5s..."
+                sleep 5
+              done
+              echo "VPN tunnel confirmed running."
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 32Mi
+
+      containers:
+        # ── gluetun: NordVPN VPN client ──────────────────────────────────────────
+        # Owns the pod's network namespace. Routes ALL egress through NordVPN Switzerland.
+        # Must start before the MCP server (handled by initContainer wait-for-vpn above).
+        - name: gluetun
+          image: ghcr.io/qdm12/gluetun:latest
+          imagePullPolicy: Always
+          securityContext:
+            privileged: true  # required for iptables + TUN interface creation
+          env:
+            - name: VPN_SERVICE_PROVIDER
+              value: "nordvpn"
+            - name: VPN_TYPE
+              value: "openvpn"
+            # NordVPN token-based OpenVPN auth: username=token, password=<access-token>
+            - name: OPENVPN_USER
+              value: "token"
+            - name: OPENVPN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secure-search-mcp-secrets
+                  key: NORDVPN_ACCESS_TOKEN
+            - name: SERVER_COUNTRIES
+              value: "Switzerland"
+            # Control API on 9999 — MCP server uses 8000
+            - name: HTTP_CONTROL_SERVER_ADDRESS
+              value: ":9999"
+            - name: TZ
+              value: "UTC"
+            - name: LOG_LEVEL
+              value: "info"
+          ports:
+            - containerPort: 9999
+              name: vpn-ctrl
+          livenessProbe:
+            httpGet:
+              path: /v1/openvpn/status
+              port: 9999
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+
+        # ── secure-search-mcp: MCP server ────────────────────────────────────────
+        # Shares gluetun's network namespace — traffic physically routes via VPN.
+        # Also performs a hard code-level VPN check before every tool call.
+        - name: server
+          image: amerenda/secure-search-mcp:sha-placeholder
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: mcp
+          env:
+            - name: SEARXNG_URL
+              value: "http://searxng.searxng.svc.cluster.local:8080"
+            - name: GLUETUN_CONTROL_URL
+              value: "http://localhost:9999"
+            - name: MAX_RESULTS
+              value: "5"
+            - name: MAX_CONTENT_CHARS
+              value: "600"
+            - name: MAX_URL_CONTENT_CHARS
+              value: "4000"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 10m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 384Mi
