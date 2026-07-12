@@ -85,7 +85,7 @@ spec:
         # Shares gluetun's network namespace — traffic physically routes via VPN.
         # Also performs a hard code-level VPN check before every tool call.
         - name: server
-          image: amerenda/secure-search-mcp:sha-3355bbb
+          image: amerenda/secure-search-mcp:sha-020479a
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -93,9 +93,6 @@ spec:
           env:
             - name: SEARXNG_URL
               value: "http://searxng.searxng.svc.cluster.local:8080"
-            # Use gluetun's internal health server (loopback, no auth) — NOT the control API.
-            - name: GLUETUN_HEALTH_URL
-              value: "http://127.0.0.1:9999"
             - name: MAX_RESULTS
               value: "5"
             - name: MAX_CONTENT_CHARS
