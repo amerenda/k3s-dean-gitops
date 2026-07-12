@@ -45,20 +45,22 @@ spec:
                   key: NORDVPN_ACCESS_TOKEN
             - name: SERVER_COUNTRIES
               value: "Switzerland"
-            # Control API on 9999 — MCP server uses 8000
+            # Gluetun defaults: internal healthcheck=127.0.0.1:9999, control server=:8000.
+            # Move control server to 8001 — MCP server occupies 8000, and 9999 is
+            # already used by gluetun's internal healthcheck (bind conflict).
             - name: HTTP_CONTROL_SERVER_ADDRESS
-              value: ":9999"
+              value: ":8001"
             - name: TZ
               value: "UTC"
             - name: LOG_LEVEL
               value: "info"
           ports:
-            - containerPort: 9999
+            - containerPort: 8001
               name: vpn-ctrl
           livenessProbe:
             httpGet:
               path: /v1/openvpn/status
-              port: 9999
+              port: 8001
             initialDelaySeconds: 30
             periodSeconds: 30
             timeoutSeconds: 5
@@ -84,7 +86,7 @@ spec:
             - name: SEARXNG_URL
               value: "http://searxng.searxng.svc.cluster.local:8080"
             - name: GLUETUN_CONTROL_URL
-              value: "http://localhost:9999"
+              value: "http://localhost:8001"
             - name: MAX_RESULTS
               value: "5"
             - name: MAX_CONTENT_CHARS
