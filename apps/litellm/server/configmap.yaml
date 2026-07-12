@@ -77,12 +77,8 @@ data:
           max_output_tokens: 8192
           supports_function_calling: true
 
-      # murderbot-v1-research-base: fast research alias (30-90s target).
-      # enable_thinking=false: disables Qwen3 extended reasoning. Without this, the model
-      # spends 3-10 minutes on chain-of-thought before producing any visible output.
-      # Research queries don't benefit from deep reasoning — speed matters far more.
-      # truncate_prompt_tokens=12288: keeps all search results in context (16384-4096=12288).
-      # max_output_tokens=1024: research summaries are short; capping prevents runaway output.
+      # murderbot-v1-research-base: kept for backwards compat with existing OWU presets.
+      # New work should use murderbot-v2-base instead.
       - model_name: murderbot-v1-research-base
         litellm_params:
           model: openai/qwen36-27b
@@ -97,6 +93,28 @@ data:
         model_info:
           max_input_tokens: 12288
           max_output_tokens: 1024
+          supports_function_calling: true
+
+      # murderbot-v2-base: single unified entrypoint for OWU (replaces v1-base + v1-research-base).
+      # thinking off: Qwen3 extended reasoning adds 3-10min latency on synthesis turns; the
+      # model is capable enough without it for chat, research, code, and creative tasks.
+      # 12288 input: fits a full multi-turn conversation plus 3-5 search results in context.
+      # 4096 output: enough for comprehensive answers; uncapped output wastes tokens on padding.
+      # tools (web search, infra, k8s) are configured in the OWU model preset, not here.
+      - model_name: murderbot-v2-base
+        litellm_params:
+          model: openai/qwen36-27b
+          api_base: http://10.100.20.19:8088/v1
+          api_key: none
+          timeout: 120
+          extra_body:
+            parallel_tool_calls: false
+            truncate_prompt_tokens: 12288
+            chat_template_kwargs:
+              enable_thinking: false
+        model_info:
+          max_input_tokens: 12288
+          max_output_tokens: 4096
           supports_function_calling: true
 
       # --- archlinux (RX 9070 XT, 16GB VRAM, Ollama — qwen3:14b at ~51 t/s) ---
