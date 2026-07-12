@@ -33,20 +33,23 @@ spec:
           env:
             - name: VPN_SERVICE_PROVIDER
               value: "nordvpn"
-            # WireGuard (NordLynx) — gluetun auto-generates and registers the keypair
-            # using the NordVPN access token via NORDVPN_API_KEY. No service credentials needed.
             - name: VPN_TYPE
-              value: "wireguard"
-            - name: NORDVPN_API_KEY
+              value: "openvpn"
+            # NordVPN service credentials — fetched from /v1/users/services/credentials API
+            # using the nordvpn-access-token. NOT the account login password.
+            - name: OPENVPN_USER
               valueFrom:
                 secretKeyRef:
                   name: secure-search-mcp-secrets
-                  key: NORDVPN_ACCESS_TOKEN
+                  key: NORDVPN_OPENVPN_USER
+            - name: OPENVPN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secure-search-mcp-secrets
+                  key: NORDVPN_OPENVPN_PASS
             - name: SERVER_COUNTRIES
               value: "Switzerland"
-            # Gluetun defaults: internal healthcheck=127.0.0.1:9999, control server=:8000.
-            # Move control server to 8001 — MCP server occupies 8000, and 9999 is
-            # already used by gluetun's internal healthcheck (bind conflict).
+            # Control server on 8001 — MCP occupies 8000, gluetun internal health on 9999.
             - name: HTTP_CONTROL_SERVER_ADDRESS
               value: ":8001"
             - name: TZ
@@ -56,11 +59,12 @@ spec:
           ports:
             - containerPort: 8001
               name: vpn-ctrl
+          # TCP probe — avoids the control server's HTTP authentication requirement.
+          # If gluetun exits (crash), the port closes and k8s restarts the container.
           livenessProbe:
-            httpGet:
-              path: /v1/openvpn/status
+            tcpSocket:
               port: 8001
-            initialDelaySeconds: 30
+            initialDelaySeconds: 15
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 3
