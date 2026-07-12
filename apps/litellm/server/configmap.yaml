@@ -79,8 +79,9 @@ data:
 
       # murderbot-v1-research-base: large-context alias for OWU quick research (30-90s).
       # Root cause of research loops: truncate_prompt_tokens=8192 truncated old search
-      # results from context, causing the model to re-search the same thing. With 32768
-      # tokens, all search results stay in context and the model synthesizes after 2-4 calls.
+      # results from context, causing the model to re-search the same thing. 12288
+      # tokens keeps all search results in context across 3-5 calls so the model
+      # synthesizes rather than re-searching. vLLM max_model_len=16384; 16384-4096=12288.
       # max_output_tokens=4096: research answers don't need 8192 output tokens.
       - model_name: murderbot-v1-research-base
         litellm_params:
@@ -90,9 +91,9 @@ data:
           timeout: 300
           extra_body:
             parallel_tool_calls: false
-            truncate_prompt_tokens: 32768
+            truncate_prompt_tokens: 12288
         model_info:
-          max_input_tokens: 32768
+          max_input_tokens: 12288
           max_output_tokens: 4096
           supports_function_calling: true
 
