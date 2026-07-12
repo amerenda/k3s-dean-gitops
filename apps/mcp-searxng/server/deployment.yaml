@@ -29,8 +29,11 @@ spec:
               value: "http://searxng.searxng.svc.cluster.local:8080"
             - name: MAX_RESULTS
               value: "5"
+            # 600 chars gives ~150 tokens of context per result — enough for the model to
+            # synthesize an answer in 1-3 searches. 200 chars was insufficient; the model
+            # kept re-searching because each result was too sparse (one sentence).
             - name: MAX_CONTENT_CHARS
-              value: "200"
+              value: "600"
             - name: MAX_URL_CONTENT_CHARS
               value: "4000"
           readinessProbe:
