@@ -342,8 +342,8 @@ spec:
     name: letsencrypt-prod
     kind: ClusterIssuer
 ---
-# DNS records — managed by DDNS CronJob (infra/ddns/ddns.yaml).
-# The cron reconciles the public IP every 5 minutes. Initial placeholder is overwritten on first run.
+# DNS records — internal-only. Pointed at Traefik VIP (10.100.20.203) so all
+# traffic stays on-LAN. DDNS CronJob no longer manages these endpoints.
 apiVersion: externaldns.k8s.io/v1alpha1
 kind: DNSEndpoint
 metadata:
@@ -355,7 +355,7 @@ spec:
       recordTTL: 300
       recordType: A
       targets:
-        - 67.250.71.110
+        - 10.100.20.203
 ---
 apiVersion: externaldns.k8s.io/v1alpha1
 kind: DNSEndpoint
@@ -368,4 +368,4 @@ spec:
       recordTTL: 300
       recordType: A
       targets:
-        - 67.250.71.110
+        - 10.100.20.203
