@@ -52,6 +52,11 @@ spec:
             # Control server on 8001 — MCP occupies 8000, gluetun internal health on 9999.
             - name: HTTP_CONTROL_SERVER_ADDRESS
               value: ":8001"
+            # Allow cluster-internal subnets to bypass the VPN tunnel.
+            # Pod CIDR (10.42.0.0/16) and Service CIDR (10.43.0.0/16) must be reachable
+            # so that internal DNS and SearXNG calls work. External traffic still goes through VPN.
+            - name: FIREWALL_OUTBOUND_SUBNETS
+              value: "10.42.0.0/16,10.43.0.0/16"
             - name: TZ
               value: "UTC"
             - name: LOG_LEVEL
