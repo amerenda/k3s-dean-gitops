@@ -77,24 +77,25 @@ data:
           max_output_tokens: 8192
           supports_function_calling: true
 
-      # murderbot-v1-research-base: large-context alias for OWU quick research (30-90s).
-      # Root cause of research loops: truncate_prompt_tokens=8192 truncated old search
-      # results from context, causing the model to re-search the same thing. 12288
-      # tokens keeps all search results in context across 3-5 calls so the model
-      # synthesizes rather than re-searching. vLLM max_model_len=16384; 16384-4096=12288.
-      # max_output_tokens=4096: research answers don't need 8192 output tokens.
+      # murderbot-v1-research-base: fast research alias (30-90s target).
+      # enable_thinking=false: disables Qwen3 extended reasoning. Without this, the model
+      # spends 3-10 minutes on chain-of-thought before producing any visible output.
+      # Research queries don't benefit from deep reasoning — speed matters far more.
+      # truncate_prompt_tokens=12288: keeps all search results in context (16384-4096=12288).
+      # max_output_tokens=1024: research summaries are short; capping prevents runaway output.
       - model_name: murderbot-v1-research-base
         litellm_params:
           model: openai/qwen36-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
-          timeout: 300
+          timeout: 120
           extra_body:
             parallel_tool_calls: false
             truncate_prompt_tokens: 12288
+            enable_thinking: false
         model_info:
           max_input_tokens: 12288
-          max_output_tokens: 4096
+          max_output_tokens: 1024
           supports_function_calling: true
 
       # --- archlinux (RX 9070 XT, 16GB VRAM, Ollama — qwen3:14b at ~51 t/s) ---
