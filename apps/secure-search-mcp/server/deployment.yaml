@@ -80,7 +80,7 @@ spec:
         # Shares gluetun's network namespace — traffic physically routes via VPN.
         # Also performs a hard code-level VPN check before every tool call.
         - name: server
-          image: amerenda/secure-search-mcp:sha-placeholder
+          image: amerenda/secure-search-mcp:sha-9399d45
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
