@@ -33,12 +33,11 @@ spec:
           env:
             - name: VPN_SERVICE_PROVIDER
               value: "nordvpn"
+            # WireGuard (NordLynx) — gluetun auto-generates and registers the keypair
+            # using the NordVPN access token via NORDVPN_API_KEY. No service credentials needed.
             - name: VPN_TYPE
-              value: "openvpn"
-            # NordVPN token-based OpenVPN auth: username=token, password=<access-token>
-            - name: OPENVPN_USER
-              value: "token"
-            - name: OPENVPN_PASSWORD
+              value: "wireguard"
+            - name: NORDVPN_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: secure-search-mcp-secrets
