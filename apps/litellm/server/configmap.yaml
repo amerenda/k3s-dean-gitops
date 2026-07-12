@@ -92,7 +92,8 @@ data:
           extra_body:
             parallel_tool_calls: false
             truncate_prompt_tokens: 12288
-            enable_thinking: false
+            chat_template_kwargs:
+              enable_thinking: false
         model_info:
           max_input_tokens: 12288
           max_output_tokens: 1024
