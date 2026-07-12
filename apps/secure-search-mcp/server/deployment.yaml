@@ -18,34 +18,13 @@ spec:
       labels:
         app: secure-search-mcp-server
     spec:
-      # gluetun controls the pod's network namespace — all containers route via VPN
-      initContainers:
-        # Block until gluetun's VPN tunnel is established before starting the MCP server.
-        # This prevents any window where the MCP could accept connections before the VPN is up.
-        - name: wait-for-vpn
-          image: curlimages/curl:latest
-          command:
-            - sh
-            - -c
-            - |
-              echo "Waiting for NordVPN tunnel via gluetun..."
-              until curl -sf http://localhost:9999/v1/openvpn/status | grep -q '"running"'; do
-                echo "VPN not ready, retrying in 5s..."
-                sleep 5
-              done
-              echo "VPN tunnel confirmed running."
-          resources:
-            requests:
-              cpu: 10m
-              memory: 16Mi
-            limits:
-              cpu: 100m
-              memory: 32Mi
-
+      # gluetun owns the pod's network namespace. All containers share it, so all egress
+      # physically routes through the VPN tunnel regardless of application code.
+      # The MCP server also performs a hard code-level check (via gluetun's control API)
+      # before every tool call — readinessProbe gates traffic until VPN is established.
       containers:
         # ── gluetun: NordVPN VPN client ──────────────────────────────────────────
-        # Owns the pod's network namespace. Routes ALL egress through NordVPN Switzerland.
-        # Must start before the MCP server (handled by initContainer wait-for-vpn above).
+        # Controls network namespace. Routes ALL egress through NordVPN Switzerland.
         - name: gluetun
           image: ghcr.io/qdm12/gluetun:latest
           imagePullPolicy: Always
