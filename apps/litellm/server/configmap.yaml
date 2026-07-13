@@ -62,7 +62,7 @@ data:
           supports_function_calling: true
 
       # murderbot-uncensored-v1-base: abliterated model alias.
-      # Requires swapping the running model to the unrestricted variant via model-switcher before use.
+      # Routes to sakamakismile/Huihui-Qwen3.6-27B-abliterated-NVFP4-TEXT-MTP (served as qwen36-27b).
       - model_name: murderbot-uncensored-v1-base
         litellm_params:
           model: openai/qwen36-27b
@@ -101,6 +101,9 @@ data:
       # 12288 input: fits a full multi-turn conversation plus 3-5 search results in context.
       # 4096 output: enough for comprehensive answers; uncapped output wastes tokens on padding.
       # tools (web search, infra, k8s) are configured in the OWU model preset, not here.
+      # Backed by sakamakismile/Huihui-Qwen3.6-27B-abliterated-NVFP4-TEXT-MTP (served as qwen36-27b).
+      # Both v2-custom (gated) and v2-uncensored-custom (permissive) use this base; behavior
+      # is controlled entirely by the OWU system prompt, not by model weights.
       - model_name: murderbot-v2-base
         litellm_params:
           model: openai/qwen36-27b
