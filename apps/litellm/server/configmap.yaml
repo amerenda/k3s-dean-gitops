@@ -98,7 +98,7 @@ data:
       # murderbot-v2-base: single unified entrypoint for OWU (replaces v1-base + v1-research-base).
       # thinking off: Qwen3 extended reasoning adds 3-10min latency on synthesis turns; the
       # model is capable enough without it for chat, research, code, and creative tasks.
-      # 12288 input: fits a full multi-turn conversation plus 3-5 search results in context.
+      # 20480 input: 24576 model ctx - 4096 output budget. Fits multi-turn + 5-8 search results.
       # 4096 output: enough for comprehensive answers; uncapped output wastes tokens on padding.
       # tools (web search, infra, k8s) are configured in the OWU model preset, not here.
       # Backed by sakamakismile/Huihui-Qwen3.6-27B-abliterated-NVFP4-TEXT-MTP (served as qwen36-27b).
@@ -112,11 +112,11 @@ data:
           timeout: 120
           extra_body:
             parallel_tool_calls: false
-            truncate_prompt_tokens: 12288
+            truncate_prompt_tokens: 20480
             chat_template_kwargs:
               enable_thinking: false
         model_info:
-          max_input_tokens: 12288
+          max_input_tokens: 20480
           max_output_tokens: 4096
           supports_function_calling: true
 
