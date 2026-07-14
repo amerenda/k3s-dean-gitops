@@ -2273,6 +2273,40 @@ spec:
         factor: 2
         maxDuration: 3m
 ---
+# Application: imggen server — LiteLLM-compatible image generation proxy
+# Routes image-gen model requests → prompt expansion (archlinux qwen3:14b) → ComfyUI (murderbot:8188)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-imggen-server
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+    targetRevision: main
+    path: apps/imggen/server
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: imggen
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+---
 # Application: mem0 server
 apiVersion: argoproj.io/v1alpha1
 kind: Application
