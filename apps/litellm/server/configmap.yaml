@@ -152,6 +152,22 @@ data:
           max_output_tokens: 4096
           supports_function_calling: true
 
+      # --- image-gen (imggen service on k3s, ComfyUI on murderbot:8188) ---
+      # Routes to imggen FastAPI proxy which expands prompts via archlinux qwen3:14b
+      # then generates via ComfyUI FLUX FP8 + LoRA stack. Returns base64 PNG in markdown.
+      # Only active when img-murderbot Komodo stack is running (image mode).
+      # timeout=300: ComfyUI generation takes 30-90s; 300s covers slow first-generation.
+      - model_name: image-gen
+        litellm_params:
+          model: openai/image-gen
+          api_base: http://imggen-server.imggen.svc.cluster.local:8000
+          api_key: none
+          timeout: 300
+        model_info:
+          max_input_tokens: 4096
+          max_output_tokens: 65536
+          supports_function_calling: false
+
     router_settings:
       routing_strategy: least-busy
       num_retries: 3

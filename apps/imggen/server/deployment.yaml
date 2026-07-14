@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: imggen-server
+  namespace: imggen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: imggen-server
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: imggen-server
+    spec:
+      containers:
+        - name: server
+          image: amerenda/imggen:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: COMFYUI_URL
+              value: "http://10.100.20.19:8188"
+            - name: OLLAMA_URL
+              value: "http://10.100.20.25:11434"
+            - name: OLLAMA_MODEL
+              value: "qwen3:14b"
+            - name: LANGFUSE_BASE_URL
+              value: "https://langfuse.amer.dev"
+            - name: LANGFUSE_PROMPT_NAME
+              value: "imggen-expansion-system"
+            - name: LANGFUSE_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: imggen-secrets
+                  key: langfuse-public-key
+            - name: LANGFUSE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: imggen-secrets
+                  key: langfuse-secret-key
+            - name: COMFYUI_TIMEOUT
+              value: "300"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
