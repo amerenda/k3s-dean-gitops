@@ -4,11 +4,13 @@ metadata:
   name: imggen-server
   namespace: imggen
   annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: imggen.amer.dev
+    external-dns.alpha.kubernetes.io/ttl: "300"
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
 spec:
-  ingressClassName: traefik
+  ingressClassName: infra-traefik
   rules:
     - host: imggen.amer.dev
       http:
@@ -23,4 +25,4 @@ spec:
   tls:
     - hosts:
         - imggen.amer.dev
-      secretName: imggen-tls
+      secretName: imggen-amer-dev-tls
