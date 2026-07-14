@@ -34,9 +34,9 @@ spec:
             - name: VPN_SERVICE_PROVIDER
               value: "nordvpn"
             - name: VPN_TYPE
-              value: "openvpn"
-            # gluetun uses the access token to fetch OpenVPN service credentials
-            # automatically from the NordVPN API — no manual username/password needed.
+              value: "wireguard"
+            # gluetun calls NordVPN's API with the access token to fetch
+            # the WireGuard private key — no username/password needed.
             - name: NORDVPN_ACCESS_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -86,6 +86,8 @@ spec:
             - containerPort: 8000
               name: mcp
           env:
+            - name: VPN_INTERFACE
+              value: "wg0"
             - name: SEARXNG_URL
               value: "http://searxng.searxng.svc.cluster.local:8080"
             - name: MAX_RESULTS
