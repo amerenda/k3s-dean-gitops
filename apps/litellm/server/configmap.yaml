@@ -160,7 +160,7 @@ data:
       - model_name: image-gen
         litellm_params:
           model: openai/image-gen
-          api_base: http://imggen-server.imggen.svc.cluster.local:8000
+          api_base: http://imggen-server.imggen.svc.cluster.local:8000/v1
           api_key: none
           timeout: 300
         model_info:
