@@ -42,6 +42,11 @@ spec:
                 secretKeyRef:
                   name: secure-search-mcp-secrets
                   key: NORDVPN_ACCESS_TOKEN
+            - name: WIREGUARD_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: secure-search-mcp-secrets
+                  key: NORDVPN_WIREGUARD_PRIVATE_KEY
             - name: SERVER_COUNTRIES
               value: "Switzerland"
             # Control server on 8001 — MCP occupies 8000, gluetun internal health on 9999.
