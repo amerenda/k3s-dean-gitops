@@ -35,18 +35,13 @@ spec:
               value: "nordvpn"
             - name: VPN_TYPE
               value: "openvpn"
-            # NordVPN service credentials — fetched from /v1/users/services/credentials API
-            # using the nordvpn-access-token. NOT the account login password.
-            - name: OPENVPN_USER
+            # gluetun uses the access token to fetch OpenVPN service credentials
+            # automatically from the NordVPN API — no manual username/password needed.
+            - name: NORDVPN_ACCESS_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: secure-search-mcp-secrets
-                  key: NORDVPN_OPENVPN_USER
-            - name: OPENVPN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: secure-search-mcp-secrets
-                  key: NORDVPN_OPENVPN_PASS
+                  key: NORDVPN_ACCESS_TOKEN
             - name: SERVER_COUNTRIES
               value: "Switzerland"
             # Control server on 8001 — MCP occupies 8000, gluetun internal health on 9999.
