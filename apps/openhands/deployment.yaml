@@ -49,6 +49,18 @@ spec:
                 secretKeyRef:
                   name: openhands-secrets
                   key: github-app-private-key
+            - name: LANGFUSE_HOST
+              value: "https://langfuse.amer.dev"
+            - name: LANGFUSE_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openhands-secrets
+                  key: langfuse-public-key
+            - name: LANGFUSE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openhands-secrets
+                  key: langfuse-secret-key
           volumeMounts:
             - name: data
               mountPath: /.openhands
