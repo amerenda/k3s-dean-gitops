@@ -81,7 +81,11 @@ spec:
     name: letsencrypt-prod
     kind: ClusterIssuer
 ---
-# DNS record — managed by DDNS CronJob (keeps target = current public IP)
+# DNS record — managed by DDNS CronJob (keeps target = current public IP).
+# The `targets` value below is NOT authoritative — the infra-ingresses
+# Application has an ignoreDifferences entry for this field specifically so
+# ArgoCD's selfHeal never reverts the CronJob's live patches. Kept roughly
+# current here just so this file isn't misleading to read.
 apiVersion: externaldns.k8s.io/v1alpha1
 kind: DNSEndpoint
 metadata:
@@ -93,4 +97,4 @@ spec:
       recordTTL: 300
       recordType: A
       targets:
-        - 67.250.71.110
+        - 67.250.70.153
