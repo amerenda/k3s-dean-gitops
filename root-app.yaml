@@ -846,6 +846,12 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 3m
+  ignoreDifferences:
+  - group: "externaldns.k8s.io"
+    kind: DNSEndpoint
+    name: pubhooks-amer-dev
+    jsonPointers:
+    - /spec/endpoints/0/targets
 
 ---
 # Infrastructure: DDNS updater — keeps public-facing DNS records pointed at current public IP
