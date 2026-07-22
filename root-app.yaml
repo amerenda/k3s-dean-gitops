@@ -852,6 +852,11 @@ spec:
     name: pubhooks-amer-dev
     jsonPointers:
     - /spec/endpoints/0/targets
+  - group: "externaldns.k8s.io"
+    kind: DNSEndpoint
+    name: libsync-amer-dev
+    jsonPointers:
+    - /spec/endpoints/0/targets
 
 ---
 # Infrastructure: DDNS updater — keeps public-facing DNS records pointed at current public IP

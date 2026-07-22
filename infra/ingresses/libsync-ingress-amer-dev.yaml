@@ -1,0 +1,99 @@
+---
+# libsync.amer.dev — KOReader sync server (kosync), genuinely public.
+#
+# Unlike every other *.amer.dev host in this repo, this one must be
+# reachable from a raw internet connection with no Tailscale and no LAN
+# access (the whole point — an e-reader that can't run Tailscale). A plain
+# Ingress + external-dns hostname annotation (what apps/libsync/ originally
+# used) publishes the Traefik LoadBalancer's *internal* VIP (10.100.20.203)
+# as the DNS answer, which only routes for LAN/Tailscale clients (Tailscale
+# advertises 10.100.20.0/24 as a subnet route — see infra/tailscale). That
+# looked like it worked in every test run from this LAN, but a real outside
+# device gets a private IP with no route to it: instant connection failure
+# ("Network error" in KOReader).
+#
+# Same pattern as pubhooks.amer.dev: IngressRoute (so external-dns's
+# Ingress-based auto-provisioning never touches this DNS record) + an
+# explicit DNSEndpoint kept pointed at the real public IP by the DDNS
+# CronJob (infra/ddns/ddns.yaml).
+#
+# Traefik's CRD provider here doesn't support cross-namespace Service refs
+# (same limitation noted in pubhooks-ingress-amer-dev.yaml), so this proxy
+# Service+EndpointSlice in `default` targets libsync's own Service ClusterIP
+# in the `libsync` namespace (stable for the life of that Service — same
+# trick used for praetor-webhook-adapter-proxy). Update the address below if
+# apps/libsync/service.yaml's Service is ever deleted and recreated.
+apiVersion: v1
+kind: Service
+metadata:
+  name: libsync-proxy
+  namespace: default
+spec:
+  ports:
+    - port: 17200
+      targetPort: 17200
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: libsync-proxy-1
+  namespace: default
+  labels:
+    kubernetes.io/service-name: libsync-proxy
+addressType: IPv4
+endpoints:
+  - addresses:
+      - 10.43.227.16
+    conditions:
+      ready: true
+ports:
+  - name: ""
+    port: 17200
+    protocol: TCP
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: libsync-ingress-amer-dev
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  tls:
+    secretName: libsync-amer-dev-tls
+  routes:
+    - match: Host(`libsync.amer.dev`)
+      kind: Rule
+      services:
+        - name: libsync-proxy
+          port: 17200
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: libsync-amer-dev
+  namespace: default
+spec:
+  secretName: libsync-amer-dev-tls
+  dnsNames:
+    - libsync.amer.dev
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+---
+# DNS record — managed by the DDNS CronJob (keeps target = current public
+# IP). The `targets` value below is NOT authoritative once the CronJob
+# starts patching it — see the ignoreDifferences entry on the
+# infra-ingresses Application in root-app.yaml.
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: libsync-amer-dev
+  namespace: default
+spec:
+  endpoints:
+    - dnsName: libsync.amer.dev
+      recordTTL: 300
+      recordType: A
+      targets:
+        - 67.250.70.153
