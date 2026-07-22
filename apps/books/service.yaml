@@ -10,16 +10,28 @@ spec:
       protocol: TCP
 ---
 # calibre-web runs on murderbot via Komodo (komodo-dean-gitops
-# murderbot/media-server), not in k3s — same pattern as openwebui's
-# bot.amer.dev. No selector on the Service above; this Endpoints object
-# points directly at murderbot's LAN IP.
-apiVersion: v1
-kind: Endpoints
+# murderbot/media-server), not in k3s — same pattern as
+# infra/ingresses/jellyfin-ingress-amer-dev.yaml's *-external services.
+# Uses discovery.k8s.io/v1 EndpointSlice, not the deprecated v1 Endpoints —
+# ArgoCD has a global resource.exclusions entry blocking v1 Endpoints
+# entirely (cluster-wide, in argocd-cm), so a v1 Endpoints object here would
+# silently never sync no matter what's committed. EndpointSlice isn't
+# excluded and is what every other external-service ingress in this repo
+# already uses for exactly this reason.
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
 metadata:
-  name: calibre-web
+  name: calibre-web-1
   namespace: books
-subsets:
+  labels:
+    kubernetes.io/service-name: calibre-web
+addressType: IPv4
+endpoints:
   - addresses:
-      - ip: 10.100.20.19
-    ports:
-      - port: 8083
+      - 10.100.20.19
+    conditions:
+      ready: true
+ports:
+  - name: ""
+    port: 8083
+    protocol: TCP
