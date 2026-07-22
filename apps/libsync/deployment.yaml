@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: libsync
+  namespace: libsync
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: libsync
+  template:
+    metadata:
+      labels:
+        app: libsync
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      containers:
+        - name: libsync
+          image: amerenda/libsync-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 17200
+          env:
+            - name: REDIS_HOST
+              value: "10.100.20.18"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_DB
+              value: "1"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: libsync-redis-credentials
+                  key: password
+            - name: ENABLE_USER_REGISTRATION
+              value: "true"
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 17200
+              httpHeaders:
+                - name: Accept
+                  value: application/vnd.koreader.v1+json
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 17200
+              httpHeaders:
+                - name: Accept
+                  value: application/vnd.koreader.v1+json
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
