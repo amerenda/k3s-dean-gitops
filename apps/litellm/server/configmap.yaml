@@ -29,22 +29,6 @@ data:
           max_output_tokens: 4096
           supports_function_calling: true
 
-      # qwen3-35b: alias used by praetor pipeline/feature-pipeline/webhook-adapter workers.
-      # truncate_prompt_tokens: rolling window prevents 400s when orchestration context grows large.
-      - model_name: qwen3-35b
-        litellm_params:
-          model: openai/qwen36-27b
-          api_base: http://10.100.20.19:8088/v1
-          api_key: none
-          timeout: 600
-          extra_body:
-            parallel_tool_calls: false
-            truncate_prompt_tokens: 14336
-        model_info:
-          max_input_tokens: 14336
-          max_output_tokens: 2048
-          supports_function_calling: true
-
       # murderbot-v1-base: canonical preset name for qwen36-27b (censored).
       # Budget split: 8192 input (truncate rolling window) + 8192 output = 16384 total context.
       # vLLM shares max_tokens between thinking and visible content — with max_output_tokens=2048,
@@ -80,24 +64,6 @@ data:
           max_output_tokens: 8192
           supports_function_calling: true
 
-      # murderbot-v1-research-base: kept for backwards compat with existing OWU presets.
-      # New work should use murderbot-v2-base instead.
-      - model_name: murderbot-v1-research-base
-        litellm_params:
-          model: openai/qwen36-27b
-          api_base: http://10.100.20.19:8088/v1
-          api_key: none
-          timeout: 120
-          extra_body:
-            parallel_tool_calls: false
-            truncate_prompt_tokens: 12288
-            chat_template_kwargs:
-              enable_thinking: false
-        model_info:
-          max_input_tokens: 12288
-          max_output_tokens: 1024
-          supports_function_calling: true
-
       # murderbot-v2-base: single unified entrypoint for OWU (replaces v1-base + v1-research-base).
       # thinking off: Qwen3 extended reasoning adds 3-10min latency on synthesis turns; the
       # model is capable enough without it for chat, research, code, and creative tasks.
@@ -119,7 +85,12 @@ data:
           model: openai/qwen36-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
-          timeout: 120
+          # timeout was 120s — too short even with zero contention: max_output_tokens=4096
+          # at this backend's real ~25 tok/s throughput alone takes ~164s to generate, so
+          # this timeout fired deterministically on any full-length synthesis. Raised to
+          # 600s to match every sibling murderbot-*-base alias and give real margin above
+          # worst-case generation time plus single-session queueing.
+          timeout: 600
           extra_body:
             parallel_tool_calls: false
             truncate_prompt_tokens: 45056
