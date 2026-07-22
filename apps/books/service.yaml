@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: calibre-web
+  namespace: books
+spec:
+  ports:
+    - port: 8083
+      targetPort: 8083
+      protocol: TCP
+---
+# calibre-web runs on murderbot via Komodo (komodo-dean-gitops
+# murderbot/media-server), not in k3s — same pattern as openwebui's
+# bot.amer.dev. No selector on the Service above; this Endpoints object
+# points directly at murderbot's LAN IP.
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: calibre-web
+  namespace: books
+subsets:
+  - addresses:
+      - ip: 10.100.20.19
+    ports:
+      - port: 8083

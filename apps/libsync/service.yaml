@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: libsync
+  namespace: libsync
+spec:
+  selector:
+    app: libsync
+  ports:
+    - port: 17200
+      targetPort: 17200
