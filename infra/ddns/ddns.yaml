@@ -44,7 +44,7 @@ data:
 
     # DNSEndpoint resources to keep pointed at the public IP
     # media-amer-dev / media-wildcard-amer-dev excluded: internal-only, pointing at Traefik VIP 10.100.20.203
-    ENDPOINTS="pubhooks-amer-dev libsync-amer-dev"
+    ENDPOINTS="pubhooks-amer-dev libsync-amer-dev opds-amer-dev"
 
     PUBLIC_IP=$(curl -sf https://ifconfig.me)
     if [ -z "$PUBLIC_IP" ]; then

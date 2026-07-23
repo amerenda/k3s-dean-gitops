@@ -1,0 +1,93 @@
+---
+# opds.amer.dev — calibre-web's OPDS feed, genuinely public (no VPN/Tailscale
+# needed), same as libsync.amer.dev and pubhooks.amer.dev.
+#
+# Unlike calibre.amer.dev (the browsing/editing web UI, kept LAN/Tailscale-
+# only via an ipAllowList middleware), OPDS clients on e-readers (e.g. the
+# XTeink X3 running CrossPoint) need to reach this over the open internet
+# with no VPN. Security here comes from calibre-web's own HTTP Basic Auth
+# on every /opds/* route (requires_basic_auth_if_no_ano in cps/opds.py) —
+# not from network-level restriction. No ipAllowList middleware on purpose.
+#
+# Same IngressRoute + DNSEndpoint (DDNS-managed) pattern as pubhooks/libsync:
+# a plain Ingress + external-dns hostname annotation would publish the
+# internal Traefik VIP instead of a real public IP, which only routes for
+# LAN/Tailscale clients — exactly the libsync.amer.dev bug from earlier.
+#
+# Traefik's CRD provider doesn't support cross-namespace Service refs (same
+# limitation as pubhooks/libsync) — this proxy Service+EndpointSlice in
+# `default` targets calibre-web's own Service ClusterIP in the calibre-web
+# namespace (stable for the life of that Service).
+apiVersion: v1
+kind: Service
+metadata:
+  name: opds-proxy
+  namespace: default
+spec:
+  ports:
+    - port: 8083
+      targetPort: 8083
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: opds-proxy-1
+  namespace: default
+  labels:
+    kubernetes.io/service-name: opds-proxy
+addressType: IPv4
+endpoints:
+  - addresses:
+      - 10.43.202.60
+    conditions:
+      ready: true
+ports:
+  - name: ""
+    port: 8083
+    protocol: TCP
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: opds-ingress-amer-dev
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  tls:
+    secretName: opds-amer-dev-tls
+  routes:
+    - match: Host(`opds.amer.dev`)
+      kind: Rule
+      services:
+        - name: opds-proxy
+          port: 8083
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: opds-amer-dev
+  namespace: default
+spec:
+  secretName: opds-amer-dev-tls
+  dnsNames:
+    - opds.amer.dev
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+---
+# DNS record — managed by the DDNS CronJob (keeps target = current public
+# IP). See infra/ddns/ddns.yaml and the ignoreDifferences entry on the
+# infra-ingresses Application in root-app.yaml.
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: opds-amer-dev
+  namespace: default
+spec:
+  endpoints:
+    - dnsName: opds.amer.dev
+      recordTTL: 300
+      recordType: A
+      targets:
+        - 67.250.70.153
