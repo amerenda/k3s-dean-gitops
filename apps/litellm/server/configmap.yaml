@@ -43,6 +43,11 @@ data:
       # murderbot-v1-base: legacy smaller-budget preset, kept only because existing OWU custom
       # models (murderbot-v1-custom) still reference it as a base_model_id. Same backend as
       # every other murderbot-* alias now — budgets deliberately left conservative/unchanged.
+      # enable_thinking=false: praetor's smoke suite caught this live — with thinking on and
+      # an 8192 output budget shared with reasoning, ordinary liveness requests (max_tokens
+      # capped low by the caller) came back with finish_reason=length and EMPTY content,
+      # because the whole budget was consumed by reasoning_content. Not a hypothetical risk,
+      # a reproduced regression (TestLiveness::test_owui_model_responds, 2026-07-23).
       - model_name: murderbot-v1-base
         litellm_params:
           model: openai/qwen36-35b-a3b
@@ -51,6 +56,8 @@ data:
           timeout: 600
           extra_body:
             parallel_tool_calls: false
+            chat_template_kwargs:
+              enable_thinking: false
         model_info:
           max_input_tokens: 8192
           max_output_tokens: 8192
@@ -59,6 +66,7 @@ data:
       # murderbot-uncensored-v1-base: legacy alias, same rationale as murderbot-v1-base above.
       # True weight-level abliteration now (huihui-ai), not just a different prompt on the same
       # weights — the underlying model itself is already the uncensored one for every alias here.
+      # enable_thinking=false: same empty-response regression as murderbot-v1-base above.
       - model_name: murderbot-uncensored-v1-base
         litellm_params:
           model: openai/qwen36-35b-a3b
@@ -67,16 +75,20 @@ data:
           timeout: 600
           extra_body:
             parallel_tool_calls: false
+            chat_template_kwargs:
+              enable_thinking: false
         model_info:
           max_input_tokens: 8192
           max_output_tokens: 8192
           supports_function_calling: true
 
       # murderbot-v2-base: single unified entrypoint for OWU (replaces v1-base + v1-research-base).
-      # thinking LEFT ON (unlike the old vLLM-era default): MTP speculative decoding means the
-      # per-token cost of reasoning is much lower now, and real testing showed materially better
-      # answer quality with thinking on than the latency cost justified turning it off for. Revisit
-      # if real usage shows otherwise — this is a considered default, not a hard requirement.
+      # enable_thinking=false: originally left ON here (MTP makes reasoning cheap, answer quality
+      # was better in ad-hoc testing) — reverted 2026-07-23 after praetor's smoke suite reproduced
+      # a real regression: with thinking on, ordinary requests with a caller-capped max_tokens
+      # (e.g. OWU's liveness check, 256 tokens) came back finish_reason=length with EMPTY content
+      # — the whole budget went to reasoning_content, none left for the visible answer. This is
+      # exactly the "revisit if real usage shows otherwise" case the original comment called for.
       # 90112/8192 = 98304 total: matches llama-server's -c 98304 (murderbot/llm/compose.yaml).
       # tools (web search, infra, k8s) are configured in the OWU model preset, not here.
       # Both v2-custom (gated) and v2-uncensored-custom (permissive) use this base; behavior
@@ -89,6 +101,8 @@ data:
           timeout: 600
           extra_body:
             parallel_tool_calls: false
+            chat_template_kwargs:
+              enable_thinking: false
         model_info:
           max_input_tokens: 90112
           max_output_tokens: 8192
