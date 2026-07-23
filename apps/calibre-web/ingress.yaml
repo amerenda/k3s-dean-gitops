@@ -1,29 +1,29 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: books-ingress
-  namespace: books
+  name: calibre-web-ingress
+  namespace: calibre-web
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/router.middlewares: books-tailscale-only@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: calibre-web-tailscale-only@kubernetescrd
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    external-dns.alpha.kubernetes.io/hostname: books.amer.dev
+    external-dns.alpha.kubernetes.io/hostname: calibre.amer.dev
     external-dns.alpha.kubernetes.io/ttl: "300"
 spec:
   ingressClassName: infra-traefik
   tls:
     - hosts:
-        - books.amer.dev
-      secretName: books-amer-dev-tls
+        - calibre.amer.dev
+      secretName: calibre-amer-dev-tls
   rules:
-    - host: books.amer.dev
+    - host: calibre.amer.dev
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: lazylibrarian
+                name: calibre-web
                 port:
-                  number: 5299
+                  number: 8083
