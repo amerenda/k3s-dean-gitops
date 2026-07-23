@@ -1,15 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: lazylibrarian
-  namespace: books
+  name: calibre-web
+  namespace: calibre-web
 spec:
   ports:
-    - port: 5299
-      targetPort: 5299
+    - port: 8083
+      targetPort: 8083
       protocol: TCP
 ---
-# lazylibrarian runs on murderbot via Komodo (komodo-dean-gitops
+# calibre-web runs on murderbot via Komodo (komodo-dean-gitops
 # murderbot/media-server), not in k3s — same pattern as
 # infra/ingresses/jellyfin-ingress-amer-dev.yaml's *-external services.
 # discovery.k8s.io/v1 EndpointSlice, not the deprecated v1 Endpoints —
@@ -18,10 +18,10 @@ spec:
 apiVersion: discovery.k8s.io/v1
 kind: EndpointSlice
 metadata:
-  name: lazylibrarian-1
-  namespace: books
+  name: calibre-web-1
+  namespace: calibre-web
   labels:
-    kubernetes.io/service-name: lazylibrarian
+    kubernetes.io/service-name: calibre-web
 addressType: IPv4
 endpoints:
   - addresses:
@@ -30,5 +30,5 @@ endpoints:
       ready: true
 ports:
   - name: ""
-    port: 5299
+    port: 8083
     protocol: TCP
