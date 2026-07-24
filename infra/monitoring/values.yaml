@@ -24,7 +24,17 @@ prometheus:
       cluster: k3s-dean
       role: edge-prometheus
     walCompression: true
-    retention: 2h
+    retention: 30m
+    # Startup probe default (failureThreshold=60, periodSeconds=1s => 60s budget) is too
+    # tight for WAL replay on Pi/Longhorn storage, which has been observed taking ~2min.
+    # Widen the budget so the pod can finish one replay + compaction instead of being
+    # killed mid-startup on every restart (the crash loop keeps the WAL from ever shrinking
+    # back down to the retention window).
+    containers:
+      - name: prometheus
+        startupProbe:
+          failureThreshold: 120
+          periodSeconds: 5
     # Local TSDB with limited storage — all data is remote-written to mac-mini.
     storageSpec:
       volumeClaimTemplate:
