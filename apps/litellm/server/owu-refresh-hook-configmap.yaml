@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litellm-owu-refresh-hook
+  namespace: litellm
+data:
+  # Runs from litellm-server's postStart lifecycle hook every time the pod
+  # (re)starts. OWU only fetches its MCP tool-server connections once, at its
+  # own process startup (open_webui/main.py, "Pre-fetch tool server specs so
+  # the first request doesn't pay the latency cost") — it has no retry or
+  # periodic refresh if the backend it's connected to (this pod) restarts
+  # later. Since litellm runs on k3s and can restart at any time (OOM,
+  # rolling deploy, node eviction), every such restart silently breaks OWU's
+  # tool availability until someone notices and manually restarts OWU too.
+  #
+  # Re-POSTing OWU's tool_servers config (even unchanged) makes OWU re-run
+  # the same connect+list_tools cycle it does at its own startup — this is
+  # the same effect as an OWU restart, without the ~1 min outage or
+  # disrupting any active OWU sessions. Confirmed via OWU v0.9.6 source
+  # (routers/configs.py: POST /tool_servers calls set_tool_servers(request)).
+  refresh_owu_tools.py: |
+    import json
+    import os
+    import sys
+    import time
+    import urllib.request
+
+    OWUI_URL = os.environ.get('OWUI_BASE_URL', 'https://bot.amer.dev')
+    EMAIL = os.environ['OWUI_ADMIN_EMAIL']
+    PASSWORD = os.environ['OWUI_ADMIN_PASSWORD']
+
+
+    def _post(url, data=None, headers=None, method=None):
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(data).encode() if data is not None else None,
+            headers=headers or {},
+            method=method,
+        )
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return json.loads(r.read())
+
+
+    def refresh_once():
+        token = _post(
+            f'{OWUI_URL}/api/v1/auths/signin',
+            data={'email': EMAIL, 'password': PASSWORD},
+            headers={'Content-Type': 'application/json'},
+        )['token']
+
+        req = urllib.request.Request(
+            f'{OWUI_URL}/api/v1/configs/tool_servers',
+            headers={'Authorization': f'Bearer {token}'},
+        )
+        with urllib.request.urlopen(req, timeout=15) as r:
+            current_config = json.loads(r.read())
+
+        _post(
+            f'{OWUI_URL}/api/v1/configs/tool_servers',
+            data=current_config,
+            headers={
+                'Authorization': f'Bearer {token}',
+                'Content-Type': 'application/json',
+            },
+            method='POST',
+        )
+
+
+    def main():
+        # Give litellm's own /health/readiness a head start, and OWU a moment
+        # if it happens to be restarting at the same time -- this runs in the
+        # background (see postStart hook), so it never delays litellm itself
+        # becoming ready.
+        delays = [10, 30, 60, 120, 240]
+        for i, delay in enumerate(delays):
+            time.sleep(delay)
+            try:
+                refresh_once()
+                print(f'refresh_owu_tools: success on attempt {i + 1}')
+                return
+            except Exception as e:  # noqa: BLE001 -- best-effort, log and retry
+                print(f'refresh_owu_tools: attempt {i + 1} failed: {e}', file=sys.stderr)
+        print('refresh_owu_tools: all attempts failed, giving up', file=sys.stderr)
+
+
+    if __name__ == '__main__':
+        main()
