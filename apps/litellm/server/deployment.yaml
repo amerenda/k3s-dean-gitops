@@ -18,7 +18,7 @@ spec:
       labels:
         app: litellm-server
       annotations:
-        configmap.reloader.stakater.com/reload: "litellm-config,litellm-custom-hooks,litellm-migration-override"
+        configmap.reloader.stakater.com/reload: "litellm-config,litellm-custom-hooks,litellm-migration-override,litellm-owu-refresh-hook"
     spec:
       nodeSelector:
         kubernetes.io/hostname: murderbot
@@ -43,6 +43,29 @@ spec:
           value: "_"
         - name: LITELLM_LOCAL_MODEL_COST_MAP
           value: "true"
+        - name: OWUI_ADMIN_EMAIL
+          value: "alex@amer.dev"
+        - name: OWUI_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: litellm-secrets
+              key: owui-admin-password
+        lifecycle:
+          # OWU only fetches its MCP tool-server connections once, at its own
+          # startup -- it never notices when this pod (litellm) restarts, and
+          # silently serves a dead connection until someone manually restarts
+          # OWU too. This re-triggers OWU's refresh every time this pod
+          # starts, so a k3s-initiated restart (OOM, rolling deploy, node
+          # eviction -- all of which are expected/routine here) can no longer
+          # leave OWU stuck. Runs in the background (backgrounded before this
+          # hook returns) so a slow or failing OWU can never block or fail
+          # this pod's own startup.
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - nohup python3 /app/hooks/refresh_owu_tools.py > /tmp/owu-refresh-hook.log 2>&1 &
         startupProbe:
           httpGet:
             path: /health/readiness
@@ -89,6 +112,9 @@ spec:
           mountPath: /app/litellm/proxy/prisma_migration.py
           subPath: prisma_migration.py
           readOnly: true
+        - name: owu-refresh-hook
+          mountPath: /app/hooks
+          readOnly: true
       volumes:
       - name: litellm-config
         configMap:
@@ -99,3 +125,6 @@ spec:
       - name: migration-override
         configMap:
           name: litellm-migration-override
+      - name: owu-refresh-hook
+        configMap:
+          name: litellm-owu-refresh-hook
