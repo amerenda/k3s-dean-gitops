@@ -2,6 +2,11 @@
 # Monitoring stack for K3s on Raspberry Pi
 #
 # Prometheus runs in full mode with local rule evaluation and forwards samples to mac-mini.
+# mac-mini (Komodo) holds the real/long-term Prometheus. This instance is intentionally a
+# thin, ephemeral edge buffer in front of remote_write — it must never accumulate a WAL that
+# outlives a pod restart (see incident: a PVC-backed WAL grew to 4700+ segments and crash-
+# looped forever because the startup probe kept killing the pod mid-replay, so it could never
+# finish long enough to compact and shrink). No PVC, no local persistence across restarts.
 
 # --- AlertManager: watchdog alerts (no notification channels yet) ---
 alertmanager:
@@ -25,24 +30,15 @@ prometheus:
       role: edge-prometheus
     walCompression: true
     retention: 30m
-    # Startup probe default (failureThreshold=60, periodSeconds=1s => 60s budget) is too
-    # tight for WAL replay on Pi/Longhorn storage, which has been observed taking ~2min.
-    # Widen the budget so the pod can finish one replay + compaction instead of being
-    # killed mid-startup on every restart (the crash loop keeps the WAL from ever shrinking
-    # back down to the retention window).
-    containers:
-      - name: prometheus
-        startupProbe:
-          failureThreshold: 120
-          periodSeconds: 5
-    # Local TSDB with limited storage — all data is remote-written to mac-mini.
+    retentionSize: 1500MB
+    # No PVC: storage is emptyDir, wiped on every pod restart/reschedule. This is deliberate —
+    # data only needs to survive long enough to be remote-written to mac-mini, and an ephemeral
+    # volume means a restart always starts from an empty WAL (near-instant replay) instead of
+    # ever being able to accumulate an unbounded WAL that a startup probe can't get through.
+    # sizeLimit backstops retentionSize so a scrape spike can't fill the node's disk.
     storageSpec:
-      volumeClaimTemplate:
-        spec:
-          storageClassName: longhorn
-          resources:
-            requests:
-              storage: 2Gi
+      emptyDir:
+        sizeLimit: 2Gi
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
@@ -61,13 +57,14 @@ prometheus:
                   operator: In
                   values:
                     - murderbot
+    # Sized for an edge buffer holding <=30m of data, not for compacting a large TSDB.
     resources:
       requests:
-        cpu: 300m
-        memory: 1.5Gi
+        cpu: 100m
+        memory: 256Mi
       limits:
-        cpu: "1"
-        memory: 6Gi
+        cpu: 500m
+        memory: 1Gi
     remoteWrite:
       - url: "http://10.100.20.18:9090/api/v1/write"
         queueConfig:
