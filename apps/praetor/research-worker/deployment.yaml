@@ -56,7 +56,7 @@ spec:
             - name: LITELLM_MCP_URL
               value: "https://litellm.amer.dev/mcp/"
             - name: LLM_MODEL
-              value: "qwen3-35b"
+              value: "coder"
             - name: LANGFUSE_HOST
               value: "https://langfuse.amer.dev"
             - name: LANGFUSE_PUBLIC_KEY

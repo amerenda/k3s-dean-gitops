@@ -103,7 +103,7 @@ spec:
                   name: praetor-webhook-secrets
                   key: llm-switch-psk
             - name: LLM_MODEL
-              value: "qwen3-35b"
+              value: "coder"
             - name: LANGFUSE_HOST
               value: "https://langfuse.amer.dev"
             - name: LANGFUSE_PUBLIC_KEY
