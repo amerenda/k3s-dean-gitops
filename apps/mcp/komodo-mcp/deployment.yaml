@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: komodo-mcp-server
+  namespace: mcp-komodo-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: komodo-mcp-server
+  template:
+    metadata:
+      labels:
+        app: komodo-mcp-server
+    spec:
+      containers:
+        - name: server
+          image: amerenda/komodo-mcp:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: KOMODO_API_URL
+              value: 'https://komodo.amer.dev'
+            - name: KOMODO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: komodo-mcp-secrets
+                  key: komodo_api_key
+            - name: KOMODO_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: komodo-mcp-secrets
+                  key: komodo_api_secret
+
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
