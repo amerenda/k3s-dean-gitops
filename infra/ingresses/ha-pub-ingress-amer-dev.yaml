@@ -1,0 +1,67 @@
+---
+# Scoped public ingress for Home Assistant's self-hosted Google Assistant
+# smart-home integration ONLY. Google's servers must reach two things over
+# the internet: the OAuth account-linking endpoints (/auth/authorize,
+# /auth/token — core HA auth, not integration-specific) and the smart-home
+# fulfillment webhook (/api/google_assistant). Nothing else on HA is routed
+# here — the full dashboard/API/websocket stays LAN-only on ha.amer.dev.
+#
+# Uses IngressRoute (not Ingress) + a dedicated DNSEndpoint kept current by
+# the DDNS CronJob (infra/ddns/ddns.yaml), same pattern as
+# pubhooks-ingress-amer-dev.yaml — external-dns would otherwise point this
+# at the Traefik LB's private IP, same mistake ha.amer.dev makes today (that
+# one is intentionally LAN-only).
+#
+# Reuses the ha-mini-external Service (ha-mini-ingress-amer-dev.yaml) — same
+# backend as ha.amer.dev, just a different, narrower public entry path.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ha-pub-ingress-amer-dev
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  tls:
+    secretName: ha-pub-amer-dev-tls
+  routes:
+    - match: Host(`ha.pub.amer.dev`) && PathPrefix(`/auth/`)
+      kind: Rule
+      services:
+        - name: ha-mini-external
+          port: 8123
+    - match: Host(`ha.pub.amer.dev`) && PathPrefix(`/api/google_assistant`)
+      kind: Rule
+      services:
+        - name: ha-mini-external
+          port: 8123
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ha-pub-amer-dev
+  namespace: default
+spec:
+  secretName: ha-pub-amer-dev-tls
+  dnsNames:
+    - ha.pub.amer.dev
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+---
+# DNS record — managed by DDNS CronJob (keeps target = current public IP).
+# The `targets` value below is NOT authoritative — see infra-ingresses
+# Application's ignoreDifferences entry for this field (same as pubhooks),
+# so ArgoCD's selfHeal never reverts the CronJob's live patches.
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: ha-pub-amer-dev
+  namespace: default
+spec:
+  endpoints:
+    - dnsName: ha.pub.amer.dev
+      recordTTL: 300
+      recordType: A
+      targets:
+        - 67.250.70.153
