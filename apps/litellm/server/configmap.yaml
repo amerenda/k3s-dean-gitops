@@ -212,6 +212,9 @@ data:
       grafana-mcp:
         url: "http://grafana-mcp-server.mcp-grafana-mcp.svc.cluster.local:8000/mcp"
         transport: "http"
+      komodo-mcp:
+        url: "http://komodo-mcp-server.mcp-komodo-mcp.svc.cluster.local:8000/mcp"
+        transport: "http"
     litellm_settings:
       drop_params: true
       callbacks:
