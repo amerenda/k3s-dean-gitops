@@ -209,6 +209,9 @@ data:
       # intermittent 400s from the llama.cpp jinja template renderer. Total tool count drops
       # from 123 to 34; prompt token overhead drops from ~36K to ~6K.
       # HA tools remain accessible via the mcp-bridge OpenAPI endpoint in OWU.
+      grafana-mcp:
+        url: "http://grafana-mcp-server.mcp-grafana-mcp.svc.cluster.local:8080/mcp"
+        transport: "http"
     litellm_settings:
       drop_params: true
       callbacks:
