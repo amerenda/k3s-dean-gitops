@@ -17,8 +17,15 @@ spec:
         - name: server
           image: grafana/mcp-grafana:latest
           imagePullPolicy: Always
+          args:
+            - "-t"
+            - "streamable-http"
+            - "-address"
+            - "0.0.0.0:8000"
+            - "-allowed-hosts"
+            - "*"
           ports:
-            - containerPort: 8080
+            - containerPort: 8000
           env:
             - name: GRAFANA_URL
               value: 'https://grafana.amer.dev'
@@ -30,7 +37,7 @@ spec:
 
           readinessProbe:
             tcpSocket:
-              port: 8080
+              port: 8000
             initialDelaySeconds: 5
             periodSeconds: 10
           resources:
