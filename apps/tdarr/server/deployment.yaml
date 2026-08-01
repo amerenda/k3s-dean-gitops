@@ -72,7 +72,10 @@ spec:
               memory: 512Mi
             limits:
               cpu: 500m
-              memory: 1Gi
+              # Bumped from 1Gi 2026-07-31: OOMKilled repeatedly (CrashLoopBackOff) once
+              # a large backlog (~260 queued transcodes/health checks) started processing
+              # at once after being paused for weeks. 1Gi was fine at idle/small-batch load.
+              memory: 2Gi
       volumes:
         - name: server-data
           persistentVolumeClaim:
