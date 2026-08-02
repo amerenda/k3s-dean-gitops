@@ -307,6 +307,9 @@ spec:
     - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
       targetRevision: main
       path: infra/monitoring/rules
+    - repoURL: https://github.com/amerenda/k3s-dean-gitops.git
+      targetRevision: main
+      path: infra/monitoring/alerting
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
