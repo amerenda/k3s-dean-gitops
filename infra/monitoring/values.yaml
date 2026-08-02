@@ -8,7 +8,7 @@
 # looped forever because the startup probe kept killing the pod mid-replay, so it could never
 # finish long enough to compact and shrink). No PVC, no local persistence across restarts.
 
-# --- AlertManager: watchdog alerts (no notification channels yet) ---
+# --- AlertManager: watchdog alerts, routed to Pushover (see infra/monitoring/alerting/) ---
 alertmanager:
   enabled: true
   alertmanagerSpec:

@@ -1,0 +1,30 @@
+# Alertmanager (alertmanagerConfigSelector/NamespaceSelector are both {} on the
+# infra-monitoring Alertmanager CR) auto-discovers AlertmanagerConfig objects in any
+# namespace, so this needs no label to be picked up. It becomes a sub-route scoped to
+# alerts originating in the monitoring namespace (where all our PrometheusRules live) —
+# everything else still falls through to the chart's default "null" receiver.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: pushover-alerts
+  namespace: monitoring
+spec:
+  route:
+    receiver: pushover
+    groupBy: ["alertname"]
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+  receivers:
+    - name: pushover
+      pushoverConfigs:
+        - userKey:
+            name: pushover-credentials
+            key: user-key
+          token:
+            name: pushover-credentials
+            key: token
+          title: "{{ .CommonLabels.alertname }} ({{ .CommonLabels.severity }})"
+          message: "{{ .CommonAnnotations.summary }}\n{{ .CommonAnnotations.description }}"
+          priority: "0"
+          sendResolved: true
