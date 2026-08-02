@@ -58,13 +58,19 @@ prometheus:
                   values:
                     - murderbot
     # Sized for an edge buffer holding <=30m of data, not for compacting a large TSDB.
+    # Headroom note: emptyDir persists across container restarts within the same pod (only
+    # a pod reschedule gets a fresh volume), so an OOMKilled restart replays whatever WAL was
+    # already on disk instead of starting empty. The 1Gi limit wasn't enough to replay a WAL
+    # that had piled up across a restart loop, which fed the loop instead of breaking it
+    # (incident: 2026-08-02, 55 restarts over 10h). This limit is intentionally well above
+    # steady-state usage to guarantee replay always succeeds and the loop can't self-sustain.
     resources:
       requests:
         cpu: 100m
         memory: 256Mi
       limits:
         cpu: 500m
-        memory: 1Gi
+        memory: 2Gi
     remoteWrite:
       - url: "http://10.100.20.18:9090/api/v1/write"
         queueConfig:
