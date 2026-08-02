@@ -26,5 +26,9 @@ spec:
             key: token
           title: "{{ .CommonLabels.alertname }} ({{ .CommonLabels.severity }})"
           message: "{{ .CommonAnnotations.summary }}\n{{ .CommonAnnotations.description }}"
+          # Operator defaults this to pushover.default.url, which templates to Alertmanager's
+          # externalUrl (http://infra-monitoring-kube-prom-alertmanager.monitoring:9093) — an
+          # in-cluster-only address that's useless from a phone. Point it at the public ingress.
+          url: "https://k3s-alertmanager.amer.dev"
           priority: "0"
           sendResolved: true
