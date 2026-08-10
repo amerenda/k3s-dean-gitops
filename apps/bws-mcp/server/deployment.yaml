@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: amerenda/bws-mcp:latest
+          image: amerenda/bws-mcp:sha-a38bd82
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
