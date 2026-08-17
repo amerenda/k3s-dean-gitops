@@ -13,7 +13,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: owui-bootstrap
-          image: amerenda/praetor-webhook:sha-f9725d5
+          image: amerenda/praetor-webhook:sha-955b477
           imagePullPolicy: Always
           command: ["python3", "scripts/register_owui_tool.py"]
           env:
