@@ -1,0 +1,31 @@
+# Public ingress for the k3s edge Alertmanager UI. Distinct from alertmanager.amer.dev /
+# alerts.amer.dev (infra/ingresses/alertmanager-amer-dev.yaml), which point at the separate,
+# primary Alertmanager instance on mac-mini — this is only for the k3s-local instance.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: k3s-alertmanager-ingress-amer-dev
+  namespace: monitoring
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: k3s-alertmanager.amer.dev
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  ingressClassName: infra-traefik
+  tls:
+    - hosts:
+        - k3s-alertmanager.amer.dev
+      secretName: k3s-alertmanager-amer-dev-tls
+  rules:
+    - host: k3s-alertmanager.amer.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: infra-monitoring-kube-prom-alertmanager
+                port:
+                  number: 9093
