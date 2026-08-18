@@ -215,6 +215,9 @@ data:
       komodo-mcp:
         url: "http://komodo-mcp-server.mcp-komodo-mcp.svc.cluster.local:8000/mcp"
         transport: "http"
+      obsidian-mcp:
+        url: "http://obsidian-mcp-server.mcp-obsidian.svc.cluster.local:8787/mcp"
+        transport: "http"
     litellm_settings:
       drop_params: true
       callbacks:
