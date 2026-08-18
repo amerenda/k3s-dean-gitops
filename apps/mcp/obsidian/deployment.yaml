@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: obsidian-mcp-server
+  namespace: mcp-obsidian
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: obsidian-mcp-server
+  template:
+    metadata:
+      labels:
+        app: obsidian-mcp-server
+    spec:
+      containers:
+        - name: server
+          image: ghcr.io/es617/obsidian-sync-mcp:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8787
+          env:
+            - name: COUCHDB_URL
+              value: 'https://couchdb.amer.dev'
+            - name: COUCHDB_USER
+              value: 'obsidian-mcp-bridge'
+            - name: COUCHDB_DATABASE
+              value: 'obsidian-dean'
+            - name: COUCHDB_OBFUSCATE_PROPERTIES
+              value: 'false'
+            - name: VAULT_NAME
+              value: 'Dean'
+            - name: PORT
+              value: '8787'
+            - name: MCP_ALLOWED_HOSTS
+              value: 'obsidian-mcp-server,obsidian-mcp-server.mcp-obsidian,obsidian-mcp-server.mcp-obsidian.svc,obsidian-mcp-server.mcp-obsidian.svc.cluster.local'
+            - name: COUCHDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: obsidian-mcp-secrets
+                  key: couchdb_password
+            - name: COUCHDB_PASSPHRASE
+              valueFrom:
+                secretKeyRef:
+                  name: obsidian-mcp-secrets
+                  key: e2ee_passphrase
+
+          readinessProbe:
+            tcpSocket:
+              port: 8787
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
