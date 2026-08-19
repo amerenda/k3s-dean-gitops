@@ -6,41 +6,44 @@ metadata:
 data:
   config.yaml: |
     model_list:
-      # --- murderbot (RTX PRO 4000, 24GB, llama.cpp/Qwen3.8-27B-GGUF+MTP — always hot) ---
-      # Migrated 2026-08-19 twice in one day: vLLM+Qwen3.8-27B-NVFP4 (no MTP, 32768 ctx,
-      # ~8 tok/s) was itself a same-day replacement for llama.cpp+Qwen3.6-35B-A3B, then
-      # replaced again by this llama.cpp+Qwen3.8-27B+MTP setup because vLLM's NVFP4 quant
-      # couldn't fit MTP speculative decoding alongside a usable KV cache on this 24GB card.
-      # Same lesson already learned once for Qwen3.6 on this card: llama.cpp's memory
-      # accounting fits this model family with MTP where vLLM's does not. See
-      # komodo-dean-gitops/murderbot/llm/compose.yaml for the full flag-by-flag rationale
-      # (every value arrived at by loading the model on this card and hitting real failures
-      # first). Served alias (--alias qwen38-27b) is what llama-server reports as its
-      # "model" name — unchanged from the vLLM setup, so no client-facing name change here.
+      # --- murderbot (RTX PRO 4000, 24GB, llama.cpp — model switchable, always hot) ---
+      # Served alias is now the stable "murderbot-primary" (2026-08-19), NOT tied to any
+      # specific model version. murderbot/llm/compose.yaml defines multiple Docker Compose
+      # *profiles* (currently qwen36, qwen38) that all serve under this same
+      # --alias murderbot-primary. Which profile is actually running is controlled by the
+      # Komodo Variable MURDERBOT_LLM_PROFILE (read by pre-deploy.sh, NOT by git) via the
+      # gpu-switcher service (murderbot/gpu-switcher/) -- switching models or switching this
+      # GPU to the image-gen stack entirely is a runtime action, not a gitops PR. This block
+      # of config therefore never needs to change when the active model changes -- that's
+      # the whole point of the rename. See komodo-dean-gitops/murderbot/llm/compose.yaml and
+      # murderbot/gpu-switcher/ for the full mechanism and each profile's flag-by-flag
+      # rationale (every value arrived at by loading the model on this card and hitting real
+      # failures first, not from docs).
       #
-      # 49,152 max-model-len (vs vLLM's 32,768, and vs the old Qwen3.6-35B-A3B llama.cpp
-      # setup's 98,304) — chosen after 65,536 survived a real near-max request but left only
-      # 101 MiB headroom (too thin); 49,152 left 1.19 GiB under the same kind of test.
-      # ~40 tok/s sustained with MTP — not the old Qwen3.6-35B-A3B setup's 120-140 tok/s
-      # (that was a sparse MoE model, ~3B active params/token; this is dense 27B, inherently
-      # costlier per token) but ~5x the vLLM setup's ~8 tok/s.
+      # As of the 2026-08-19 migration, the qwen38 profile is active: Qwen3.8-27B-GGUF+MTP,
+      # 49,152 ctx, ~40 tok/s. The qwen36 profile (Qwen3.6-35B-A3B+MTP, historically
+      # 98,304 ctx / 120-140 tok/s on this card) is the other known-good option -- check
+      # which is actually running via the gpu-switcher's /status endpoint or
+      # `docker ps` on murderbot before assuming either number applies.
       #
-      # No abliterated GGUF/NVFP4 quant of Qwen3.8-27B was available as of this migration —
-      # the murderbot-uncensored-* presets below rely on prompt-based uncensoring only, not
-      # true weight-level abliteration like the old huihui-ai Qwen3.6 setup had. Check
-      # huggingface.co/sakamakismile and huggingface.co/huihui-ai before assuming this is
-      # still true — several third-party "uncensored" Qwen3.8-27B GGUFs surfaced within days
-      # of release but weren't vetted for this migration (scope: engine/context/throughput
-      # fix, not a new abliteration adoption decision).
+      # No abliterated GGUF/NVFP4 quant of Qwen3.8-27B was available as of the 2026-08-19
+      # migration -- the murderbot-uncensored-* presets below rely on prompt-based
+      # uncensoring only when that profile is active, not true weight-level abliteration
+      # like the old huihui-ai Qwen3.6 setup had. Check huggingface.co/sakamakismile and
+      # huggingface.co/huihui-ai before assuming this is still true.
 
       # coder: used by OpenHands, praetor-coder-worker, and opencode.
       # parallel_tool_calls=false: coding agents must execute tools sequentially (read → edit → verify);
       # parallel calls cause race conditions on file state.
       # enable_thinking=false: coding agents want fast tool-call iteration, not long reasoning chains.
-      # 40960/8192 = 49152 total: matches llama-server's -c 49152 (murderbot/llm/compose.yaml).
+      # 40960/8192 = 49152 total: intentionally sized to the SMALLER of the two model
+      # profiles (qwen38's -c 49152), not necessarily the currently-active one -- qwen36's
+      # -c 98304 is larger, so this stays a safe (if conservative) budget regardless of
+      # which profile the gpu-switcher has active. Bump only if a future profile has an
+      # even smaller context than 49152.
       - model_name: coder
         litellm_params:
-          model: openai/qwen38-27b
+          model: openai/murderbot-primary
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
@@ -63,7 +66,7 @@ data:
       # a reproduced regression (TestLiveness::test_owui_model_responds, 2026-07-23).
       - model_name: murderbot-v1-base
         litellm_params:
-          model: openai/qwen38-27b
+          model: openai/murderbot-primary
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
@@ -82,7 +85,7 @@ data:
       # enable_thinking=false: same empty-response regression as murderbot-v1-base above.
       - model_name: murderbot-uncensored-v1-base
         litellm_params:
-          model: openai/qwen38-27b
+          model: openai/murderbot-primary
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
@@ -102,13 +105,17 @@ data:
       # (e.g. OWU's liveness check, 256 tokens) came back finish_reason=length with EMPTY content
       # — the whole budget went to reasoning_content, none left for the visible answer. This is
       # exactly the "revisit if real usage shows otherwise" case the original comment called for.
-      # 40960/8192 = 49152 total: matches llama-server's -c 49152 (murderbot/llm/compose.yaml).
+      # 40960/8192 = 49152 total: intentionally sized to the SMALLER of the two model
+      # profiles (qwen38's -c 49152), not necessarily the currently-active one -- qwen36's
+      # -c 98304 is larger, so this stays a safe (if conservative) budget regardless of
+      # which profile the gpu-switcher has active. Bump only if a future profile has an
+      # even smaller context than 49152.
       # tools (web search, infra, k8s) are configured in the OWU model preset, not here.
       # Both v2-custom (gated) and v2-uncensored-custom (permissive) use this base; behavior
       # is controlled entirely by the OWU system prompt, not by model weights.
       - model_name: murderbot-v2-base
         litellm_params:
-          model: openai/qwen38-27b
+          model: openai/murderbot-primary
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
