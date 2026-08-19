@@ -6,29 +6,38 @@ metadata:
 data:
   config.yaml: |
     model_list:
-      # --- murderbot (RTX PRO 4000, 24GB, vLLM/Qwen3.8-27B-NVFP4 — always hot) ---
-      # Migrated 2026-08-19 from llama.cpp/Qwen3.6-35B-A3B to vLLM serving the newly-released
-      # Qwen3.8-27B (sakamakismile/Qwen3.8-27B-MTP-NVFP4). Model upgrade, not an engine
-      # regression — see komodo-dean-gitops/murderbot/llm/compose.yaml for the full flag-by-flag
-      # rationale (every value was arrived at by loading the model on this card and hitting real
-      # OOM failures first, not from vendor docs). Served alias (--served-model-name qwen38-27b)
-      # is what vLLM reports as its "model" name.
+      # --- murderbot (RTX PRO 4000, 24GB, llama.cpp/Qwen3.8-27B-GGUF+MTP — always hot) ---
+      # Migrated 2026-08-19 twice in one day: vLLM+Qwen3.8-27B-NVFP4 (no MTP, 32768 ctx,
+      # ~8 tok/s) was itself a same-day replacement for llama.cpp+Qwen3.6-35B-A3B, then
+      # replaced again by this llama.cpp+Qwen3.8-27B+MTP setup because vLLM's NVFP4 quant
+      # couldn't fit MTP speculative decoding alongside a usable KV cache on this 24GB card.
+      # Same lesson already learned once for Qwen3.6 on this card: llama.cpp's memory
+      # accounting fits this model family with MTP where vLLM's does not. See
+      # komodo-dean-gitops/murderbot/llm/compose.yaml for the full flag-by-flag rationale
+      # (every value arrived at by loading the model on this card and hitting real failures
+      # first). Served alias (--alias qwen38-27b) is what llama-server reports as its
+      # "model" name — unchanged from the vLLM setup, so no client-facing name change here.
       #
-      # 32768 max-model-len (vs 98,304 under the previous llama.cpp setup) — smaller because MTP
-      # speculative decoding is deliberately disabled on this checkpoint (its MTP head left no
-      # room for a usable KV cache alongside it on this 24GB card); traded speculative-decoding
-      # throughput for a model that reliably fits and serves real context. ~8 tok/s (enforce-eager,
-      # no MTP) vs the previous ~120-140 tok/s — a real regression, not overlooked. Revisit if a
-      # lighter MTP integration or bigger card shows up.
+      # 49,152 max-model-len (vs vLLM's 32,768, and vs the old Qwen3.6-35B-A3B llama.cpp
+      # setup's 98,304) — chosen after 65,536 survived a real near-max request but left only
+      # 101 MiB headroom (too thin); 49,152 left 1.19 GiB under the same kind of test.
+      # ~40 tok/s sustained with MTP — not the old Qwen3.6-35B-A3B setup's 120-140 tok/s
+      # (that was a sparse MoE model, ~3B active params/token; this is dense 27B, inherently
+      # costlier per token) but ~5x the vLLM setup's ~8 tok/s.
       #
-      # No abliterated NVFP4 quant of Qwen3.8-27B exists yet (see compose.yaml) — the
-      # murderbot-uncensored-* presets below rely on prompt-based uncensoring only for now.
+      # No abliterated GGUF/NVFP4 quant of Qwen3.8-27B was available as of this migration —
+      # the murderbot-uncensored-* presets below rely on prompt-based uncensoring only, not
+      # true weight-level abliteration like the old huihui-ai Qwen3.6 setup had. Check
+      # huggingface.co/sakamakismile and huggingface.co/huihui-ai before assuming this is
+      # still true — several third-party "uncensored" Qwen3.8-27B GGUFs surfaced within days
+      # of release but weren't vetted for this migration (scope: engine/context/throughput
+      # fix, not a new abliteration adoption decision).
 
       # coder: used by OpenHands, praetor-coder-worker, and opencode.
       # parallel_tool_calls=false: coding agents must execute tools sequentially (read → edit → verify);
       # parallel calls cause race conditions on file state.
       # enable_thinking=false: coding agents want fast tool-call iteration, not long reasoning chains.
-      # 24576/8192 = 32768 total: matches vllm-server's --max-model-len 32768 (murderbot/llm/compose.yaml).
+      # 40960/8192 = 49152 total: matches llama-server's -c 49152 (murderbot/llm/compose.yaml).
       - model_name: coder
         litellm_params:
           model: openai/qwen38-27b
@@ -40,7 +49,7 @@ data:
             chat_template_kwargs:
               enable_thinking: false
         model_info:
-          max_input_tokens: 24576
+          max_input_tokens: 40960
           max_output_tokens: 8192
           supports_function_calling: true
 
@@ -68,8 +77,8 @@ data:
           supports_function_calling: true
 
       # murderbot-uncensored-v1-base: legacy alias, same rationale as murderbot-v1-base above.
-      # True weight-level abliteration now (huihui-ai), not just a different prompt on the same
-      # weights — the underlying model itself is already the uncensored one for every alias here.
+      # Prompt-based uncensoring only as of the 2026-08-19 Qwen3.8 migration (see header
+      # comment above) — not weight-level abliteration like the old Qwen3.6/huihui-ai setup.
       # enable_thinking=false: same empty-response regression as murderbot-v1-base above.
       - model_name: murderbot-uncensored-v1-base
         litellm_params:
@@ -93,7 +102,7 @@ data:
       # (e.g. OWU's liveness check, 256 tokens) came back finish_reason=length with EMPTY content
       # — the whole budget went to reasoning_content, none left for the visible answer. This is
       # exactly the "revisit if real usage shows otherwise" case the original comment called for.
-      # 24576/8192 = 32768 total: matches vllm-server's --max-model-len 32768 (murderbot/llm/compose.yaml).
+      # 40960/8192 = 49152 total: matches llama-server's -c 49152 (murderbot/llm/compose.yaml).
       # tools (web search, infra, k8s) are configured in the OWU model preset, not here.
       # Both v2-custom (gated) and v2-uncensored-custom (permissive) use this base; behavior
       # is controlled entirely by the OWU system prompt, not by model weights.
@@ -108,7 +117,7 @@ data:
             chat_template_kwargs:
               enable_thinking: false
         model_info:
-          max_input_tokens: 24576
+          max_input_tokens: 40960
           max_output_tokens: 8192
           supports_function_calling: true
 
