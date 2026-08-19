@@ -6,28 +6,32 @@ metadata:
 data:
   config.yaml: |
     model_list:
-      # --- murderbot (RTX PRO 4000, 24GB, llama.cpp/Huihui-Qwen3.6-35B-A3B-abliterated-MTP — always hot) ---
-      # Migrated 2026-07-23 from vLLM+Qwen3.6-27B-NVFP4 (tagged `qwen3.6-27b` in this repo and in
-      # komodo-dean-gitops if this needs reverting) to llama.cpp+Qwen3.6-35B-A3B — same 24GB card,
-      # but ~120-140 tok/s via MTP speculative decoding (vs ~25-32 tok/s) and 98,304 usable context
-      # (vs 49,152), both empirically verified under real load, not calculated. See
-      # komodo-dean-gitops/murderbot/llm/compose.yaml for the full rationale and the served alias
-      # (--alias qwen36-35b-a3b) llama-server reports as its "model" name.
+      # --- murderbot (RTX PRO 4000, 24GB, vLLM/Qwen3.8-27B-NVFP4 — always hot) ---
+      # Migrated 2026-08-19 from llama.cpp/Qwen3.6-35B-A3B to vLLM serving the newly-released
+      # Qwen3.8-27B (sakamakismile/Qwen3.8-27B-MTP-NVFP4). Model upgrade, not an engine
+      # regression — see komodo-dean-gitops/murderbot/llm/compose.yaml for the full flag-by-flag
+      # rationale (every value was arrived at by loading the model on this card and hitting real
+      # OOM failures first, not from vendor docs). Served alias (--served-model-name qwen38-27b)
+      # is what vLLM reports as its "model" name.
       #
-      # llama.cpp has no `truncate_prompt_tokens` request-level param (that's vLLM-specific API
-      # surface) — drop_params:true below silently drops it, so it's omitted entirely here rather
-      # than left as dead config. Long-conversation overflow behavior for llama.cpp (does it error
-      # cleanly, or context-shift?) has NOT yet been verified the way vLLM's truncation was —
-      # tracked as an open follow-up, not yet covered by the smoke/context-exhaustion test suite.
+      # 32768 max-model-len (vs 98,304 under the previous llama.cpp setup) — smaller because MTP
+      # speculative decoding is deliberately disabled on this checkpoint (its MTP head left no
+      # room for a usable KV cache alongside it on this 24GB card); traded speculative-decoding
+      # throughput for a model that reliably fits and serves real context. ~8 tok/s (enforce-eager,
+      # no MTP) vs the previous ~120-140 tok/s — a real regression, not overlooked. Revisit if a
+      # lighter MTP integration or bigger card shows up.
+      #
+      # No abliterated NVFP4 quant of Qwen3.8-27B exists yet (see compose.yaml) — the
+      # murderbot-uncensored-* presets below rely on prompt-based uncensoring only for now.
 
       # coder: used by OpenHands, praetor-coder-worker, and opencode.
       # parallel_tool_calls=false: coding agents must execute tools sequentially (read → edit → verify);
       # parallel calls cause race conditions on file state.
       # enable_thinking=false: coding agents want fast tool-call iteration, not long reasoning chains.
-      # 90112/8192 = 98304 total: matches llama-server's -c 98304 (murderbot/llm/compose.yaml).
+      # 24576/8192 = 32768 total: matches vllm-server's --max-model-len 32768 (murderbot/llm/compose.yaml).
       - model_name: coder
         litellm_params:
-          model: openai/qwen36-35b-a3b
+          model: openai/qwen38-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
@@ -36,7 +40,7 @@ data:
             chat_template_kwargs:
               enable_thinking: false
         model_info:
-          max_input_tokens: 90112
+          max_input_tokens: 24576
           max_output_tokens: 8192
           supports_function_calling: true
 
@@ -50,7 +54,7 @@ data:
       # a reproduced regression (TestLiveness::test_owui_model_responds, 2026-07-23).
       - model_name: murderbot-v1-base
         litellm_params:
-          model: openai/qwen36-35b-a3b
+          model: openai/qwen38-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
@@ -69,7 +73,7 @@ data:
       # enable_thinking=false: same empty-response regression as murderbot-v1-base above.
       - model_name: murderbot-uncensored-v1-base
         litellm_params:
-          model: openai/qwen36-35b-a3b
+          model: openai/qwen38-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
@@ -89,13 +93,13 @@ data:
       # (e.g. OWU's liveness check, 256 tokens) came back finish_reason=length with EMPTY content
       # — the whole budget went to reasoning_content, none left for the visible answer. This is
       # exactly the "revisit if real usage shows otherwise" case the original comment called for.
-      # 90112/8192 = 98304 total: matches llama-server's -c 98304 (murderbot/llm/compose.yaml).
+      # 24576/8192 = 32768 total: matches vllm-server's --max-model-len 32768 (murderbot/llm/compose.yaml).
       # tools (web search, infra, k8s) are configured in the OWU model preset, not here.
       # Both v2-custom (gated) and v2-uncensored-custom (permissive) use this base; behavior
       # is controlled entirely by the OWU system prompt, not by model weights.
       - model_name: murderbot-v2-base
         litellm_params:
-          model: openai/qwen36-35b-a3b
+          model: openai/qwen38-27b
           api_base: http://10.100.20.19:8088/v1
           api_key: none
           timeout: 600
@@ -104,7 +108,7 @@ data:
             chat_template_kwargs:
               enable_thinking: false
         model_info:
-          max_input_tokens: 90112
+          max_input_tokens: 24576
           max_output_tokens: 8192
           supports_function_calling: true
 
