@@ -33,7 +33,7 @@ spec:
             - name: PORT
               value: '8787'
             - name: MCP_ALLOWED_HOSTS
-              value: 'obsidian-mcp-server,obsidian-mcp-server.mcp-obsidian,obsidian-mcp-server.mcp-obsidian.svc,obsidian-mcp-server.mcp-obsidian.svc.cluster.local'
+              value: 'obsidian-mcp-server,obsidian-mcp-server.mcp-obsidian,obsidian-mcp-server.mcp-obsidian.svc,obsidian-mcp-server.mcp-obsidian.svc.cluster.local,mcp-obsidian.amer.dev'
             - name: COUCHDB_PASSWORD
               valueFrom:
                 secretKeyRef:
