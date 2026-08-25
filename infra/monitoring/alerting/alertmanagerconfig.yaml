@@ -14,7 +14,7 @@ spec:
     groupBy: ["alertname"]
     groupWait: 30s
     groupInterval: 5m
-    repeatInterval: 4h
+    repeatInterval: 6h
   receivers:
     - name: pushover
       pushoverConfigs:
