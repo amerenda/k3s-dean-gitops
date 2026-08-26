@@ -24,7 +24,7 @@ spec:
           token:
             name: pushover-credentials
             key: token
-          title: "{{ .CommonLabels.alertname }} ({{ .CommonLabels.severity }})"
+          title: "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }} ({{ .CommonLabels.severity }})"
           message: "{{ .CommonAnnotations.summary }}\n{{ .CommonAnnotations.description }}"
           # Operator defaults this to pushover.default.url, which templates to Alertmanager's
           # externalUrl (http://infra-monitoring-kube-prom-alertmanager.monitoring:9093) — an
