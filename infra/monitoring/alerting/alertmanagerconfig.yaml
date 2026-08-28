@@ -24,8 +24,16 @@ spec:
           token:
             name: pushover-credentials
             key: token
-          title: "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }} ({{ .CommonLabels.severity }})"
-          message: "{{ .CommonAnnotations.summary }}\n{{ .CommonAnnotations.description }}"
+          # message ranges over .Alerts, NOT .CommonAnnotations -- CommonAnnotations
+          # only shows text that's byte-identical across every alert in the group, so
+          # it silently blanks out whenever 2+ instances of the same alertname fire
+          # with different label values. Found 2026-08-28 on the mini's Alertmanager
+          # (komodo-dean-gitops#236-ish) via a DiskSpaceLow firing on two mountpoints
+          # at once producing a Pushover push with no details. Mirrored here even
+          # though every current rule on this Alertmanager (just MacMiniPrometheusDown)
+          # is single-instance — keeps this safe for whatever gets added next.
+          title: "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }} ({{ .CommonLabels.severity }}){{ if gt (len .Alerts) 1 }} x{{ len .Alerts }}{{ end }}"
+          message: "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}"
           # Operator defaults this to pushover.default.url, which templates to Alertmanager's
           # externalUrl (http://infra-monitoring-kube-prom-alertmanager.monitoring:9093) — an
           # in-cluster-only address that's useless from a phone. Point it at the public ingress.
