@@ -20,8 +20,18 @@ spec:
       annotations:
         configmap.reloader.stakater.com/reload: "litellm-config,litellm-custom-hooks,litellm-migration-override,litellm-owu-refresh-hook"
     spec:
+      # Was hard-pinned to murderbot (kubernetes.io/hostname: murderbot) as a
+      # reactive fix for a flaky archlinux node going NotReady (#974, June
+      # 2026). No architectural need for this pod to run specifically on
+      # murderbot -- llama-server (10.100.20.19:8088) and Postgres (mac-mini)
+      # are both reached over the network regardless of node. That pin meant
+      # this pod went down for 7+ hours during INC-2026-08-30 (murderbot host
+      # memory exhaustion) instead of self-healing like everything else did,
+      # since kubelet had nowhere else to (re)schedule it. Matches the
+      # arch-only selector already used by imggen/praetor-webhook-adapter for
+      # the same GPU-adjacent murderbot/archlinux pair.
       nodeSelector:
-        kubernetes.io/hostname: murderbot
+        kubernetes.io/arch: amd64
       containers:
       - name: server
         image: ghcr.io/berriai/litellm:main-stable
