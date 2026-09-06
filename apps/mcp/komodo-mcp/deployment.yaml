@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: amerenda/komodo-mcp:sha-6ab393f
+          image: amerenda/komodo-mcp:sha-e76f0be
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
