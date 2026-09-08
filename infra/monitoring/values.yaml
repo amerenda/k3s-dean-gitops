@@ -81,6 +81,19 @@ prometheus:
           batchSendDeadline: 5s
           minBackoff: 100ms
           maxBackoff: 10s
+        # Drop node-exporter series for murderbot/archlinux before they leave this cluster.
+        # mac-mini's own Prometheus already scrapes both directly (jobs murderbot-node /
+        # archlinux-node, instance relabeled to the plain node name). This DaemonSet's
+        # node-exporter pod on those same two nodes remote-writes the identical host metrics
+        # under job="node-exporter", instance="<ip>:9100" instead — a second, differently-
+        # labeled copy of the same series landing in the same TSDB. Every alert rule over
+        # those metrics (e.g. RaidArrayDegraded on murderbot's md0) then evaluates both
+        # copies independently and fires twice for one real condition. rpi5-0/rpi5-1/rpi4-0
+        # have no other metrics source, so their node-exporter series must still pass through.
+        writeRelabelConfigs:
+          - source_labels: [job, node]
+            regex: "node-exporter;(murderbot|archlinux)"
+            action: drop
     # Scrape external targets (outside k8s)
     additionalScrapeConfigs:
       # Cross-stack heartbeat — mac-mini Prometheus health probe
