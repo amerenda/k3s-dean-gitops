@@ -103,7 +103,7 @@ prometheus:
         # copies independently and fires twice for one real condition. rpi5-0/rpi5-1/rpi4-0
         # have no other metrics source, so their node-exporter series must still pass through.
         writeRelabelConfigs:
-          - source_labels: [job, node]
+          - sourceLabels: [job, node]
             regex: "node-exporter;(murderbot|archlinux)"
             action: drop
     # Scrape external targets (outside k8s)
