@@ -64,13 +64,23 @@ prometheus:
     # that had piled up across a restart loop, which fed the loop instead of breaking it
     # (incident: 2026-08-02, 55 restarts over 10h). This limit is intentionally well above
     # steady-state usage to guarantee replay always succeeds and the loop can't self-sustain.
+    #
+    # 2026-09-07 recurrence: head series had grown to ~503K (mostly kubeApiServer/kubeEtcd
+    # histogram buckets and third-party apps' own ServiceMonitors getting swept in by the nil
+    # selector below — see serviceMonitorSelectorNilUsesHelmValues), which pushed the
+    # container past this 2Gi limit and into the same OOM/replay crash loop for ~12h before
+    # the pod was finally evicted and recreated clean. The selector/component fixes below
+    # should cut steady-state series by an order of magnitude; this limit bump is headroom on
+    # top of that fix, not a substitute for it. Request was also 256Mi against ~1.4-2GB actual
+    # usage — raised so the pod's QoS reflects real usage instead of being first-evicted under
+    # node memory pressure.
     resources:
       requests:
         cpu: 100m
-        memory: 256Mi
+        memory: 512Mi
       limits:
         cpu: 500m
-        memory: 2Gi
+        memory: 3Gi
     remoteWrite:
       - url: "http://10.100.20.18:9090/api/v1/write"
         queueConfig:
@@ -96,8 +106,28 @@ prometheus:
     ruleSelector:
       matchLabels:
         app.kubernetes.io/component: heartbeat
-    serviceMonitorSelectorNilUsesHelmValues: false
-    podMonitorSelectorNilUsesHelmValues: false
+    # This Prometheus exists for exactly two things: scrape k3s node/pod health (kubelet,
+    # node-exporter, kube-state-metrics — all part of this same Helm release) and ship it to
+    # mac-mini via remote_write, plus the heartbeat rule above. `false` here left both
+    # selectors nil, which Prometheus Operator reads as "match every ServiceMonitor/PodMonitor
+    # in the cluster" — by 2026-09-07 that had silently adopted ~15 unrelated jobs (every
+    # argocd-*, longhorn, external-dns, external-secrets, cert-manager, traefik, praetor,
+    # ecdysis, unifi-poller, speedtest-exporter... ServiceMonitor in the cluster), none of
+    # which belongs on a thin edge buffer. `true` (the chart default) scopes selection back
+    # to ServiceMonitors/PodMonitors carrying this release's own label, which kubelet/
+    # node-exporter/kube-state-metrics already do since they're deployed by this same release.
+    serviceMonitorSelectorNilUsesHelmValues: true
+    podMonitorSelectorNilUsesHelmValues: true
+
+# kube-apiserver/etcd/CoreDNS are k3s control-plane internals, not node/pod health — and their
+# histogram-bucket metrics (etcd_request_duration_seconds_bucket alone: 55K+ series) were most
+# of the ~503K head series behind the 2026-09-07 OOM. Out of scope for this edge buffer; disabled.
+kubeApiServer:
+  enabled: false
+kubeEtcd:
+  enabled: false
+coreDns:
+  enabled: false
 
 # --- Grafana ---
 grafana:
