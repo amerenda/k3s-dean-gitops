@@ -6,7 +6,15 @@
 namespaceOverride: arc-systems
 
 # Controller replica count
-replicaCount: 1
+# Temporarily 0: the org's ARC GitHub App is returning 403 "Resource not
+# accessible by integration" on runner-registration-token requests
+# (2026-09-08, org-wide, cause still open). Every scale set's listener pod
+# was crash-looping every ~15-30s waiting on this, and the sustained churn
+# wedged murderbot's kubelet (PLEG unhealthy), which evicted every pod on
+# the node. Scaling the controller to 0 stops it from respawning listener
+# pods. Runner fixup/unification is deferred to a separate session -- set
+# this back to 1 only once that work resumes, not as a quick revert.
+replicaCount: 0
 
 # Image configuration
 image:
