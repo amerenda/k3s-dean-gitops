@@ -152,7 +152,7 @@ kubeApiServer:
         regex: "resource|subresource|scope|component|group|version"
       # These five apiserver histograms (~90K series combined) have zero dashboard or alert
       # usage anywhere in komodo-dean-gitops (confirmed via repo-wide search 2026-09-08).
-      - source_labels: [__name__]
+      - sourceLabels: [__name__]
         regex: "apiserver_request_sli_duration_seconds_(bucket|count|sum)|apiserver_request_body_size_bytes_(bucket|count|sum)|apiserver_response_sizes_(bucket|count|sum)|apiserver_watch_cache_read_wait_seconds_(bucket|count|sum)|apiserver_watch_events_sizes_(bucket|count|sum)"
         action: drop
 kubeEtcd:
@@ -165,7 +165,7 @@ kubeEtcd:
       # instead (45 series each, no cardinality concern). grpc_server_handled_total is etcd's
       # own gRPC-server instrumentation, also unused (ArgoCD emits a separate small share of
       # this same metric name — left alone here, out of scope for this component).
-      - source_labels: [__name__]
+      - sourceLabels: [__name__]
         regex: "etcd_request_duration_seconds_(bucket|count|sum)|grpc_server_handled_total"
         action: drop
 
