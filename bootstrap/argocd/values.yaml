@@ -41,7 +41,7 @@ controller:
       memory: "512Mi"
       cpu: "100m"
     limits:
-      memory: "1536Mi"  # 1.5Gi - increased from 512Mi to handle ~17 applications
+      memory: "2Gi"  # increased from 1.5Gi - app controller OOMing
       cpu: "500m"
 
 # Application controller configuration
