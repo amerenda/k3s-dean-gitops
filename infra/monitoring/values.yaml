@@ -64,13 +64,25 @@ prometheus:
     # that had piled up across a restart loop, which fed the loop instead of breaking it
     # (incident: 2026-08-02, 55 restarts over 10h). This limit is intentionally well above
     # steady-state usage to guarantee replay always succeeds and the loop can't self-sustain.
+    #
+    # 2026-09-07 recurrence: head series had grown to ~503K, which pushed the container past
+    # this 2Gi limit and into the same OOM/replay crash loop for ~12h before the pod was
+    # finally evicted and recreated clean. Root cause was NOT scope creep — a full audit of
+    # every Grafana dashboard (2026-09-08) confirmed all ~28 scrape jobs here are genuinely
+    # consumed by a purpose-built dashboard or alert (mac-mini has no other vantage point with
+    # ServiceMonitor/ClusterIP access to argocd/longhorn/external-dns/etc — this Prometheus is
+    # the only source for any of it). The actual fix is the metricRelabelings below, which drop
+    # ~175K series of confirmed-zero-usage metrics without touching anything dashboarded. This
+    # limit bump is headroom on top of that cut, not a substitute for it. Request was also
+    # 256Mi against ~1.4-2GB actual usage — raised so the pod's QoS reflects real usage instead
+    # of being first-evicted under node memory pressure.
     resources:
       requests:
         cpu: 100m
-        memory: 256Mi
+        memory: 512Mi
       limits:
         cpu: 500m
-        memory: 2Gi
+        memory: 3Gi
     remoteWrite:
       - url: "http://10.100.20.18:9090/api/v1/write"
         queueConfig:
@@ -96,8 +108,53 @@ prometheus:
     ruleSelector:
       matchLabels:
         app.kubernetes.io/component: heartbeat
+    # Nil selector = Prometheus Operator matches every ServiceMonitor/PodMonitor in the
+    # cluster, not just this release's own. That's deliberate, not a leak: this is the only
+    # Prometheus with ClusterIP/ServiceMonitor access to in-cluster apps (argocd, longhorn,
+    # external-dns, external-secrets, cert-manager, traefik, coredns, metallb, reloader,
+    # arc-controller, unifi-poller, praetor, ecdysis, speedtest-exporter...) — mac-mini can
+    # only blackbox-probe a handful of public ingress URLs, it has no other way to reach any
+    # of this. Confirmed via a full audit of every dashboard JSON (2026-09-08): all ~28 jobs
+    # here are consumed by a real dashboard or alert. Scoping this down to release-only
+    # ServiceMonitors (tried in an earlier draft of this fix) would have gone straight to "No
+    # data" on ~15 dashboards in the Infra/ folder. Leave nil.
     serviceMonitorSelectorNilUsesHelmValues: false
     podMonitorSelectorNilUsesHelmValues: false
+
+# kubeApiServer/kubeEtcd stay enabled — infra-kubernetes-cluster.json and infra-etcd.json
+# genuinely dashboard apiserver_request_total/_duration_seconds_bucket and etcd's leader/WAL/
+# backend-commit/db-size/peer-latency metrics respectively (confirmed 2026-09-08). The actual
+# ~503K-head-series problem was a handful of specific metrics with zero dashboard or alert
+# usage anywhere in the repo (confirmed via full-text search), not these components as a
+# whole — dropped at scrape time instead of disabling the components that also carry the
+# metrics that ARE used.
+kubeApiServer:
+  serviceMonitor:
+    metricRelabelings:
+      # apiserver_request_duration_seconds_bucket (55,148 series) IS used — but only ever
+      # grouped by verb/code/le (infra-kubernetes-cluster.json's p99-by-verb panel). The raw
+      # metric also carries resource/subresource/scope/component/group/version, which is what
+      # actually multiplies it out; no panel or alert references any of those six.
+      - action: labeldrop
+        regex: "resource|subresource|scope|component|group|version"
+      # These five apiserver histograms (~90K series combined) have zero dashboard or alert
+      # usage anywhere in komodo-dean-gitops (confirmed via repo-wide search 2026-09-08).
+      - source_labels: [__name__]
+        regex: "apiserver_request_sli_duration_seconds_(bucket|count|sum)|apiserver_request_body_size_bytes_(bucket|count|sum)|apiserver_response_sizes_(bucket|count|sum)|apiserver_watch_cache_read_wait_seconds_(bucket|count|sum)|apiserver_watch_events_sizes_(bucket|count|sum)"
+        action: drop
+kubeEtcd:
+  serviceMonitor:
+    metricRelabelings:
+      # etcd_request_duration_seconds_bucket is the single largest metric on this Prometheus
+      # (55,420 series) and has zero dashboard or alert usage anywhere in the repo (confirmed
+      # via repo-wide search 2026-09-08) — infra-etcd.json's latency panels use
+      # etcd_disk_wal_fsync_duration_seconds_bucket / etcd_disk_backend_commit_duration_seconds_bucket
+      # instead (45 series each, no cardinality concern). grpc_server_handled_total is etcd's
+      # own gRPC-server instrumentation, also unused (ArgoCD emits a separate small share of
+      # this same metric name — left alone here, out of scope for this component).
+      - source_labels: [__name__]
+        regex: "etcd_request_duration_seconds_(bucket|count|sum)|grpc_server_handled_total"
+        action: drop
 
 # --- Grafana ---
 grafana:
