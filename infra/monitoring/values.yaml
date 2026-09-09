@@ -169,6 +169,31 @@ kubeEtcd:
         regex: "etcd_request_duration_seconds_(bucket|count|sum)|grpc_server_handled_total"
         action: drop
 
+# k3s runs apiserver+etcd+kubelet in one process per node sharing one metrics registry, so
+# kubelet's own /metrics endpoint (this ServiceMonitor's base "kubelet" job, distinct from its
+# cAdvisor/probes/resource endpoints) *also* exposes the exact same apiserver/etcd metrics
+# kubeApiServer/kubeEtcd above already target — untouched by those fixes since they only patch
+# the kubeApiServer/kubeEtcd ServiceMonitors, not this one. Confirmed live 2026-09-09: ~110K
+# series across these seven metric names still present under job=kubelet. Same drop rules as
+# kubeApiServer/kubeEtcd above, applied here too. The chart's own default metricRelabelings
+# (dropping noisy csi_operations/storage_operation_duration histogram buckets) is repeated
+# verbatim first — Helm replaces list values wholesale on override, so omitting it here would
+# silently undo that unrelated existing cardinality trim.
+kubelet:
+  serviceMonitor:
+    metricRelabelings:
+      - action: drop
+        sourceLabels: [__name__, le]
+        regex: (csi_operations|storage_operation_duration)_seconds_bucket;(0.25|2.5|15|25|120|600)(\.0)?
+      - action: labeldrop
+        regex: "resource|subresource|scope|component|group|version"
+      - sourceLabels: [__name__]
+        regex: "apiserver_request_sli_duration_seconds_(bucket|count|sum)|apiserver_request_body_size_bytes_(bucket|count|sum)|apiserver_response_sizes_(bucket|count|sum)|apiserver_watch_cache_read_wait_seconds_(bucket|count|sum)|apiserver_watch_events_sizes_(bucket|count|sum)"
+        action: drop
+      - sourceLabels: [__name__]
+        regex: "etcd_request_duration_seconds_(bucket|count|sum)"
+        action: drop
+
 # --- Grafana ---
 grafana:
   # Disabled — we forward all metrics to mac-mini's Grafana for full dashboards.
