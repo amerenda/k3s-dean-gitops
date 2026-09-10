@@ -155,6 +155,13 @@ kubeApiServer:
       - sourceLabels: [__name__]
         regex: "apiserver_request_sli_duration_seconds_(bucket|count|sum)|apiserver_request_body_size_bytes_(bucket|count|sum)|apiserver_response_sizes_(bucket|count|sum)|apiserver_watch_cache_read_wait_seconds_(bucket|count|sum)|apiserver_watch_events_sizes_(bucket|count|sum)"
         action: drop
+      # etcd_request_duration_seconds_bucket also leaks via this job (~35K series, confirmed
+      # 2026-09-09 via historical query on mac-mini's Prometheus) — same k3s single-binary
+      # shared-metrics-registry cause as the kubelet leak below, just a third job carrying the
+      # same unused-per-kubeEtcd's-own-fix metric. Same drop rule as kubeEtcd's below.
+      - sourceLabels: [__name__]
+        regex: "etcd_request_duration_seconds_(bucket|count|sum)"
+        action: drop
 kubeEtcd:
   serviceMonitor:
     metricRelabelings:
