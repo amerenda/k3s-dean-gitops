@@ -263,6 +263,9 @@ ports:
     port: 5056
     protocol: TCP
 ---
+# bookorbit-external: also used by the genuinely-public bookorbit.media.amer.dev
+# route in bookorbit-ingress-amer-dev.yaml — see that file for why BookOrbit
+# needs a public (not LAN/Tailscale-only) route, same reasoning as libsync.
 apiVersion: v1
 kind: Service
 metadata:
@@ -393,14 +396,6 @@ spec:
       services:
         - name: shelfarr-external
           port: 5056
-    - match: Host(`bookorbit.media.amer.dev`)
-      kind: Rule
-      middlewares:
-        - name: media-allowlist
-          namespace: default
-      services:
-        - name: bookorbit-external
-          port: 3005
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate

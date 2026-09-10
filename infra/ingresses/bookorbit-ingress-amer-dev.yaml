@@ -1,0 +1,84 @@
+---
+# bookorbit.media.amer.dev — genuinely public, same reasoning and pattern as
+# libsync-ingress-amer-dev.yaml (see that file's comment for the full
+# rationale). BookOrbit's own sync now replaces libsync/kosync as the
+# progress-sync mechanism for both e-readers (Obsidian
+# Projects/Media Server Stack/Plans/audiobookshelf-setup.md Phase 4) — the
+# XTeink X3 can't run Tailscale and can't reach the LAN any other way
+# (confirmed 2026-09-10: tethering the X3 off a phone does NOT bridge it
+# onto the phone's Tailscale network — tethering shares the phone's normal
+# internet uplink, not its VPN tunnel interface), so this host needs the
+# same "reachable from a raw internet connection" treatment libsync got.
+#
+# This host was previously bundled into jellyfin-ingress-amer-dev.yaml's
+# shared media-allowlist-gated IngressRoute (LAN/Tailscale/home-IP only) —
+# pulled out into its own IngressRoute here instead, since it now needs the
+# opposite policy (no allowlist) from every other *.media.amer.dev host.
+# Reuses that file's bookorbit-external Service (already points directly at
+# BookOrbit's real location, murderbot 10.100.20.19:3005 — no cross-namespace
+# proxy trick needed, unlike libsync, which is an actual k8s workload in a
+# different namespace) and the existing *.media.amer.dev wildcard
+# certificate (media-amer-dev-tls) — a specific DNS record for this exact
+# hostname takes priority over the wildcard record, so no new Certificate
+# resource is needed.
+#
+# Security review before exposing this publicly (2026-09-10, against the
+# exact deployed image ghcr.io/bookorbit/bookorbit:2.8.1, not just main):
+# - Setup/bootstrap is permanently locked at the DB level once any user
+#   exists (auth.service.ts `setup()` — checks user count, not just the
+#   x-setup-token header) — confirmed live via `/api/v1/auth/setup-status`
+#   returning needsSetup:false. A leaked SETUP_BOOTSTRAP_TOKEN can no
+#   longer create an account.
+# - Self-registration confirmed live OFF (`allowRegistration:false` from
+#   the same endpoint) and gated by throttling even when enabled.
+# - Real brute-force protection: bcrypt(12) password hashing, a
+#   timing-safe dummy-hash comparison so an invalid username and an
+#   invalid password return identically (no username enumeration via
+#   timing or response), 5-failed-attempt/15-minute account lockout, AND
+#   independent IP-based @nestjs/throttler limits on every public auth
+#   route (login 5/min, register 3/min, setup 3/min, forgot-password
+#   3/hour, reset-password 5/min).
+# - Refresh-token rotation with reuse/theft detection (a stolen, already-
+#   rotated refresh token reuse attempt revokes every session and bumps
+#   tokenVersion).
+# - fastify-helmet CSP + conditional HSTS, no open CORS in production,
+#   Swagger/API docs off (SWAGGER_ENABLED unset, defaults false).
+# - Every data-bearing API route confirmed to require auth live
+#   (`/api/v1/opds` -> 401 unauthenticated; only the SPA shell itself is
+#   served anonymously, same as any login page).
+# - trustProxy defaults to loopback/link-local/unique-local, which
+#   correctly trusts only the immediate Traefik hop (a private cluster IP)
+#   for X-Forwarded-For — an external client can't spoof their way around
+#   the IP-based throttling by forging that header.
+# - Container already hardened independently (compose.yaml): read_only
+#   root filesystem, cap_drop ALL with a minimal explicit add-back list,
+#   no-new-privileges.
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: bookorbit-amer-dev
+  namespace: default
+spec:
+  endpoints:
+    - dnsName: bookorbit.media.amer.dev
+      recordTTL: 300
+      recordType: A
+      targets:
+        - 67.250.70.153
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: bookorbit-ingress-amer-dev
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  tls:
+    secretName: media-amer-dev-tls
+  routes:
+    - match: Host(`bookorbit.media.amer.dev`)
+      kind: Rule
+      services:
+        - name: bookorbit-external
+          port: 3005

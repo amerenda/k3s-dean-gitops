@@ -44,9 +44,15 @@ data:
 
     # DNSEndpoint resources to keep pointed at the public IP
     # media-amer-dev / media-wildcard-amer-dev excluded: internal-only, pointing at Traefik VIP 10.100.20.203
-    ENDPOINTS="pubhooks-amer-dev libsync-amer-dev opds-amer-dev ha-pub-amer-dev"
+    ENDPOINTS="pubhooks-amer-dev libsync-amer-dev opds-amer-dev ha-pub-amer-dev bookorbit-amer-dev"
 
-    PUBLIC_IP=$(curl -sf https://ifconfig.me)
+    # -4: ifconfig.me is dual-stack (has an AAAA record) and this cluster's LAN IPv6 is
+    # known-broken on some nodes (blackholed, not cleanly rejected) — without -4 a pod
+    # landing on an affected node hangs on the IPv6 attempt instead of falling back fast.
+    # --max-time: belt-and-suspenders so a hang here can never eat the whole Job's
+    # activeDeadlineSeconds. Confirmed root cause 2026-09-10: 3 consecutive failed runs,
+    # each killed by DeadlineExceeded with no output at all (i.e. this curl never returned).
+    PUBLIC_IP=$(curl -sf -4 --max-time 10 https://ifconfig.me)
     if [ -z "$PUBLIC_IP" ]; then
       echo "ERROR: failed to fetch public IP"
       exit 1
