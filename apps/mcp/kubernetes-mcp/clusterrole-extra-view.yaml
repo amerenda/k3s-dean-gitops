@@ -1,19 +1,62 @@
+# Supplements the built-in `view` ClusterRole (see clusterrolebinding.yaml),
+# which never grants cluster-scoped core resources and only grants a CRD
+# when its own controller opted the CRD into the `aggregate-to-view` label
+# (most operators here don't). Without this, kubectl_get/describe on an
+# uncovered resource gets an immediate Forbidden that the MCP wrapper turns
+# into a 60s timeout instead of a fast error. See INC-2026-09-11.
+#
+# To grant read access to a NEW resource group later: add one rule block
+# below with `resources: ["*"]` for that apiGroup — do not enumerate
+# individual resource names, so newly added CRDs in an already-trusted
+# group are covered automatically with no further PRs.
+#
+# EXCEPTION: never use `resources: ["*"]` on the core group (apiGroups: [""])
+# — it would include `secrets`. Core group cluster-scoped resources are
+# listed explicitly instead, and `secrets` stays deliberately excluded.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: kubernetes-mcp-extra-view
 rules:
+  # Core group: cluster-scoped resources only (never wildcard this group)
   - apiGroups: [""]
     resources: ["nodes", "persistentvolumes"]
     verbs: ["get", "list", "watch"]
+  # ArgoCD (Application, ApplicationSet, AppProject, ...)
   - apiGroups: ["argoproj.io"]
-    resources: ["applications"]
+    resources: ["*"]
     verbs: ["get", "list", "watch"]
+  # Traefik (IngressRoute, Middleware, TLSOption, ServersTransport, ...)
   - apiGroups: ["traefik.io"]
-    resources: ["ingressroutes", "ingressroutetcps", "middlewares"]
+    resources: ["*"]
     verbs: ["get", "list", "watch"]
+  # prometheus-operator (ServiceMonitor, PodMonitor, Alertmanager, ...)
   - apiGroups: ["monitoring.coreos.com"]
-    resources: ["servicemonitors", "podmonitors", "prometheusrules"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  # Longhorn (Volume, Engine, Replica, Backup, ...)
+  - apiGroups: ["longhorn.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  # MetalLB (IPAddressPool, L2Advertisement, BGPPeer, ...)
+  - apiGroups: ["metallb.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  # cert-manager (Certificate, CertificateRequest, ClusterIssuer, Issuer, ...)
+  - apiGroups: ["cert-manager.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  # external-secrets (ExternalSecret, SecretStore, ClusterSecretStore, ...)
+  - apiGroups: ["external-secrets.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  # KEDA (ScaledObject, ScaledJob, TriggerAuthentication, ...)
+  - apiGroups: ["keda.sh"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  # GitHub Actions Runner Controller (AutoscalingRunnerSet, EphemeralRunner, ...)
+  - apiGroups: ["actions.github.com"]
+    resources: ["*"]
     verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
