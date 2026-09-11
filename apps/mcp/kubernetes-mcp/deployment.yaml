@@ -38,23 +38,35 @@ spec:
               value: "true"
             - name: ALLOW_ONLY_READONLY_TOOLS
               value: "true"
+          # exec probes, not tcpSocket: the wrapper's synchronous, blocking
+          # subprocess model can wedge the single Node.js event loop (e.g.
+          # during kubectl_reconnect's full API-discovery rebuild) while the
+          # OS still completes new TCP handshakes, so tcpSocket can't detect
+          # this failure mode. curl against /mcp exits 0 for any completed
+          # HTTP response (including the server's normal 405 on GET) and
+          # non-zero only on timeout/connection-refused — i.e. "is the event
+          # loop actually responsive," not "is the port open."
           readinessProbe:
-            tcpSocket:
-              port: 3000
+            exec:
+              command: ["sh", "-c", "curl -s -o /dev/null -m 5 http://localhost:3000/mcp"]
             initialDelaySeconds: 5
             periodSeconds: 10
+            timeoutSeconds: 8
+            failureThreshold: 3
           livenessProbe:
-            tcpSocket:
-              port: 3000
-            initialDelaySeconds: 10
-            periodSeconds: 30
+            exec:
+              command: ["sh", "-c", "curl -s -o /dev/null -m 5 http://localhost:3000/mcp"]
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 8
+            failureThreshold: 6
           resources:
             requests:
-              cpu: 10m
-              memory: 64Mi
+              cpu: 50m
+              memory: 96Mi
             limits:
-              cpu: 100m
-              memory: 128Mi
+              cpu: 300m
+              memory: 256Mi
         - name: host-proxy
           image: nginx:alpine
           ports:
