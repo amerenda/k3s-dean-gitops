@@ -21,8 +21,14 @@ spec:
       serviceAccountName: kubernetes-mcp-sa
       containers:
         - name: server
-          image: flux159/mcp-server-kubernetes:latest
-          imagePullPolicy: Always
+          # Pinned digest (was :latest — floating tag could silently change
+          # behavior on any pod restart/reschedule). Corresponds to
+          # mcp-server-kubernetes v4.1.6, confirmed from the running
+          # container's package.json as of 2026-09-11. To find the digest
+          # for a version bump: kubectl -n mcp-kubernetes-mcp get pod
+          #   -o jsonpath='{.items[0].status.containerStatuses[0].imageID}'
+          image: flux159/mcp-server-kubernetes@sha256:7aa82daa1f10f4305dd8b47fc0351250c342066edc52a68254bb50a84ec067a1
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
           env:
