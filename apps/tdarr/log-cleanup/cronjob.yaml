@@ -1,0 +1,47 @@
+# Tdarr's own maxLogSizeMB (server/deployment.yaml) only caps individual
+# log file size — it rotates into Tdarr_Server_Log.txt/.1/.2 but keeps
+# those generations indefinitely (observed: .2 was ~2 months old). This
+# job prunes anything older than a week from the hostPath Tdarr writes
+# its logs to, independent of Tdarr's own rotation.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: tdarr-log-cleanup
+  namespace: tdarr
+spec:
+  schedule: "0 1 * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 120
+      template:
+        spec:
+          restartPolicy: OnFailure
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: kubernetes.io/hostname
+                        operator: In
+                        values:
+                          - murderbot
+          containers:
+            - name: cleanup
+              image: busybox
+              command:
+                - sh
+                - -c
+                - |
+                  find /logs -maxdepth 1 -type f -mtime +7 -delete
+                  echo "Cleanup complete."
+              volumeMounts:
+                - name: logs
+                  mountPath: /logs
+          volumes:
+            - name: logs
+              hostPath:
+                path: /mnt/storage/media/config/tdarr/logs
+                type: Directory
