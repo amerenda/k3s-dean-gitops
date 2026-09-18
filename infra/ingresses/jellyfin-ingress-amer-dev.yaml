@@ -292,6 +292,35 @@ ports:
     port: 3005
     protocol: TCP
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: maintainerr-external
+  namespace: default
+spec:
+  ports:
+    - port: 6246
+      targetPort: 6246
+      protocol: TCP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: maintainerr-external-1
+  namespace: default
+  labels:
+    kubernetes.io/service-name: maintainerr-external
+addressType: IPv4
+endpoints:
+  - addresses:
+      - 10.100.20.19
+    conditions:
+      ready: true
+ports:
+  - name: ""
+    port: 6246
+    protocol: TCP
+---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -401,6 +430,14 @@ spec:
       services:
         - name: bookorbit-external
           port: 3005
+    - match: Host(`maintainerr.media.amer.dev`)
+      kind: Rule
+      middlewares:
+        - name: media-allowlist
+          namespace: default
+      services:
+        - name: maintainerr-external
+          port: 6246
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
