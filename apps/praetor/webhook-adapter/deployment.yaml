@@ -15,6 +15,8 @@ spec:
       maxSurge: 1
   template:
     metadata:
+      annotations:
+        reloader.stakater.com/auto: "true"
       labels:
         app: praetor-webhook-adapter
     spec:
