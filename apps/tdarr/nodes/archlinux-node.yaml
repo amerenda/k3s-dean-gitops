@@ -3,14 +3,8 @@ kind: Deployment
 metadata:
   name: tdarr-node-amd
   namespace: tdarr
-  annotations:
-    # NFS not set up yet. To enable:
-    # 1. Set up NFS: murderbot exports /mnt/storage, archlinux mounts it
-    # 2. Replace emptyDir volumes below with NFS volumes (see plan)
-    # 3. Set replicas: 1
-    nfs-status: "pending"
 spec:
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels:
       app: tdarr-node-amd
@@ -25,9 +19,6 @@ spec:
         - name: tdarr-node
           image: ghcr.io/haveagitgat/tdarr_node:2.82.02
           imagePullPolicy: IfNotPresent
-          resources:
-            limits:
-              amd.com/gpu: 1
           env:
             - name: TZ
               value: America/New_York
@@ -67,21 +58,39 @@ spec:
               mountPath: /tv
             - name: transcode-cache
               mountPath: /temp
+            - name: dri
+              mountPath: /dev/dri
       volumes:
-        # PLACEHOLDER — replace with NFS volumes when ready:
-        # - name: movies
-        #   nfs:
-        #     server: 10.100.20.10   # murderbot IP (confirm before enabling)
-        #     path: /mnt/storage/movies
-        # - name: tv
-        #   nfs:
-        #     server: 10.100.20.10
-        #     path: /mnt/storage/tv
+        # No AMD device plugin in this cluster (only infra/nvidia-device-plugin),
+        # so this doesn't request amd.com/gpu as a scheduler resource. ffmpeg
+        # VAAPI just needs the render node device -- verified 2026-09-21 that
+        # /dev/dri/renderD128 on archlinux is world RW (crw-rw-rw-), so no
+        # supplementary group / privileged mode is needed to use it.
+        - name: dri
+          hostPath:
+            path: /dev/dri
+            type: Directory
+        # murderbot exports these over NFS (ansible-playbooks
+        # playbooks/infrastructure/murderbot-nfs-export.yml), IP-allowlisted
+        # to archlinux (10.100.20.25) only. See
+        # Projects/Media Server Stack/notes/tdarr-archlinux-node-background.md
+        # in the Dean Obsidian vault for why this is unauthenticated NFS
+        # rather than a credentialed share (deferred to a later phase).
         - name: movies
-          emptyDir: {}
+          nfs:
+            server: 10.100.20.19
+            path: /mnt/storage/movies
         - name: tv
-          emptyDir: {}
+          nfs:
+            server: 10.100.20.19
+            path: /mnt/storage/tv
+        # Kept local to archlinux rather than over NFS -- scratch I/O
+        # shouldn't cross the 1GbE link twice per job on top of the
+        # source-read/result-write it already does. On the host's btrfs
+        # root disk (240G free at time of writing), not /tmp -- archlinux's
+        # /tmp is a 16G tmpfs and a single large source file can exceed
+        # that, which would consume host RAM instead of disk.
         - name: transcode-cache
           hostPath:
-            path: /tmp/tdarr-cache
+            path: /var/lib/tdarr-cache
             type: DirectoryOrCreate
