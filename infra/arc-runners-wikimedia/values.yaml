@@ -1,8 +1,8 @@
-# ARC runner scale set for amerenda/wikimedia
+# ARC runner scale set for dean-amer-dev/wikimedia
 # Host Docker socket — amd64 builds on murderbot (primary) or archlinux (overflow / when murderbot is down)
-githubConfigUrl: "https://github.com/amerenda/wikimedia"
+githubConfigUrl: "https://github.com/dean-amer-dev/wikimedia"
 runnerScaleSetName: arc-runner-wikimedia
-githubConfigSecret: controller-manager
+githubConfigSecret: controller-manager-dean
 controllerServiceAccount:
   name: infra-arc-controller
   namespace: arc-systems

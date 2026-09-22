@@ -1,8 +1,8 @@
-# ARC runner scale set for amerenda/ecdysis
+# ARC runner scale set for dean-amer-dev/ecdysis
 # Host Docker socket — amd64 builds on murderbot (primary) or archlinux (overflow / when murderbot is down)
-githubConfigUrl: "https://github.com/amerenda/ecdysis"
+githubConfigUrl: "https://github.com/dean-amer-dev/ecdysis"
 runnerScaleSetName: arc-runner-ecdysis
-githubConfigSecret: controller-manager
+githubConfigSecret: controller-manager-dean
 controllerServiceAccount:
   name: infra-arc-controller
   namespace: arc-systems
