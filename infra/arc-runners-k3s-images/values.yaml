@@ -1,8 +1,8 @@
-# ARC runner scale set for amerenda/k3s-images
+# ARC runner scale set for dean-amer-dev/k3s-images
 # Host Docker socket — multi-arch builds via buildx+QEMU on murderbot (primary) or archlinux (overflow)
-githubConfigUrl: "https://github.com/amerenda/k3s-images"
+githubConfigUrl: "https://github.com/dean-amer-dev/k3s-images"
 runnerScaleSetName: arc-runner-k3s-images
-githubConfigSecret: controller-manager
+githubConfigSecret: controller-manager-dean
 controllerServiceAccount:
   name: infra-arc-controller
   namespace: arc-systems

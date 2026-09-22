@@ -1,8 +1,8 @@
-# ARC runner scale set for amerenda/praetor
+# ARC runner scale set for dean-amer-dev/praetor
 # Host Docker socket — amd64 builds on murderbot (primary) or archlinux (overflow)
-githubConfigUrl: "https://github.com/amerenda/praetor"
+githubConfigUrl: "https://github.com/dean-amer-dev/praetor"
 runnerScaleSetName: arc-runner-praetor
-githubConfigSecret: controller-manager
+githubConfigSecret: controller-manager-dean
 controllerServiceAccount:
   name: infra-arc-controller
   namespace: arc-systems
