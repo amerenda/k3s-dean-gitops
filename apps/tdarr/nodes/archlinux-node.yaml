@@ -19,6 +19,18 @@ spec:
         - name: tdarr-node
           image: ghcr.io/haveagitgat/tdarr_node:2.82.02
           imagePullPolicy: IfNotPresent
+          # Required for VAAPI on the render node. Confirmed live 2026-09-22:
+          # a hostPath mount of /dev/dri makes the device nodes visible
+          # (correct crw-rw-rw- perms), but the default (non-privileged) pod
+          # cgroup devices controller still blocks actually opening
+          # renderD128 -- "Failed to open the given device!" from vainfo /
+          # ffmpeg inside the container, and the node's own encoder self-test
+          # reported hevc_vaapi/h264_vaapi/av1_vaapi as enabled but not
+          # working. No AMD device plugin exists in this cluster to grant
+          # the cgroup rule more narrowly, so this is the standard workaround
+          # for that gap. Alex-approved 2026-09-23.
+          securityContext:
+            privileged: true
           env:
             - name: TZ
               value: America/New_York
