@@ -55,9 +55,9 @@ spec:
             - name: transcodecpuWorkers
               value: "2"
             - name: healthcheckgpuWorkers
-              value: "1"
+              value: "0"
             - name: healthcheckcpuWorkers
-              value: "1"
+              value: "0"
             - name: apiKey
               valueFrom:
                 secretKeyRef:
