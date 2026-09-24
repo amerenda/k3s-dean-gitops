@@ -91,7 +91,7 @@ module.exports = async (args) => {
         '-cq', cq,
         '-maxrate', maxrate,
         '-bufsize', bufsize,
-        '-profile:v', 'main',
+        '-profile:v:0', 'main',
         '-pix_fmt', 'yuv420p',
       );
       if (cropFilter) {
@@ -104,7 +104,7 @@ module.exports = async (args) => {
         '-crf', cq,
         '-maxrate', maxrate,
         '-bufsize', bufsize,
-        '-profile:v', 'main',
+        '-profile:v:0', 'main',
         '-pix_fmt', 'yuv420p',
       );
       if (cropFilter) {
