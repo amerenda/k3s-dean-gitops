@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: tdarr
+resources:
+  - job.yaml
+# Files stay real .js/.json/.py in git; kustomize wraps them in a ConfigMap and
+# rewrites the Job's reference, so a content change gives a new ConfigMap name.
+configMapGenerator:
+  - name: tdarr-flow
+    files:
+      - flow.json
+      - decide-crop-codec-audio.js
+      - decide-hdr-audio-only.js
+      - sync.py

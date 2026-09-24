@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tdarr-flow-sync
+  namespace: tdarr
+  annotations:
+    # Runs after every sync of this app: pushes flow.json + plugin code from git
+    # into Tdarr's DB (idempotent - no-op when already in sync). Fixed name +
+    # BeforeHookCreation so re-deploys replace rather than accumulate jobs.
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+      containers:
+        - name: sync
+          image: python:3.12-alpine
+          command: ["python3", "/flow/sync.py"]
+          env:
+            - name: FLOW_DIR
+              value: /flow
+            - name: TDARR_URL
+              value: http://tdarr-server.tdarr.svc.cluster.local:8265
+          volumeMounts:
+            - name: flow
+              mountPath: /flow
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+      volumes:
+        - name: flow
+          configMap:
+            name: tdarr-flow
