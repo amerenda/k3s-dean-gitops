@@ -77,9 +77,15 @@ module.exports = async (args) => {
 
   const outArgs = ['-dn', '-c:s', 'copy'];
   if (needsVideoEncode) {
+    // Copy every video stream by default (embedded cover art is an mjpeg "video"
+    // stream), then encode/crop only the main video (v:0). Without this the codec
+    // and crop applied to the cover art too, e.g. crop=1920:808 on a 640x360 image
+    // -> "Invalid too big or non positive size" (fixed 2026-09-24). Last matching
+    // option wins in ffmpeg, same pattern as -c:a copy / -c:a:0 below.
+    outArgs.push('-c:v', 'copy');
     if (encoderKind === 'nvenc') {
       outArgs.push(
-        '-c:v', 'hevc_nvenc',
+        '-c:v:0', 'hevc_nvenc',
         '-preset', 'p7',
         '-rc', 'vbr',
         '-cq', cq,
@@ -89,11 +95,11 @@ module.exports = async (args) => {
         '-pix_fmt', 'yuv420p',
       );
       if (cropFilter) {
-        outArgs.push('-vf', cropFilter);
+        outArgs.push('-filter:v:0', cropFilter);
       }
     } else {
       outArgs.push(
-        '-c:v', 'libx265',
+        '-c:v:0', 'libx265',
         '-preset', 'slow',
         '-crf', cq,
         '-maxrate', maxrate,
@@ -102,7 +108,7 @@ module.exports = async (args) => {
         '-pix_fmt', 'yuv420p',
       );
       if (cropFilter) {
-        outArgs.push('-vf', cropFilter);
+        outArgs.push('-filter:v:0', cropFilter);
       }
     }
   } else {
